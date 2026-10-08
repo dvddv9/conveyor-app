@@ -113,13 +113,14 @@ with tab_history:
         if not history:
             st.info("История пуста")
         else:
-            import pandas as pd
-            df = pd.DataFrame(history)
-            if "route" in df.columns:
-                df["route"] = df["route"].apply(
-                    lambda x: ", ".join(x) if isinstance(x, list) else str(x)
-                )
-            st.dataframe(df, use_container_width=True)
+            # Convert route lists to comma-separated strings for display
+            display_rows = []
+            for row in history:
+                r = dict(row)
+                if isinstance(r.get("route"), list):
+                    r["route"] = ", ".join(r["route"])
+                display_rows.append(r)
+            st.dataframe(display_rows, use_container_width=True)
             st.caption(f"Всего записей: {len(history)}")
 
     except Exception as e:
