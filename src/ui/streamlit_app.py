@@ -97,7 +97,7 @@ with tab_analyze:
             analyze_btn = st.button(
                 "🚀 Запустить анализ",
                 type="primary",
-                use_container_width=True,
+                width="stretch",
                 disabled=not material.strip(),
                 key="single_analyze_btn",
             )
@@ -144,7 +144,7 @@ with tab_analyze:
             batch_btn = st.button(
                 f"🚀 Анализ всех ({len(uploaded_files)} файлов)",
                 type="primary",
-                use_container_width=True,
+                width="stretch",
                 key="batch_analyze_btn",
             )
 
@@ -302,7 +302,7 @@ with tab_history:
                     continue
                 filtered.append(r)
 
-            st.dataframe(filtered, use_container_width=True)
+            st.dataframe(filtered, width="stretch")
             st.caption(f"Показано: {len(filtered)} из {len(display_rows)}")
 
     except Exception as e:
