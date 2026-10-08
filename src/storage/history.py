@@ -3,11 +3,15 @@
 Хранилище историй анализов Conveyor.
 """
 import json
+import threading
 from datetime import datetime
 
 from src.config import DATA_DIR
 
 HISTORY_FILE = DATA_DIR / "history.json"
+
+# Thread lock for safe concurrent writes (batch mode)
+_HISTORY_LOCK = threading.Lock()
 
 
 def load_history() -> list:
@@ -32,12 +36,14 @@ def save_history(history: list) -> None:
 
 
 def add_entry(entry: dict) -> dict:
-    history = load_history()
-    entry["timestamp"] = datetime.now().isoformat()
-    history.append(entry)
-    save_history(history)
-    return entry
+    with _HISTORY_LOCK:
+        history = load_history()
+        entry["timestamp"] = datetime.now().isoformat()
+        history.append(entry)
+        save_history(history)
+        return entry
 
 
 def clear_history() -> None:
-    save_history([])
+    with _HISTORY_LOCK:
+        save_history([])

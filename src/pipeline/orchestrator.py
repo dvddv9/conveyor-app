@@ -115,9 +115,13 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat") -> d
 
 # === Pipeline ===
 
-def run_pipeline(material: str, filename: str, verbose: bool = True) -> dict:
-    """Запускает полный pipeline Conveyor."""
-    session_id = f"sess-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}"
+def run_pipeline(material: str, filename: str, verbose: bool = True,
+                 session_suffix: str = "") -> dict:
+    """Запускает полный pipeline Conveyor.
+
+    session_suffix: опциональный суффикс для session_id (batch mode).
+    """
+    session_id = f"sess-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
 
     if verbose:
         print(f"=== Conveyor Pipeline ===")
