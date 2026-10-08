@@ -56,6 +56,8 @@ class HistoryItem(BaseModel):
     route: list | None = None
     material_size: int
     timestamp: str
+    verdict: str | None = None
+    pii_detected: bool | None = None
 
 
 # === Endpoints ===
@@ -132,6 +134,8 @@ async def history(limit: int = 20):
             route=item.get("route"),
             material_size=item.get("material_size", 0),
             timestamp=item.get("timestamp", ""),
+            verdict=item.get("verdict"),
+            pii_detected=item.get("pii_detected"),
         )
         for item in items[-limit:]
     ]

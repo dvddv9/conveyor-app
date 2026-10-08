@@ -113,17 +113,51 @@ with tab_history:
         if not history:
             st.info("История пуста")
         else:
-            # Convert route lists to comma-separated strings for display
+            # Prepare display rows (fill defaults for old records)
             display_rows = []
             for row in history:
                 r = dict(row)
                 if isinstance(r.get("route"), list):
                     r["route"] = ", ".join(r["route"])
-                r.setdefault("verdict", "—")
-                r.setdefault("pii_detected", False)
+                if not r.get("verdict"):
+                    r["verdict"] = "—"
+                if r.get("pii_detected") is None:
+                    r["pii_detected"] = False
                 display_rows.append(r)
-            st.dataframe(display_rows, use_container_width=True)
-            st.caption(f"Всего записей: {len(history)}")
+
+            # === Filters ===
+            st.markdown("**Фильтры**")
+            f_col1, f_col2, f_col3, f_col4 = st.columns([1, 1, 1, 2])
+
+            with f_col1:
+                levels_all = sorted({r.get("level", "?") for r in display_rows})
+                levels_sel = st.multiselect("Level", levels_all, default=levels_all)
+
+            with f_col2:
+                verdicts_all = sorted({str(r.get("verdict", "—")) for r in display_rows})
+                verdicts_sel = st.multiselect("Verdict", verdicts_all, default=verdicts_all)
+
+            with f_col3:
+                only_pii = st.checkbox("Только PII", value=False)
+
+            with f_col4:
+                fname_query = st.text_input("Поиск по filename", value="").strip().lower()
+
+            # Apply filters
+            filtered = []
+            for r in display_rows:
+                if r.get("level") not in levels_sel:
+                    continue
+                if str(r.get("verdict", "—")) not in verdicts_sel:
+                    continue
+                if only_pii and not r.get("pii_detected"):
+                    continue
+                if fname_query and fname_query not in str(r.get("filename", "")).lower():
+                    continue
+                filtered.append(r)
+
+            st.dataframe(filtered, use_container_width=True)
+            st.caption(f"Показано: {len(filtered)} из {len(display_rows)}")
 
     except Exception as e:
         st.error(f"Ошибка загрузки истории: {e}")
