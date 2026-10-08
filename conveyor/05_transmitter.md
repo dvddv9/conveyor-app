@@ -30,7 +30,7 @@
 [ASSEMBLY] [REFACTORING] [PARALLELS] [TESTS] [ACTION] [QUESTIONS]
 [FUNC:FULL] — 3–5 строк
 [MANDATORY BASE] — 10 полей
-[REFLEXION] [AUDIT_TRAIL]
+[REFLEXION]
 
 ### D4
 Всё из D3 +
@@ -92,15 +92,9 @@ X без условия — ложная точность.
 
 ## AUDIT_TRAIL
 
-Блок-ссылка:
-
-[AUDIT_TRAIL]
-audit_id: audit-YYYY-MM-DD-xxxxxx
-material_hash: sha256:...
-pii_detected: false
-compliance_flags: []
-
-Полный лог — в tools/audit_log.py --output audit.json.
+НЕ ГЕНЕРИРОВАТЬ. Audit-блок (`[AUDIT_TRAIL]`) добавляется автоматически
+pipeline'ом (orchestrator.py) после Stage 5 — с реальными sha256, pii_detected,
+compliance_flags. Если ты сгенерируешь свой — будет дубликат с фейковыми данными.
 
 ## Fallback
 

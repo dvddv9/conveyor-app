@@ -21,15 +21,16 @@ from src.pipeline.stages import (
     stage5_transmitter,
 )
 from src.storage.history import add_entry
+from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
 
 
-# === Audit (встроено из audit_log.py) ===
+# === Audit (встроенный compliance-scan) ===
 
 PII_PATTERNS = {
     "email": re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
     "phone_ru": re.compile(r"\+7\d{10}|\b8\d{10}\b"),
     "passport_ru": re.compile(r"\b\d{4}\s?\d{6}\b"),
-    "snils": re.compile(r"\b\d{3}-?\d{3}-?\d{3}\s?\d{2}\b"),
+    "snils": re.compile(r"\b\d{3}-\d{3}-\d{3}[ -]?\d{2}\b"),
     "iban": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b"),
 }
 
@@ -56,12 +57,21 @@ def detect_pii(text: str) -> dict:
     return found
 
 
-def detect_compliance(text: str) -> list:
+def detect_compliance(text: str, pii: dict | None = None) -> list:
     low = text.lower()
     flags = []
     for flag, triggers in COMPLIANCE_TRIGGERS.items():
         if any(t in low for t in triggers):
             flags.append(flag)
+
+    # PII -> auto-add GDPR + 152-ФЗ
+    if pii:
+        if any(k in pii for k in ("email", "phone_ru", "passport_ru", "snils", "iban")):
+            if "GDPR" not in flags:
+                flags.append("GDPR")
+            if "152-ФЗ" not in flags:
+                flags.append("152-ФЗ")
+
     return flags
 
 
@@ -75,7 +85,7 @@ def generate_audit_id() -> str:
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat") -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
-    compliance = detect_compliance(material)
+    compliance = detect_compliance(material, pii)
     critique = "REQUIRES_REVIEW" if (pii or compliance) else "SAFE"
 
     audit = {
@@ -133,11 +143,70 @@ def run_pipeline(material: str, filename: str, verbose: bool = True) -> dict:
     if "EMERGENCY_INTERRUPT" in flags:
         if verbose:
             print("[!] EMERGENCY_INTERRUPT — стоп")
+
+        # Still run audit — compliance priority
+        if verbose:
+            print("[Audit] Сбор audit-записи (emergency)...")
+        audit = run_audit(material, session_id)
+        if verbose:
+            print(f"  → audit_id: {audit['audit_id']}")
+            print(f"  → material_hash: {audit['material_hash']}")
+            print(f"  → pii_detected: {audit['pii_detected']}")
+            print(f"  → compliance_flags: {audit['compliance_flags']}")
+            print(f"  → critique_verdict: {audit['critique_verdict']}")
+            print()
+
+        emergency_md = (
+            "⛔ INTERRUPTED: EMERGENCY\n\n"
+            "[EMERGENCY]\n"
+            "Stage 0 обнаружил критический риск → pipeline остановлен.\n"
+            f"[TRIGGER] flags: {flags}\n"
+            f"[REASON] level: {level}, route: {route}\n"
+        )
+        audit_block = (
+            "\n\n[AUDIT_TRAIL]\n"
+            f"audit_id: {audit['audit_id']}\n"
+            f"material_hash: {audit['material_hash']}\n"
+            f"pii_detected: {str(audit['pii_detected']).lower()}\n"
+            f"compliance_flags: {audit['compliance_flags']}\n"
+            f"critique_verdict: {audit['critique_verdict']}\n"
+        )
+        emergency_md = emergency_md + audit_block
+
+        add_entry({
+            "session_id": session_id,
+            "filename": filename,
+            "level": level,
+            "route": route,
+            "material_size": len(material),
+        })
+
+        result_file = DATA_DIR / f"result_{session_id}.json"
+        result_file.write_text(
+            json.dumps({
+                "session_id": session_id,
+                "timestamp": datetime.now(UTC).isoformat(),
+                "filename": filename,
+                "material_size": len(material),
+                "stage0": stage0,
+                "audit": audit,
+                "emergency": True,
+                "final_markdown": emergency_md,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        if verbose:
+            print("=== Pipeline завершён (EMERGENCY) ===")
+            print(f"Результат: {result_file}")
+            print()
+
         return {
             "session_id": session_id,
             "stage0": stage0,
+            "audit": audit,
             "emergency": True,
-            "final_markdown": "⛔ INTERRUPTED: EMERGENCY",
+            "final_markdown": emergency_md,
         }
 
     if verbose:
@@ -207,6 +276,35 @@ def run_pipeline(material: str, filename: str, verbose: bool = True) -> dict:
     )
     final_markdown = final_markdown + audit_block
 
+    # === COMPLETENESS CHECK (fallback_check integration) ===
+    required = REQUIRED_BLOCKS.get(level, [])
+    missing = [b for b in required if b not in final_markdown]
+    loss_pct = round(len(missing) / len(required) * 100, 1) if required else 0.0
+    completeness = {
+        "level": level,
+        "required_count": len(required),
+        "missing": missing,
+        "missing_count": len(missing),
+        "loss_pct": loss_pct,
+        "threshold": LOSS_THRESHOLD,
+        "verdict": "ACCEPTABLE" if loss_pct <= LOSS_THRESHOLD else "INCOMPLETE",
+    }
+
+    if verbose:
+        print(f"[Completeness] level={level}, loss_pct={loss_pct}%, "
+              f"missing={len(missing)}, verdict={completeness['verdict']}")
+        print()
+
+    completeness_block = (
+        "\n\n[COMPLETENESS]\n"
+        f"level: {level}\n"
+        f"required: {len(required)}\n"
+        f"missing: {missing}\n"
+        f"loss_pct: {loss_pct}%\n"
+        f"verdict: {completeness['verdict']}\n"
+    )
+    final_markdown = final_markdown + completeness_block
+
     result = {
         "session_id": session_id,
         "timestamp": datetime.now(UTC).isoformat(),
@@ -218,6 +316,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True) -> dict:
         "stage3": stage3,
         "stage4": stage4,
         "audit": audit,
+        "completeness": completeness,
         "final_markdown": final_markdown,
     }
 
