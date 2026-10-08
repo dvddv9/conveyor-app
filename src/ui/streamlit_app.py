@@ -35,54 +35,200 @@ except Exception as e:
 tab_analyze, tab_history, tab_about = st.tabs(["🔬 Анализ", "📜 История", "ℹ️ О проекте"])
 
 
+# Defaults — на случай, если пользователь в batch-режиме
+analyze_btn = False
+material = ""
+filename = "input.txt"
+result_placeholder = None
+
+
 with tab_analyze:
-    col_left, col_right = st.columns([1, 1])
+    # === Выбор режима ===
+    mode = st.radio(
+        "Режим анализа",
+        ["📁 Один файл", "📚 Несколько файлов (batch)"],
+        horizontal=True,
+        key="analyze_mode",
+    )
 
-    with col_left:
-        st.subheader("Входные данные")
+    # ============================================================
+    # === Режим «Один файл» ===
+    # ============================================================
+    if mode == "📁 Один файл":
+        col_left, col_right = st.columns([1, 1])
 
-        input_mode = st.radio(
-            "Как передать материал?",
-            ["📁 Загрузить файл", "✍️ Вставить текст"],
-            horizontal=True,
+        with col_left:
+            st.subheader("Входные данные")
+
+            input_mode = st.radio(
+                "Как передать материал?",
+                ["📁 Загрузить файл", "✍️ Вставить текст"],
+                horizontal=True,
+                key="single_input_mode",
+            )
+
+            material = ""
+            filename = "input.txt"
+
+            if input_mode == "📁 Загрузить файл":
+                uploaded = st.file_uploader(
+                    "Выбери файл",
+                    type=["py", "go", "js", "ts", "java", "rs", "txt", "md", "json"],
+                    key="single_file",
+                )
+                if uploaded is not None:
+                    try:
+                        material = uploaded.read().decode("utf-8", errors="replace")
+                        filename = uploaded.name
+                        st.success(f"✅ Загружено: {filename} ({len(material)} символов)")
+                    except Exception as e:
+                        st.error(f"Ошибка чтения: {e}")
+            else:
+                filename = st.text_input("Имя файла (для контекста)", value="input.txt", key="single_name")
+                material = st.text_area(
+                    "Код / spec / logs",
+                    height=300,
+                    placeholder="Вставь код сюда...",
+                    key="single_text",
+                )
+                if material:
+                    st.caption(f"{len(material)} символов")
+
+            analyze_btn = st.button(
+                "🚀 Запустить анализ",
+                type="primary",
+                use_container_width=True,
+                disabled=not material.strip(),
+                key="single_analyze_btn",
+            )
+
+        with col_right:
+            st.subheader("Результат")
+            result_placeholder = st.empty()
+            result_placeholder.info("👈 Загрузи файл и нажми Анализ")
+
+    # ============================================================
+    # === Режим «Несколько файлов (batch)» ===
+    # ============================================================
+    else:
+        st.subheader("Batch-анализ")
+        st.caption("Загрузи несколько файлов — они обработаются параллельно. Быстрее в ~N раз (N = параллельных потоков).")
+
+        uploaded_files = st.file_uploader(
+            "Выбери файлы (можно несколько)",
+            type=["py", "go", "js", "ts", "java", "rs", "txt", "md", "json"],
+            accept_multiple_files=True,
+            key="batch_files",
         )
 
-        material = ""
-        filename = "input.txt"
+        if uploaded_files:
+            st.success(f"✅ Загружено файлов: {len(uploaded_files)}")
 
-        if input_mode == "📁 Загрузить файл":
-            uploaded = st.file_uploader(
-                "Выбери файл",
-                type=["py", "go", "js", "ts", "java", "rs", "txt", "md", "json"],
+            # Список файлов
+            with st.expander(f"📋 Список файлов ({len(uploaded_files)})", expanded=False):
+                for i, f in enumerate(uploaded_files, 1):
+                    st.write(f"{i}. **{f.name}** — {f.size} байт")
+
+            # Настройки
+            col_a, col_b = st.columns([1, 3])
+            with col_a:
+                max_conc = st.slider(
+                    "Параллельно",
+                    min_value=1,
+                    max_value=10,
+                    value=3,
+                    help="Сколько файлов обрабатывать одновременно. Больше 10 — риск rate limit DeepSeek.",
+                    key="batch_max_conc",
+                )
+
+            batch_btn = st.button(
+                f"🚀 Анализ всех ({len(uploaded_files)} файлов)",
+                type="primary",
+                use_container_width=True,
+                key="batch_analyze_btn",
             )
-            if uploaded is not None:
-                try:
-                    material = uploaded.read().decode("utf-8", errors="replace")
-                    filename = uploaded.name
-                    st.success(f"✅ Загружено: {filename} ({len(material)} символов)")
-                except Exception as e:
-                    st.error(f"Ошибка чтения: {e}")
+
+            if batch_btn:
+                # Собрать items
+                items = []
+                for f in uploaded_files:
+                    try:
+                        content = f.read().decode("utf-8", errors="replace")
+                        items.append({"material": content, "filename": f.name})
+                    except Exception as e:
+                        st.error(f"Ошибка чтения {f.name}: {e}")
+
+                if items:
+                    with st.spinner(f"⏳ Обработка {len(items)} файлов (параллельно до {max_conc})..."):
+                        try:
+                            resp = requests.post(
+                                f"{API_URL}/analyze/batch",
+                                json={"items": items, "max_concurrent": max_conc},
+                                timeout=900,
+                            )
+
+                            if resp.status_code != 200:
+                                st.error(f"Ошибка API: {resp.status_code}\n\n{resp.text}")
+                            else:
+                                data = resp.json()
+                                results = data.get("results", [])
+
+                                # Сводка
+                                st.success(f"✅ Обработано: {data.get('count', 0)} файлов")
+                                safe = sum(1 for r in results if r.get("verdict") == "SAFE")
+                                review = sum(1 for r in results if r.get("verdict") == "REQUIRES_REVIEW")
+                                pii_count = sum(1 for r in results if r.get("pii_detected"))
+                                errors = sum(1 for r in results if r.get("error"))
+
+                                m1, m2, m3, m4, m5 = st.columns(5)
+                                m1.metric("Всего", len(results))
+                                m2.metric("SAFE", safe)
+                                m3.metric("REVIEW", review)
+                                m4.metric("PII", pii_count)
+                                m5.metric("Ошибки", errors)
+
+                                st.divider()
+
+                                # Результаты — expander для каждого
+                                for r in results:
+                                    fn = r.get("filename", "?")
+                                    vd = r.get("verdict") or "ERROR"
+                                    pii = r.get("pii_detected")
+
+                                    # Иконка
+                                    if r.get("error"):
+                                        icon = "❌"
+                                    elif pii:
+                                        icon = "🔴"
+                                    elif vd == "SAFE":
+                                        icon = "✅"
+                                    else:
+                                        icon = "🟡"
+
+                                    title = f"{icon} {fn} — {vd}"
+                                    with st.expander(title, expanded=False):
+                                        if r.get("error"):
+                                            st.error(f"Ошибка: {r['error']}")
+                                        else:
+                                            c1, c2, c3 = st.columns(3)
+                                            c1.markdown(f"**Level:** {r.get('level', '?')}")
+                                            c2.markdown(f"**Verdict:** {vd}")
+                                            c3.markdown(f"**PII:** {'да' if pii else 'нет'}")
+                                            st.caption(f"Session: {r.get('session_id', '?')}")
+                                            st.divider()
+                                            st.markdown(r.get("final_markdown", "") or "_пусто_")
+                                            st.download_button(
+                                                "💾 Скачать Markdown",
+                                                data=r.get("final_markdown", "") or "",
+                                                file_name=f"report_{fn}.md",
+                                                mime="text/markdown",
+                                                key=f"dl_{fn}_{r.get('session_id', '')}",
+                                            )
+
+                        except Exception as e:
+                            st.error(f"Ошибка запроса: {e}")
         else:
-            filename = st.text_input("Имя файла (для контекста)", value="input.txt")
-            material = st.text_area(
-                "Код / spec / logs",
-                height=300,
-                placeholder="Вставь код сюда...",
-            )
-            if material:
-                st.caption(f"{len(material)} символов")
-
-        analyze_btn = st.button(
-            "🚀 Запустить анализ",
-            type="primary",
-            use_container_width=True,
-            disabled=not material.strip(),
-        )
-
-    with col_right:
-        st.subheader("Результат")
-        result_placeholder = st.empty()
-        result_placeholder.info("👈 Загрузи файл и нажми Анализ")
+            st.info("👆 Загрузи файлы, чтобы начать batch-анализ")
 
 
 with tab_history:
@@ -191,7 +337,7 @@ Streamlit UI -> FastAPI (:5001) -> Pipeline (6 стадий) -> DeepSeek/Ollama
     st.caption(f"API: {API_URL}")
 
 
-if analyze_btn and material.strip():
+if analyze_btn and material.strip() and result_placeholder is not None:
     with st.spinner("⏳ Анализ идёт... 6 стадий, ~40-90 секунд"):
 
         progress = st.progress(0)
