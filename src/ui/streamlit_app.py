@@ -119,6 +119,8 @@ with tab_history:
                 r = dict(row)
                 if isinstance(r.get("route"), list):
                     r["route"] = ", ".join(r["route"])
+                r.setdefault("verdict", "—")
+                r.setdefault("pii_detected", False)
                 display_rows.append(r)
             st.dataframe(display_rows, use_container_width=True)
             st.caption(f"Всего записей: {len(history)}")

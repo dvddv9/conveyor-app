@@ -179,6 +179,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True) -> dict:
             "level": level,
             "route": route,
             "material_size": len(material),
+            "verdict": audit["critique_verdict"],
+            "pii_detected": audit["pii_detected"],
         })
 
         result_file = DATA_DIR / f"result_{session_id}.json"
@@ -326,6 +328,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True) -> dict:
         "level": level,
         "route": route,
         "material_size": len(material),
+        "verdict": audit["critique_verdict"],
+        "pii_detected": audit["pii_detected"],
     })
 
     result_file = DATA_DIR / f"result_{session_id}.json"
