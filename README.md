@@ -610,7 +610,8 @@ git --no-pager log --oneline
 
 - **pandas не используется** — Windows Code Integrity Policy может блокировать `pandas._libs.*.pyd`. Вместо pandas используется нативный `st.dataframe(list[dict])`.
 
-- **Тесты** — пока не написаны (`pytest` в `requirements.txt`, но тестов нет).
+- **Тесты** — 24 регрессионных теста (`tests/`). Запуск: `python run_tests.py`.
+  Покрытие: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
 - **Параллелизм Stage 3/4** — пока последовательный.
 - **Локальный режим (Ollama)** — на CPU (без дискретной GPU) полный pipeline
@@ -624,7 +625,7 @@ git --no-pager log --oneline
 
 
 
-- [ ] Тесты (`pytest`, smoke-test pipeline)
+- [x] Тесты — 24 регрессионных (`python run_tests.py`)
 
 - [ ] Параллелизм Stage 3/4 (`asyncio.gather`)
 
