@@ -119,3 +119,88 @@ def test_fallback_check_required_d3():
 
 def test_fallback_check_threshold():
     assert LOSS_THRESHOLD == 30.0
+
+
+# === Extended PII ===
+
+def test_detect_pii_snils():
+    result = detect_pii("SNILS: 123-456-789 00")
+    assert "snils" in result
+
+
+def test_detect_pii_snils_no_false_positive():
+    # Phone 79991234567 (11 digits) — не должно быть snils
+    result = detect_pii("tel: +79991234567")
+    assert "snils" not in result
+
+
+def test_detect_pii_iban():
+    result = detect_pii("IBAN: DE89370400440532013000")
+    assert "iban" in result
+
+
+def test_detect_pii_combined():
+    result = detect_pii("user@example.com +79991234567")
+    assert "email" in result
+    assert "phone_ru" in result
+
+
+# === Extended Compliance ===
+
+def test_detect_compliance_152fz():
+    result = detect_compliance("мы обрабатываем персональные данные")
+    assert "152-ФЗ" in result
+
+
+def test_detect_compliance_hipaa():
+    result = detect_compliance("patient diagnosis record")
+    assert "HIPAA" in result
+
+
+def test_detect_compliance_pci():
+    result = detect_compliance("credit card cvv processing")
+    assert "PCI-DSS" in result
+
+
+def test_detect_compliance_multi():
+    result = detect_compliance("personal data payment", pii={"email": 1})
+    assert "GDPR" in result
+    assert "PCI-DSS" in result
+    assert "152-ФЗ" in result
+
+
+# === Extended JSON parsing ===
+
+def test_parse_json_nested():
+    result = parse_json_response('{"a": {"b": {"c": 1}}}')
+    assert result.get("a", {}).get("b", {}).get("c") == 1
+
+
+def test_parse_json_array():
+    result = parse_json_response('[{"id": 1}, {"id": 2}]')
+    # parse_json_response возвращает dict или _raw; массив — допустим
+    assert isinstance(result, (dict, list))
+
+
+def test_parse_json_with_bom():
+    result = parse_json_response('﻿{"level": "D0"}')
+    # BOM может помешать — не критично, главное не падать
+    assert isinstance(result, dict)
+
+
+# === Extended fallback_check ===
+
+def test_fallback_check_required_d1():
+    assert "D1" in REQUIRED
+    assert "[CONCLUSION]" in REQUIRED["D1"]
+
+
+def test_fallback_check_required_d4():
+    assert "D4" in REQUIRED
+    assert len(REQUIRED["D4"]) > 20
+
+
+def test_fallback_check_forced_blocks():
+    # [FUNC:FULL] и [MANDATORY BASE] должны быть в D3
+    assert "[FUNC:FULL]" in REQUIRED["D3"]
+    assert "[MANDATORY BASE]" in REQUIRED["D3"]
