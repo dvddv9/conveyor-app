@@ -1,9 +1,21 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Клиент DeepSeek API (через openai SDK).
 """
-from openai import OpenAI
+import logging
+
+from openai import OpenAI, APIConnectionError, RateLimitError, APIStatusError
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+    before_sleep_log,
+)
+
 from src.config import DEEPSEEK_API_KEY, DEEPSEEK_URL, DEEPSEEK_MODEL
+
+logger = logging.getLogger(__name__)
 
 
 def get_client() -> OpenAI:
@@ -15,6 +27,13 @@ def get_client() -> OpenAI:
     )
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=30),
+    retry=retry_if_exception_type((APIConnectionError, RateLimitError, APIStatusError)),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+    reraise=True,
+)
 def chat(system: str, user: str,
          temperature: float = 0.0,
          max_tokens: int = 2000) -> dict:
