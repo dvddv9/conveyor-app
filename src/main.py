@@ -89,6 +89,15 @@ class BatchResponse(BaseModel):
     max_concurrent: int
 
 
+class ModeRequest(BaseModel):
+    mode: str = Field(..., description="auto / cloud / local")
+
+
+class ModeResponse(BaseModel):
+    mode: str
+    valid_modes: list[str]
+
+
 # === Endpoints ===
 
 @app.get("/")
@@ -236,6 +245,25 @@ async def history_clear():
     from src.storage.history import save_history
     save_history([])
     return {"status": "ok"}
+
+
+@app.get("/mode", response_model=ModeResponse)
+async def get_mode_endpoint():
+    """Возвращает текущий режим LLM."""
+    from src.storage.mode import get_mode, VALID_MODES
+    return ModeResponse(mode=get_mode(), valid_modes=list(VALID_MODES))
+
+
+@app.post("/mode", response_model=ModeResponse)
+async def set_mode_endpoint(req: ModeRequest):
+    """Устанавливает режим LLM (auto / cloud / local)."""
+    from src.storage.mode import set_mode, get_mode, VALID_MODES
+    if not set_mode(req.mode):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid mode: {req.mode}. Valid: {list(VALID_MODES)}",
+        )
+    return ModeResponse(mode=get_mode(), valid_modes=list(VALID_MODES))
 
 
 if __name__ == "__main__":

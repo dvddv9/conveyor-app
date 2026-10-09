@@ -311,6 +311,55 @@ with tab_history:
 
 with tab_about:
     st.subheader("ℹ️ Conveyor V5.7")
+
+    # === Режим LLM ===
+    st.markdown("### 🔧 Режим LLM")
+
+    current_mode = "auto"
+    try:
+        r = requests.get(f"{API_URL}/mode", timeout=5)
+        if r.status_code == 200:
+            current_mode = r.json().get("mode", "auto")
+    except Exception:
+        pass
+
+    mode_options = {
+        "auto": "🔄 Auto (DeepSeek → Ollama fallback)",
+        "cloud": "☁️ Cloud (только DeepSeek)",
+        "local": "💻 Local (только Ollama)",
+    }
+    mode_keys = list(mode_options.keys())
+
+    selected = st.radio(
+        "Выбери режим",
+        mode_keys,
+        index=mode_keys.index(current_mode) if current_mode in mode_keys else 0,
+        format_func=lambda x: mode_options[x],
+        horizontal=False,
+        key="llm_mode_radio",
+    )
+
+    if selected != current_mode:
+        if st.button("✅ Применить", type="primary"):
+            try:
+                r = requests.post(f"{API_URL}/mode", json={"mode": selected}, timeout=5)
+                if r.status_code == 200:
+                    st.success(f"Режим изменён на: {selected}")
+                    st.rerun()
+                else:
+                    st.error(f"Ошибка: {r.text}")
+            except Exception as e:
+                st.error(f"Ошибка запроса: {e}")
+
+    st.caption(f"**Текущий режим:** `{current_mode}`")
+    st.info(
+        "**Auto** — DeepSeek (быстро), при ошибке → Ollama (медленно)\n\n"
+        "**Cloud** — только DeepSeek\n\n"
+        "**Local** — только Ollama (медленно, для приватности)"
+    )
+
+    st.divider()
+
     st.markdown("""
 **Conveyor V5.7** — 6-стадийный LLM-конвейер для анализа инженерного материала.
 
