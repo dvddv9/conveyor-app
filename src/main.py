@@ -127,7 +127,8 @@ async def analyze(req: AnalyzeRequest):
         raise HTTPException(status_code=400, detail="material не может быть пустым")
 
     try:
-        result = run_pipeline(
+        from src.pipeline.orchestrator import run_pipeline_async
+        result = await run_pipeline_async(
             material=req.material,
             filename=req.filename,
             verbose=False,

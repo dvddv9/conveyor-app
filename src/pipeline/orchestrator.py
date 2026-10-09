@@ -350,6 +350,65 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     return result
 
 
+async def run_pipeline_async(material: str, filename: str, verbose: bool = False,
+                              session_suffix: str = "") -> dict:
+    """Async pipeline."""
+    from src.pipeline.async_stages import (
+        async_stage0_orchestrator, async_stage1_scanner, async_stage2_analyst,
+        async_stage3_researcher, async_stage4_synthesizer, async_stage5_transmitter,
+    )
+    session_id = f"sess-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
+    stage0 = await async_stage0_orchestrator(material, filename)
+    route = stage0.get("route", [])
+    level = stage0.get("level", "D3")
+    research_first = stage0.get("research_first", False)
+    stage1 = await async_stage1_scanner(material, {"stage0": stage0})
+    stage2 = await async_stage2_analyst(material, {"stage0": stage0, "stage1": stage1})
+    stage3 = None
+    if research_first:
+        stage3 = await async_stage3_researcher(
+            material, {"stage0": stage0, "stage1": stage1, "stage2": stage2})
+    context_4 = {"stage0": stage0, "stage1": stage1, "stage2": stage2}
+    if stage3:
+        context_4["stage3"] = stage3
+    stage4 = await async_stage4_synthesizer(material, context_4)
+    context_5 = {"stage0": stage0, "stage1": stage1, "stage2": stage2, "stage4": stage4}
+    if stage3:
+        context_5["stage3"] = stage3
+    final_markdown = await async_stage5_transmitter(material, context_5)
+    audit = run_audit(material, session_id)
+    final_markdown += (
+        "\n\n[AUDIT_TRAIL]\n"
+        f"audit_id: {audit['audit_id']}\n"
+        f"material_hash: {audit['material_hash']}\n"
+        f"pii_detected: {str(audit['pii_detected']).lower()}\n"
+        f"compliance_flags: {audit['compliance_flags']}\n"
+        f"critique_verdict: {audit['critique_verdict']}\n"
+    )
+    required = REQUIRED_BLOCKS.get(level, [])
+    missing = [b for b in required if b not in final_markdown]
+    loss_pct = round(len(missing) / len(required) * 100, 1) if required else 0.0
+    completeness = {"level": level, "required_count": len(required), "missing": missing,
+                    "missing_count": len(missing), "loss_pct": loss_pct,
+                    "threshold": LOSS_THRESHOLD,
+                    "verdict": "ACCEPTABLE" if loss_pct <= LOSS_THRESHOLD else "INCOMPLETE"}
+    final_markdown += (
+        "\n\n[COMPLETENESS]\n"
+        f"level: {level}\nrequired: {len(required)}\nmissing: {missing}\n"
+        f"loss_pct: {loss_pct}%\nverdict: {completeness['verdict']}\n"
+    )
+    result = {"session_id": session_id, "timestamp": datetime.now(UTC).isoformat(),
+              "filename": filename, "material_size": len(material), "stage0": stage0,
+              "stage1": stage1, "stage2": stage2, "stage3": stage3, "stage4": stage4,
+              "audit": audit, "completeness": completeness, "final_markdown": final_markdown}
+    add_entry({"session_id": session_id, "filename": filename, "level": level,
+               "route": route, "material_size": len(material),
+               "verdict": audit["critique_verdict"], "pii_detected": audit["pii_detected"]})
+    result_file = DATA_DIR / f"result_{session_id}.json"
+    result_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    return result
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", required=True, help="Путь к файлу")
