@@ -12,7 +12,7 @@ import sys
 def run(path):
     print(f"\n=== {path} ===")
     result = subprocess.run(
-        ["pytest", "-v", path],
+        [sys.executable, "-m", "pytest", "-v", path],
         cwd="C:/AI/conveyor_app",
     )
     return result.returncode
@@ -24,8 +24,8 @@ def main():
     rc |= run("tests/test_pipeline_mock.py")
 
     if "--all" in sys.argv:
-        print("\n[--all] Real LLM tests (slow, uses API):")
-        rc |= run("tests/test_pipeline_real.py")
+        print("\n[--all] E2E tests (real LLM, slow, uses API):")
+        rc |= run("tests/test_e2e.py")
 
     sys.exit(rc)
 
