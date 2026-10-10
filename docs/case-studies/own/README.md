@@ -18,8 +18,20 @@ against **known ground truth**.
 
 ## Metrics
 
-- **Recall: 217%** — Conveyor found more than planted:
+- **Recall: 100%** (24/24 planted bugs found).
+  Conveyor also found **+28 additional issues** beyond the planted set:
   - cross-cutting issues (SRP violations, missing observability)
+  - attack chains (SQLi + MD5 = plaintext leak)
+  - industrial patterns (thundering herd, single-flight, TOCTOU)
+  - incident-response plans (kill switch → audit → rotation)
+  - misleading comments (comments masking real bugs)
+
+- **Precision: 90%** — random sample of 10 findings checked manually:
+  - 9 — real bugs
+  - 1 — script artifact (not Conveyor)
+  - 0 — invented by Conveyor
+
+- **False positives: 0** — no invented findings.  - cross-cutting issues (SRP violations, missing observability)
   - attack chains (SQLi + MD5 = plaintext leak)
   - industrial patterns (thundering herd, single-flight, TOCTOU)
   - incident-response plans (kill switch → audit → rotation)

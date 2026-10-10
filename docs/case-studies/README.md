@@ -154,8 +154,7 @@ Measured recall + FP against known ground truth.
 | Java | 3 | 9 | 0 | $0.0052 |
 | **TOTAL** | **24** | **52** | **0** | **$0.0338** |
 
-**Recall: 217%. FP: 0%.**
-
+**Recall: 100% (24/24 planted bugs found). Precision: 90% (9/10 sampled). FP: 0%.**
 See [own/](own/) for full reports.
 
 ## Links
