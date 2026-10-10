@@ -626,23 +626,21 @@ git --no-pager log --oneline
 
 
 
-- [x] Тесты — 24 регрессионных (`python run_tests.py`)
+### Roadmap
 
+- [x] Тесты — 44 (41 unit + 3 E2E)
+- [x] GitHub Actions (CI)
+- [x] Фильтры в UI (по level, verdict, pii_detected)
+- [x] `pyproject.toml` + CLI (`conveyor analyze/info`)
+- [x] Truncate больших файлов (>12000 chars)
+- [x] Secrets detection (AWS, Stripe, GitHub, Slack, passwords, private keys)
+- [x] Cost tracker ($ per analysis)
+- [x] Idempotency (`cached: true`)
+- [x] Mode switcher (auto/cloud/local)
 - [ ] Параллелизм Stage 3/4 (`asyncio.gather`)
-
 - [ ] Streaming output (SSE)
-
 - [ ] `slice_input` интегрировать в orchestrator
-
-- [ ] `audit` в JSON-ответ API
-
-- [ ] GitHub Actions (CI)
-
 - [ ] GitHub App (webhook на PR)
-
-- [ ] Фильтры в UI (по level, verdict, pii_detected)
-
-
 
 ---
 
