@@ -661,6 +661,21 @@ Conveyor V5.7 was validated on 5 real open-source projects. See [docs/case-studi
 
 
 
+
+### Hard Case Studies
+
+5 production-grade files (Java, C, Go) at D3–D4. Real CVEs, races, TOCTOU, UB.
+
+| Project | Lang | Level | Cost | Key findings |
+|---------|------|-------|------|--------------|
+| [Log4Shell](docs/case-studies/hard/log4shell-jndi-lookup.md) | Java | D3 | $0.0057 | CVE-2021-44228 |
+| [OpenSSL EVP](docs/case-studies/hard/openssl-evp-enc.md) | C | D3 | $0.0092 | CVE-2023-5363, race |
+| [Redis networking](docs/case-studies/hard/redis-networking.md) | C | D4 | $0.0071 | TOCTOU auth, UB |
+| [K8s scheduler](docs/case-studies/hard/k8s-scheduler.md) | Go | D4 | $0.0080 | Irreversible side effect |
+| [PostgreSQL execMain](docs/case-studies/hard/postgres-execmain.md) | C | D4 | $0.0088 | Snapshot leak, priv-esc |
+
+See [docs/case-studies/hard/](docs/case-studies/hard/) for full reports.
+
 ## Лицензия
 
 

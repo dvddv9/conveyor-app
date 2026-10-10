@@ -181,9 +181,32 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         print()
 
     flags = stage0.get("flags", [])
+
+    # === GATE: EMERGENCY от LLM понижается до WARNING,
+    # если audit не нашёл РЕАЛЬНЫХ секретов/PII ===
+    if "EMERGENCY_INTERRUPT" in flags:
+        _pii = detect_pii(material)
+        _comp = detect_compliance(material, _pii)
+        _secret_keys = (
+            "aws_access_key", "aws_secret_key", "stripe_live_key",
+            "stripe_test_key", "github_token", "slack_token",
+            "google_api_key", "private_key", "hardcoded_password",
+            "hardcoded_secret",
+        )
+        _has_real_emergency = (
+            "SECRETS" in _comp
+            or any(k in _pii for k in _secret_keys)
+        )
+        if not _has_real_emergency:
+            flags = [f for f in flags if f != "EMERGENCY_INTERRUPT"]
+            flags.append("WARNING: llm_emergency_downgraded")
+            if verbose:
+                print("[!] EMERGENCY от LLM понижен до WARNING (audit: SAFE)")
+                print(f"    flags: {flags}")
+
     if "EMERGENCY_INTERRUPT" in flags:
         if verbose:
-            print("[!] EMERGENCY_INTERRUPT — стоп")
+            print("[!] EMERGENCY_INTERRUPT — стоп (подтверждено audit)")
 
         # Still run audit — compliance priority
         if verbose:
@@ -361,6 +384,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "stage4": stage4,
         "audit": audit,
         "completeness": completeness,
+            "critique_verdict": audit["critique_verdict"],
         "cost_usd": sum_stage_costs([stage0, stage1, stage2, stage3, stage4]),
         "final_markdown": final_markdown,
     }

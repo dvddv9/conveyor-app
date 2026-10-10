@@ -102,6 +102,24 @@ pip install -e ".[dev]"
 
 conveyor analyze path/to/file.py
 
+
+---
+
+## Hard Case Studies
+
+5 production-grade open-source files analyzed at D3–D4. See [hard/](hard/) for full reports.
+
+| # | Project | Lang | Level | Truncate | Cost | Key findings |
+|---|---------|------|-------|----------|------|--------------|
+| 1 | [Log4Shell](hard/log4shell-jndi-lookup.md) | Java | D3 | No | $0.0057 | CVE-2021-44228, JNDI injection |
+| 2 | [OpenSSL EVP](hard/openssl-evp-enc.md) | C | D3 | 75% | $0.0092 | CVE-2023-5363, race, partial-init UB |
+| 3 | [Redis networking](hard/redis-networking.md) | C | D4 | 95% | $0.0071 | TOCTOU auth, io-thread race, UB |
+| 4 | [K8s scheduler](hard/k8s-scheduler.md) | Go | D4 | 50% | $0.0080 | Irreversible `metrics.Register()`, shared state |
+| 5 | [PostgreSQL execMain](hard/postgres-execmain.md) | C | D4 | 88% | $0.0088 | Snapshot leak, privilege escalation via hook |
+
+**Total:** 10 analyses (5 synthetic + 5 hard), ~$0.075. Average: ~$0.0075.
+
+
 ## Links
 
 - [Main README](../../README.md)
