@@ -624,7 +624,21 @@ git --no-pager log --oneline
 
 ### Roadmap
 
+## Case Studies
 
+Conveyor V5.7 was validated on 5 real open-source projects. See [docs/case-studies](docs/case-studies/) for detailed findings:
+
+| Project | Level | Cost | Key findings |
+|---------|-------|------|--------------|
+| FastAPI | D4 | $0.0082 | OOM via `id(func)`, vendored divergence |
+| Django | D3 | $0.0068 | Async race, breaking change 2028 |
+| Flask | D4 | $0.0065 | `SECRET_KEY=None`, cookie flags, DoS |
+| Express | D3 | $0.0069 | Prototype pollution (CVE-2022-24999) |
+| Go stdlib | D3 | $0.0074 | CL/TE smuggling, HTTP/2 race |
+
+**Total:** 5 analyses, ~$0.036. Average: $0.0072 per analysis.
+
+---
 
 ### Roadmap
 
@@ -641,6 +655,7 @@ git --no-pager log --oneline
 - [ ] Streaming output (SSE)
 - [ ] `slice_input` интегрировать в orchestrator
 - [ ] GitHub App (webhook на PR)
+\
 
 ---
 
