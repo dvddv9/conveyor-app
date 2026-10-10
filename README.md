@@ -1,5 +1,6 @@
 # Conveyor V5.7
 
+[![tests](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml)
 
 
 🔬 6-стадийный LLM-конвейер для анализа инженерного материала (код, spec, logs).
