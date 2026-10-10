@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "conveyor"
+version = "5.7.0"
+description = "6-stage LLM pipeline for engineering code analysis"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Private"}
+authors = [{name = "David", email = "hndavid9@yahoo.com"}]
+keywords = ["llm", "code-analysis", "audit", "compliance", "pii", "deepseek", "ollama"]
+
+dependencies = [
+    "requests>=2.32.0",
+    "python-dotenv>=1.0.0",
+    "ollama>=0.4.0",
+    "openai>=1.50.0",
+    "streamlit>=1.40.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "radon>=6.0.0",
+    "tenacity>=9.2.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0", "black>=24.0.0"]
+
+[project.scripts]
+conveyor = "src.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312"]
