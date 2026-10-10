@@ -33,6 +33,17 @@ PII_PATTERNS = {
     "passport_ru": re.compile(r"\b\d{4}\s?\d{6}\b"),
     "snils": re.compile(r"\b\d{3}-\d{3}-\d{3}[ -]?\d{2}\b"),
     "iban": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b"),
+    # Secrets
+    "aws_access_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    "aws_secret_key": re.compile(r"(?i)aws_secret_access_key\s*[:=]\s*[\"']?[A-Za-z0-9/+=]{40}[\"']?"),
+    "stripe_live_key": re.compile(r"\bsk_live_[A-Za-z0-9]{20,}\b"),
+    "stripe_test_key": re.compile(r"\bsk_test_[A-Za-z0-9]{20,}\b"),
+    "github_token": re.compile(r"\bghp_[A-Za-z0-9]{36}\b"),
+    "slack_token": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"),
+    "google_api_key": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
+    "private_key": re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
+    "hardcoded_password": re.compile(r"(?i)\bpassword\s*[:=]\s*[\"'][^\"']{8,}[\"']"),
+    "hardcoded_secret": re.compile(r"(?i)\b(secret|api_key|access_key|token)\s*[:=]\s*[\"'][^\"']{12,}[\"']"),
 }
 
 COMPLIANCE_TRIGGERS = {
@@ -41,6 +52,8 @@ COMPLIANCE_TRIGGERS = {
     "GDPR": ["personal data", "gdpr", "eu citizen", "right to erasure"],
     "152-ФЗ": ["персональные данные", "152-фз", "оператор данных"],
     "EU AI Act": ["llm", "foundation model", "ai system", "eu ai act"],
+    "SECRETS": ["access_key", "secret_key", "api_key", "apikey", "password",
+                "private_key", "token", "credential", "aws_secret"],
 }
 
 
@@ -72,6 +85,15 @@ def detect_compliance(text: str, pii: dict | None = None) -> list:
                 flags.append("GDPR")
             if "152-ФЗ" not in flags:
                 flags.append("152-ФЗ")
+
+        # Secrets -> SECRETS flag (critical)
+        secret_keys = ("aws_access_key", "aws_secret_key", "stripe_live_key",
+                       "stripe_test_key", "github_token", "slack_token",
+                       "google_api_key", "private_key", "hardcoded_password",
+                       "hardcoded_secret")
+        if any(k in pii for k in secret_keys):
+            if "SECRETS" not in flags:
+                flags.append("SECRETS")
 
     return flags
 
