@@ -721,3 +721,12 @@ Private / not specified.
 
 David — 2026
 
+## License
+
+This project is licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0).
+
+- ✅ Free to use, modify, and distribute
+- ✅ SaaS use allowed — but if you offer it as a network service, you must release your source code under AGPL
+- ❌ Cannot be taken closed-source
+
+See [LICENSE](LICENSE) for full text.
