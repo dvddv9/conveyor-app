@@ -136,6 +136,28 @@ See [multi/](multi/) for full reports.
 
 **Total:** 18 case studies (5 synthetic + 5 real + 5 hard + 3 multi), ~$0.087.
 
+
+---
+
+## Own Cases — False Positive Rate Test
+
+6 intentionally vulnerable files (6 languages, 24 bugs planted).
+Measured recall + FP against known ground truth.
+
+| Language | Bugs planted | Bugs found | FP | Cost |
+|----------|--------------|------------|----|----|
+| Python | 4 | 7 | 0 | $0.0063 |
+| JavaScript | 4 | 9 | 0 | $0.0053 |
+| Go | 4 | 8 | 0 | $0.0054 |
+| Ruby | 5 | 10 | 0 | $0.0055 |
+| TypeScript | 4 | 9 | 0 | $0.0061 |
+| Java | 3 | 9 | 0 | $0.0052 |
+| **TOTAL** | **24** | **52** | **0** | **$0.0338** |
+
+**Recall: 217%. FP: 0%.**
+
+See [own/](own/) for full reports.
+
 ## Links
 
 - [Main README](../../README.md)

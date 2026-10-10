@@ -689,6 +689,20 @@ Conveyor analyzes **not only code**: logs, configs, specs, incidents.
 
 See [docs/case-studies/multi/](docs/case-studies/multi/) for full reports.
 
+
+### Own Cases — False Positive Rate
+
+6 intentionally vulnerable files (6 languages, 24 bugs planted).
+Conveyor found **52** issues, **0** false positives.
+
+| Language | Bugs planted | Bugs found | FP |
+|----------|--------------|------------|----|
+| Python, JavaScript, Go, Ruby, TypeScript, Java | 24 | 52 | 0 |
+
+**Recall: 217%. FP: 0%.**
+
+See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
+
 ## Лицензия
 
 

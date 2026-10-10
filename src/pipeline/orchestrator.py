@@ -54,8 +54,9 @@ COMPLIANCE_TRIGGERS = {
     "GDPR": ["personal data", "gdpr", "eu citizen", "right to erasure"],
     "152-ФЗ": ["персональные данные", "152-фз", "оператор данных"],
     "EU AI Act": ["llm", "foundation model", "ai system", "eu ai act"],
-    "SECRETS": ["access_key", "secret_key", "api_key", "apikey", "password",
-                "private_key", "token", "credential", "aws_secret"],
+    # SECRETS выставляется только через detect_pii (см. ниже),
+    # keyword-triggers удалены: они ловили имена переменных, а не секреты.
+    # "SECRETS": [...],
 }
 
 
@@ -193,10 +194,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             "google_api_key", "private_key", "hardcoded_password",
             "hardcoded_secret",
         )
-        _has_real_emergency = (
-            "SECRETS" in _comp
-            or any(k in _pii for k in _secret_keys)
-        )
+        _has_real_emergency = any(k in _pii for k in _secret_keys)
         if not _has_real_emergency:
             flags = [f for f in flags if f != "EMERGENCY_INTERRUPT"]
             flags.append("WARNING: llm_emergency_downgraded")
