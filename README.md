@@ -676,6 +676,19 @@ Conveyor V5.7 was validated on 5 real open-source projects. See [docs/case-studi
 
 See [docs/case-studies/hard/](docs/case-studies/hard/) for full reports.
 
+
+### Multi-Material Analysis
+
+Conveyor analyzes **not only code**: logs, configs, specs, incidents.
+
+| Material | Type | Level | Cost | Key findings |
+|----------|------|-------|------|--------------|
+| [incident.log](docs/case-studies/multi/incident-log-pool-exhaustion.md) | logs | D1 | $0.0055 | DB pool cascade, SLO 18x |
+| [k8s_insecure.yaml](docs/case-studies/multi/k8s-insecure-config.md) | config | D2 | $0 | EMERGENCY: real `sk_live_...` |
+| [payment_spec.md](docs/case-studies/multi/payment-spec-review.md) | spec | D2 | $0.0068 | Resilience 2/10, PCI-DSS violation |
+
+See [docs/case-studies/multi/](docs/case-studies/multi/) for full reports.
+
 ## Лицензия
 
 

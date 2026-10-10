@@ -120,6 +120,22 @@ conveyor analyze path/to/file.py
 **Total:** 10 analyses (5 synthetic + 5 hard), ~$0.075. Average: ~$0.0075.
 
 
+
+---
+
+## Multi-Material Case Studies
+
+3 non-code materials (logs, config, spec) — proving Conveyor works beyond code.
+See [multi/](multi/) for full reports.
+
+| # | Material | Type | Level | Cost | Verdict |
+|---|----------|------|-------|------|---------|
+| 1 | [incident.log](multi/incident-log-pool-exhaustion.md) | logs | D1 | $0.0055 | REQUIRES_REVIEW |
+| 2 | [k8s_insecure.yaml](multi/k8s-insecure-config.md) | config | D2 | $0 | REQUIRES_REVIEW |
+| 3 | [payment_spec.md](multi/payment-spec-review.md) | spec | D2 | $0.0068 | REQUIRES_REVIEW |
+
+**Total:** 18 case studies (5 synthetic + 5 real + 5 hard + 3 multi), ~$0.087.
+
 ## Links
 
 - [Main README](../../README.md)
