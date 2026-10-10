@@ -22,6 +22,7 @@ from src.pipeline.stages import (
 )
 from src.storage.history import add_entry
 from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
+from src.pipeline.cost import sum_stage_costs
 
 
 # === Audit (встроенный compliance-scan) ===
@@ -323,6 +324,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "stage4": stage4,
         "audit": audit,
         "completeness": completeness,
+        "cost_usd": sum_stage_costs([stage0, stage1, stage2, stage3, stage4]),
         "final_markdown": final_markdown,
     }
 
@@ -400,7 +402,9 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     result = {"session_id": session_id, "timestamp": datetime.now(UTC).isoformat(),
               "filename": filename, "material_size": len(material), "stage0": stage0,
               "stage1": stage1, "stage2": stage2, "stage3": stage3, "stage4": stage4,
-              "audit": audit, "completeness": completeness, "final_markdown": final_markdown}
+              "audit": audit, "completeness": completeness,
+              "cost_usd": sum_stage_costs([stage0, stage1, stage2, stage3, stage4]),
+              "final_markdown": final_markdown}
     add_entry({"session_id": session_id, "filename": filename, "level": level,
                "route": route, "material_size": len(material),
                "verdict": audit["critique_verdict"], "pii_detected": audit["pii_detected"]})

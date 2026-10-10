@@ -145,6 +145,8 @@ def run_stage(stage_name: str, prompt_name: str, material: str,
         result = llm_chat(system, retry_user, temperature=temperature, max_tokens=max_tokens)
         parsed = parse_json_response(result["text"])
 
+    from src.pipeline.cost import estimate_cost
+
     parsed["_meta"] = {
         "stage": stage_name,
         "tokens_in": result["tokens_in"],
@@ -152,6 +154,9 @@ def run_stage(stage_name: str, prompt_name: str, material: str,
         "model": result["model"],
         "mode": result["mode"],
         "json_ok": "_error" not in parsed,
+        "cost_usd": estimate_cost(
+            result["model"], result["tokens_in"], result["tokens_out"]
+        ),
     }
     return parsed
 
@@ -210,3 +215,4 @@ def stage5_transmitter(material: str, context: dict) -> str:
     system, user = build_prompt("05_transmitter", material, context)
     result = llm_chat(system, user, temperature=0.0, max_tokens=MAX_TOKENS)
     return result["text"]
+

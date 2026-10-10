@@ -48,6 +48,7 @@ class AnalyzeResponse(BaseModel):
     timestamp: str
     tokens_in: int = 0
     tokens_out: int = 0
+    cost_usd: float = 0.0
 
 
 class HistoryItem(BaseModel):
@@ -148,6 +149,10 @@ async def analyze(req: AnalyzeRequest):
         s.get("_meta", {}).get("tokens_out", 0)
         for s in [stage0, stage1, stage2]
     )
+    from src.pipeline.cost import sum_stage_costs
+    stage3 = result.get("stage3") or {}
+    stage4 = result.get("stage4") or {}
+    cost_usd = sum_stage_costs([stage0, stage1, stage2, stage3, stage4])
 
     return AnalyzeResponse(
         session_id=result["session_id"],
@@ -158,6 +163,7 @@ async def analyze(req: AnalyzeRequest):
         timestamp=result["timestamp"],
         tokens_in=tokens_in,
         tokens_out=tokens_out,
+        cost_usd=cost_usd,
     )
 
 
