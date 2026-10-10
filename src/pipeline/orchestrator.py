@@ -24,6 +24,8 @@ from src.storage.history import add_entry
 from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
 from src.pipeline.cost import sum_stage_costs
 
+MAX_CHARS = 12000   # ~3000 токенов
+
 
 # === Audit (встроенный compliance-scan) ===
 
@@ -105,7 +107,8 @@ def generate_audit_id() -> str:
     return f"audit-{today}-{rand}"
 
 
-def run_audit(material: str, session_id: str, model: str = "deepseek-chat") -> dict:
+def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
+              truncated: bool = False, original_size: int = 0) -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
@@ -125,6 +128,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat") -> d
         "pii_detected": bool(pii),
         "pii_details": pii,
         "compliance_flags": compliance,
+        "truncated": truncated,
+        "original_size": original_size,
     }
 
     audit_file = DATA_DIR / f"audit_{session_id}.json"
@@ -144,6 +149,15 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     session_suffix: опциональный суффикс для session_id (batch mode).
     """
+    # Truncate if too large
+    truncated = False
+    original_size = len(material)
+    if original_size > MAX_CHARS:
+        material = material[:MAX_CHARS]
+        truncated = True
+        if verbose:
+            print(f"[!] Материал {original_size} символов > {MAX_CHARS} — обрезан")
+
     session_id = f"sess-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
 
     if verbose:
@@ -174,7 +188,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material, session_id)
+        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size)
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -287,7 +301,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # === AUDIT ===
     if verbose:
         print("[Audit] Сбор audit-записи...")
-    audit = run_audit(material, session_id)
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size)
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -402,7 +416,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     if stage3:
         context_5["stage3"] = stage3
     final_markdown = await async_stage5_transmitter(material, context_5)
-    audit = run_audit(material, session_id)
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
