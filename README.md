@@ -3,11 +3,11 @@
 [![tests](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml)
 
 
-🔬 6-стадийный LLM-конвейер для анализа инженерного материала (код, spec, logs).
+🔬 6-stage LLM pipeline for analyzing engineering materials (code, spec, logs).
 
 
 
-Принимает файл на вход → возвращает структурированный Markdown-отчёт с рисками, STRIDE-моделью, вариантами рефакторинга и **audit trail** с PII-детекцией и compliance-флагами.
+Takes a file as input → returns a structured Markdown report with risks, STRIDE threat model, refactoring options and **audit trail** with PII detection and compliance flags.
 
 
 
@@ -15,19 +15,19 @@
 
 
 
-## Что делает
+## What it does
 
 
 
-**Вход:** `.py`, `.go`, `.js`, `.ts`, `.java`, `.rs`, `.txt`, `.md`, `.json`.
+**Input:** `.py`, `.go`, `.js`, `.ts`, `.java`, `.rs`, `.txt`, `.md`, `.json`.
 
 
 
-**Выход:**
+**Output:**
 
-- 📄 Markdown-отчёт (12+ секций: ECHO, ROUTE, CONCLUSION, RISK, ACTION, FUNC:FULL, MANDATORY BASE, REFLEXION, …)
+- 📄 Markdown report (12+ sections: ECHO, ROUTE, CONCLUSION, RISK, ACTION, FUNC:FULL, MANDATORY BASE, REFLEXION, …)
 
-- 📊 Метаданные: `session_id`, `level` (D0–D4), `route`, `tokens_in/out`
+- 📊 Metadata: `session_id`, `level` (D0–D4), `route`, `tokens_in/out`
 
 - 🔐 Audit trail: `material_hash` (sha256), `pii_detected`, `compliance_flags`, `critique_verdict`
 
@@ -39,7 +39,7 @@
 
 
 
-## Архитектура
+## Architecture
 
 
 
@@ -61,19 +61,19 @@
 
 &#x20;                       │   Pipeline      │
 
-&#x20;                       │   6 стадий      │
+&#x20;                       │   6 stages      │
 
 &#x20;                       │  ┌───────────┐  │
 
 &#x20;                       │  │ Stage 0   │  │ Orchestrator — route, level
 
-&#x20;                       │  │ Stage 1   │  │ Scanner — 4 слоя
+&#x20;                       │  │ Stage 1   │  │ Scanner — 4 layers
 
-&#x20;                       │  │ Stage 2   │  │ Analyst — риски, STRIDE
+&#x20;                       │  │ Stage 2   │  │ Analyst — risks, STRIDE
 
-&#x20;                       │  │ Stage 3   │  │ Researcher — параллели
+&#x20;                       │  │ Stage 3   │  │ Researcher — parallels
 
-&#x20;                       │  │ Stage 4   │  │ Synthesizer — варианты
+&#x20;                       │  │ Stage 4   │  │ Synthesizer — options
 
 &#x20;                       │  │ Stage 5   │  │ Transmitter — Markdown
 
@@ -91,7 +91,7 @@
 
 &#x20;        │ DeepSeek  │   │  Ollama   │   │   Audit   │
 
-&#x20;        │ (облако)  │   │ (локально)│   │ sha256 +  │
+&#x20;        │ (cloud)   │   │ (local)   │   │ sha256 +  │
 
 &#x20;        └───────────┘   └───────────┘   │ PII +     │
 
@@ -107,25 +107,25 @@
 
 
 
-## Стек
+## Stack
 
 
 
-| Компонент | Технология |
+| Component | Technology |
 
 |-----------|-----------|
 
-| Язык | Python 3.11+ |
+| Language | Python 3.11+ |
 
 | API | FastAPI + Uvicorn |
 
 | UI | Streamlit |
 
-| LLM | DeepSeek (облако) / Ollama (локальный fallback) |
+| LLM | DeepSeek (cloud) / Ollama (local fallback) |
 
-| Хранилище | JSON (`data/history.json`, `data/audit_*.json`, `data/result_*.json`) |
+| Storage | JSON (`data/history.json`, `data/audit_*.json`, `data/result_*.json`) |
 
-| Audit | Собственная PII-детекция + compliance-флаги |
+| Audit | Built-in PII detection + compliance flags |
 
 
 
@@ -133,11 +133,11 @@
 
 
 
-## Быстрый старт
+## Quick start
 
 
 
-### 1. Клонировать / распаковать
+### 1. Clone / unpack
 
 
 
@@ -149,7 +149,7 @@ cd C:\\AI\\conveyor_app
 
 
 
-### 2. Виртуальное окружение
+### 2. Virtual environment
 
 
 
@@ -163,7 +163,7 @@ python -m venv .venv
 
 
 
-### 3. Установить зависимости
+### 3. Install dependencies
 
 
 
@@ -175,11 +175,11 @@ pip install -r requirements.txt
 
 
 
-### 4. Настроить `.env`
+### 4. Configure `.env`
 
 
 
-Создай `.env` в корне:
+Create `.env` in the root:
 
 
 
@@ -193,11 +193,11 @@ OLLAMA_URL=http://localhost:11434
 
 
 
-⚠️ `.env` в `.gitignore` — API-ключ **не уйдёт** в git.
+⚠️ `.env` is in `.gitignore` — API key **will not leak** into git.
 
 
 
-### 5. Запустить API (окно 1)
+### 5. Run API (window 1)
 
 
 
@@ -213,7 +213,7 @@ python -m src.main
 
 
 
-### 6. Запустить UI (окно 2)
+### 6. Run UI (window 2)
 
 
 
@@ -235,29 +235,29 @@ streamlit run src/ui/streamlit_app.py
 
 
 
-## Использование
+## Usage
 
 
 
-### 🖥️ Через UI
+### 🖥️ Via UI
 
 
 
-1\. Открой http://localhost:8501
+1\. Open http://localhost:8501
 
-2\. Tab **«🔬 Анализ»**
+2\. Tab **"🔬 Analysis"**
 
-3\. Загрузи файл (drag \& drop) или вставь текст
+3\. Upload file (drag \& drop) or paste text
 
-4\. Нажми **«🚀 Запустить анализ»**
+4\. Click **"🚀 Run analysis"**
 
-5\. Жди 40–90 секунд
+5\. Wait 40–90 seconds
 
-6\. Результат: Markdown + метаданные + `[AUDIT_TRAIL]` + download
+6\. Result: Markdown + metadata + `[AUDIT_TRAIL]` + download
 
 
 
-### 🔌 Через API
+### 🔌 Via API
 
 
 
@@ -273,25 +273,25 @@ curl.exe -X POST http://localhost:5001/analyze -H "Content-Type: application/jso
 
 
 
-| Метод | URL | Что |
+| Method | URL | What |
 
-|-------|-----|-----|
+|--------|-----|------|
 
 | GET | `/` | root |
 
 | GET | `/health` | health check |
 
-| POST | `/analyze` | запуск pipeline |
+| POST | `/analyze` | run pipeline |
 
-| GET | `/history?limit=20` | история |
+| GET | `/history?limit=20` | history |
 
-| POST | `/history/clear` | очистка истории |
+| POST | `/history/clear` | clear history |
 
 | GET | `/docs` | Swagger UI |
 
 
 
-### ⌨️ Через CLI
+### ⌨️ Via CLI
 
 
 
@@ -305,13 +305,13 @@ python -m src.pipeline.orchestrator --input "data/test_code.py" --quiet
 
 
 
-**Дополнительные утилиты:**
+**Additional tools:**
 
 
 
 ```powershell
 
-# Статический анализ (AST, сложность, secrets)
+# Static analysis (AST, complexity, secrets)
 
 python -m src.tools.analyze --mode static --input file.py
 
@@ -321,13 +321,13 @@ python -m src.tools.analyze --mode metrics --input file.py
 
 
 
-# Проверка полноты отчёта
+# Report completeness check
 
 python -m src.tools.fallback_check --level D3 --present "[ECHO],[ROUTE],..."
 
 
 
-# Нарезка больших файлов
+# Slice large files
 
 python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
@@ -339,7 +339,7 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 
 
-## Структура проекта
+## Project structure
 
 
 
@@ -347,7 +347,7 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 conveyor_app/
 
-├── conveyor/                 # промпты V5.7 (660+ строк)
+├── conveyor/                 # V5.7 prompts (660+ lines)
 
 │   ├── 00_orchestrator.md
 
@@ -365,7 +365,7 @@ conveyor_app/
 
 │   ├── main.py              # FastAPI app
 
-│   ├── config.py            # пути, env
+│   ├── config.py            # paths, env
 
 │   ├── llm/
 
@@ -377,11 +377,11 @@ conveyor_app/
 
 │   ├── pipeline/
 
-│   │   ├── orchestrator.py  # главный pipeline + audit + completeness
+│   │   ├── orchestrator.py  # main pipeline + audit + completeness
 
 │   │   ├── stages.py        # stage0..stage5
 
-│   │   └── prompts.py       # загрузчик промптов
+│   │   └── prompts.py       # prompts loader
 
 │   ├── storage/
 
@@ -391,17 +391,17 @@ conveyor_app/
 
 │   ├── tools/
 
-│   │   ├── analyze.py       # статический анализ
+│   │   ├── analyze.py       # static analysis
 
 │   │   ├── fallback_check.py # loss_pct, verdict
 
-│   │   └── slice_input.py   # нарезка
+│   │   └── slice_input.py   # slicing
 
 │   └── ui/
 
 │       └── streamlit_app.py # Streamlit UI
 
-├── data/                     # результаты (в .gitignore)
+├── data/                     # results (in .gitignore)
 
 │   ├── history.json
 
@@ -427,11 +427,11 @@ conveyor_app/
 
 
 
-### Что такое audit trail
+### What is audit trail
 
 
 
-На каждый анализ создаётся `data/audit_<session>.json`:
+For each analysis, `data/audit_<session>.json` is created:
 
 
 
@@ -457,7 +457,7 @@ conveyor_app/
 
 &#x20; "pii_details": {"email": 1, "phone_ru": 1},
 
-&#x20; "compliance_flags": ["GDPR", "152-ФЗ"]
+&#x20; "compliance_flags": ["GDPR", "152-FZ"]
 
 }
 
@@ -465,11 +465,11 @@ conveyor_app/
 
 
 
-### PII-детекция
+### PII detection
 
 
 
-Регулярками ловит:
+Regex-based detection for:
 
 - `email`
 
@@ -479,17 +479,17 @@ conveyor_app/
 
 - `snils` — `XXX-XXX-XXX XX`
 
-- `iban` — международный формат
+- `iban` — international format
 
 
 
-### Compliance-флаги
+### Compliance flags
 
 
 
-- По ключевым словам: `HIPAA`, `PCI-DSS`, `GDPR`, `152-ФЗ`, `EU AI Act`
+- By keywords: `HIPAA`, `PCI-DSS`, `GDPR`, `152-FZ`, `EU AI Act`
 
-- **Автоматически** добавляются: `GDPR` + `152-ФЗ` при наличии любого PII
+- **Auto-added**: `GDPR` + `152-FZ` when any PII is present
 
 
 
@@ -497,9 +497,9 @@ conveyor_app/
 
 
 
-- `SAFE` — PII и compliance не найдены
+- `SAFE` — no PII or compliance triggers found
 
-- `REQUIRES_REVIEW` — найдено PII или compliance-триггеры
+- `REQUIRES_REVIEW` — PII or compliance triggers found
 
 
 
@@ -507,7 +507,7 @@ conveyor_app/
 
 
 
-Если Stage 0 видит критический риск (RCE, hardcoded secrets, **PII** → «нарушение закона») — `EMERGENCY_INTERRUPT`. Pipeline останавливается, но **audit всё равно собирается**.
+If Stage 0 detects a critical risk (RCE, hardcoded secrets, **PII** → "legal violation") — `EMERGENCY_INTERRUPT`. The pipeline stops, but **audit still is collected**.
 
 
 
@@ -515,7 +515,7 @@ conveyor_app/
 
 
 
-## Пример отчёта
+## Example report
 
 
 
@@ -525,25 +525,25 @@ conveyor_app/
 
 
 
-[CONCLUSION] Функция `process_user(email)` выводит email в stdout через `print`
+[CONCLUSION] Function `process_user(email)` prints email to stdout via `print`
 
-без маскирования; в комментариях исходника — PII (email, телефон).
+without masking; source comments contain PII (email, phone).
 
 
 
-[RISK] критично PII в комментариях → коммит в VCS → утечка в git-историю
+[RISK] critical PII in comments → commit to VCS → leak into git history
 
-навсегда. критично `print(f"User: {email}")` → email в stdout → агрегация
+forever. critical `print(f"User: {email}")` → email to stdout → aggregation
 
-в логи без redaction.
+into logs without redaction.
 
 
 
 [FUNC:FULL]
 
-- ECON: effort \~0.5h, cost $0, ROI высокий...
+- ECON: effort \~0.5h, cost $0, ROI high...
 
-- FAIL: критично PII → VCS (необратимо)...
+- FAIL: critical PII → VCS (irreversible)...
 
 ...
 
@@ -557,7 +557,7 @@ material_hash: sha256:4f87e43baa8f2253
 
 pii_detected: true
 
-compliance_flags: ['GDPR', '152-ФЗ']
+compliance_flags: ['GDPR', '152-FZ']
 
 critique_verdict: REQUIRES_REVIEW
 
@@ -583,7 +583,7 @@ verdict: ACCEPTABLE
 
 
 
-## Разработка
+## Development
 
 
 
@@ -605,21 +605,21 @@ git --no-pager log --oneline
 
 
 
-### Известные ограничения
+### Known limitations
 
 
 
-- **pandas не используется** — Windows Code Integrity Policy может блокировать `pandas._libs.*.pyd`. Вместо pandas используется нативный `st.dataframe(list[dict])`.
+- **pandas is not used** — Windows Code Integrity Policy may block `pandas._libs.*.pyd`. Native `st.dataframe(list[dict])` is used instead.
 
-- **Тесты** — 24 регрессионных теста (`tests/`). Запуск: `python run_tests.py`.
-  Покрытие: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
+- **Tests** — 44 tests (`tests/`). Run: `python run_tests.py`.
+  Coverage: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
-- **Параллелизм Stage 3/4** — пока последовательный.
-- **Локальный режим (Ollama)** — на CPU (без дискретной GPU) полный pipeline
-  может занимать 20–40 минут. Встроенные GPU (Intel Iris Xe, AMD Vega)
-  не оптимизированы для LLM. Рекомендуется режим `auto` (DeepSeek + fallback)
-  для повседневной работы. Режим `local` — для приватных данных, когда
-  можно подождать.
+- **Stage 3/4 parallelism** — currently sequential.
+- **Local mode (Ollama)** — on CPU (no discrete GPU) the full pipeline
+  may take 20–40 minutes. Integrated GPUs (Intel Iris Xe, AMD Vega)
+  are not optimized for LLMs. Use `auto` mode (DeepSeek + fallback)
+  for daily work. `local` mode — for private data when
+  you can wait.
 
 
 ### Roadmap
@@ -642,19 +642,19 @@ Conveyor V5.7 was validated on 5 real open-source projects. See [docs/case-studi
 
 ### Roadmap
 
-- [x] Тесты — 44 (41 unit + 3 E2E)
+- [x] Tests — 44 (41 unit + 3 E2E)
 - [x] GitHub Actions (CI)
-- [x] Фильтры в UI (по level, verdict, pii_detected)
+- [x] UI filters (by level, verdict, pii_detected)
 - [x] `pyproject.toml` + CLI (`conveyor analyze/info`)
-- [x] Truncate больших файлов (>12000 chars)
+- [x] Truncate large files (>12000 chars)
 - [x] Secrets detection (AWS, Stripe, GitHub, Slack, passwords, private keys)
 - [x] Cost tracker ($ per analysis)
 - [x] Idempotency (`cached: true`)
 - [x] Mode switcher (auto/cloud/local)
-- [ ] Параллелизм Stage 3/4 (`asyncio.gather`)
+- [ ] Stage 3/4 parallelism (`asyncio.gather`)
 - [ ] Streaming output (SSE)
-- [ ] `slice_input` интегрировать в orchestrator
-- [ ] GitHub App (webhook на PR)
+- [ ] Integrate `slice_input` into orchestrator
+- [ ] GitHub App (webhook on PR)
 \
 
 ---
@@ -703,7 +703,7 @@ Conveyor found **52** issues, **0** false positives.
 
 See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
 
-## Лицензия
+## License
 
 
 
@@ -715,7 +715,7 @@ AGPL-3.0 (see LICENSE).
 
 
 
-## Автор
+## Author
 
 
 
