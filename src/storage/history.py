@@ -47,3 +47,18 @@ def add_entry(entry: dict) -> dict:
 def clear_history() -> None:
     with _HISTORY_LOCK:
         save_history([])
+
+
+def find_done_by_hash(material_hash: str) -> dict | None:
+    """Возвращает последнюю завершённую запись с таким material_hash, или None.
+
+    Завершённая = есть verdict (pipeline дошёл до audit).
+    """
+    if not material_hash:
+        return None
+    history = load_history()
+    # Идём с конца — последняя запись приоритетнее
+    for entry in reversed(history):
+        if entry.get("material_hash") == material_hash and entry.get("verdict"):
+            return entry
+    return None

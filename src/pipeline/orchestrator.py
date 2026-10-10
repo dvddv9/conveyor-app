@@ -186,6 +186,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             "material_size": len(material),
             "verdict": audit["critique_verdict"],
             "pii_detected": audit["pii_detected"],
+            "material_hash": audit["material_hash"],
         })
 
         result_file = DATA_DIR / f"result_{session_id}.json"
@@ -336,6 +337,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "material_size": len(material),
         "verdict": audit["critique_verdict"],
         "pii_detected": audit["pii_detected"],
+        "material_hash": audit["material_hash"],
     })
 
     result_file = DATA_DIR / f"result_{session_id}.json"
@@ -407,7 +409,8 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
               "final_markdown": final_markdown}
     add_entry({"session_id": session_id, "filename": filename, "level": level,
                "route": route, "material_size": len(material),
-               "verdict": audit["critique_verdict"], "pii_detected": audit["pii_detected"]})
+               "verdict": audit["critique_verdict"], "pii_detected": audit["pii_detected"],
+               "material_hash": audit["material_hash"]})
     result_file = DATA_DIR / f"result_{session_id}.json"
     result_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     return result

@@ -3,7 +3,9 @@
 Conveyor — FastAPI сервер.
 """
 from contextlib import asynccontextmanager
+import json
 from datetime import datetime
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -49,6 +51,7 @@ class AnalyzeResponse(BaseModel):
     tokens_in: int = 0
     tokens_out: int = 0
     cost_usd: float = 0.0
+    cached: bool = False
 
 
 class HistoryItem(BaseModel):
@@ -126,6 +129,36 @@ async def analyze(req: AnalyzeRequest):
     """
     if not req.material.strip():
         raise HTTPException(status_code=400, detail="material не может быть пустым")
+
+    # === Idempotency: check if same material already analyzed ===
+    from src.pipeline.orchestrator import compute_hash
+    from src.storage.history import find_done_by_hash, load_history
+
+    material_hash = compute_hash(req.material)
+    existing = find_done_by_hash(material_hash)
+
+    if existing:
+        cached_session = existing.get("session_id", "")
+        result_file = Path(f"C:/AI/conveyor_app/data/result_{cached_session}.json")
+        if result_file.exists():
+            cached = json.loads(result_file.read_text(encoding="utf-8"))
+            stage0c = cached.get("stage0", {})
+            stage1c = cached.get("stage1", {})
+            stage2c = cached.get("stage2", {})
+            tokens_in_c = sum(s.get("_meta", {}).get("tokens_in", 0) for s in [stage0c, stage1c, stage2c])
+            tokens_out_c = sum(s.get("_meta", {}).get("tokens_out", 0) for s in [stage0c, stage1c, stage2c])
+            return AnalyzeResponse(
+                session_id=cached.get("session_id", cached_session),
+                filename=cached.get("filename", req.filename),
+                level=stage0c.get("level"),
+                route=stage0c.get("route"),
+                final_markdown=cached.get("final_markdown", ""),
+                timestamp=cached.get("timestamp", ""),
+                tokens_in=tokens_in_c,
+                tokens_out=tokens_out_c,
+                cost_usd=cached.get("cost_usd", 0.0),
+                cached=True,
+            )
 
     try:
         from src.pipeline.orchestrator import run_pipeline_async
