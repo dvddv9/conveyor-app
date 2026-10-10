@@ -98,16 +98,12 @@ These are the kinds of findings a \*\*senior engineer with security focus\*\* wo
 
 ```bash
 
-pip install -e ".\[dev]"
+pip install -e ".[dev]"
 
 conveyor analyze path/to/file.py
 
-Links
-Main README
+## Links
 
-GitHub Actions
-
-Source code
-
-
-
+- [Main README](../../README.md)
+- [GitHub Actions](https://github.com/dvddv9/conveyor-app/actions)
+- [Source code](../../src)
