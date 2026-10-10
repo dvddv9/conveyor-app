@@ -28,7 +28,7 @@ from src.pipeline.cost import sum_stage_costs
 # === Audit (встроенный compliance-scan) ===
 
 PII_PATTERNS = {
-    "email": re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
+    "email": re.compile(r"(?<![\w%])[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
     "phone_ru": re.compile(r"\+7\d{10}|\b8\d{10}\b"),
     "passport_ru": re.compile(r"\b\d{4}\s?\d{6}\b"),
     "snils": re.compile(r"\b\d{3}-\d{3}-\d{3}[ -]?\d{2}\b"),
