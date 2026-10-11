@@ -256,6 +256,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
                 "stage0": stage0,
                 "audit": audit,
                 "emergency": True,
+                "critique_verdict": audit.get("critique_verdict", "SAFE"),
+                "cost_usd": 0.0,
                 "final_markdown": emergency_md,
             }, ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -315,6 +317,16 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     if stage3:
         context_5["stage3"] = stage3
     final_markdown = stage5_transmitter(material, context_5)
+
+    # === FIX #6: Replace or add real session_id in header ===
+    import re as _re
+    if _re.search(r'Session:\\s*sess-[\\w-]+', final_markdown):
+        final_markdown = _re.sub(r'Session:\\s*sess-[\\w-]+', f'Session: {session_id}', final_markdown, count=1)
+    else:
+        _lines = final_markdown.split('\n', 2)
+        if len(_lines) >= 2:
+            final_markdown = _lines[0] + f'\n\n**Session:** {session_id}' + '\n' + '\n'.join(_lines[1:])
+
     if verbose:
         print(f"  → финальный Markdown: {len(final_markdown)} символов")
         print()

@@ -36,6 +36,7 @@ app = FastAPI(
 # === Pydantic-схемы ===
 
 class AnalyzeRequest(BaseModel):
+    force: bool = False
     material: str = Field(..., description="Код, spec, logs — что анализировать")
     filename: str = Field(default="input.txt", description="Имя файла (для контекста)")
     verbose: bool = Field(default=False, description="Подробные логи в ответе")
@@ -135,7 +136,7 @@ async def analyze(req: AnalyzeRequest):
     from src.storage.history import find_done_by_hash, load_history
 
     material_hash = compute_hash(req.material)
-    existing = find_done_by_hash(material_hash)
+    existing = None if getattr(req, 'force', False) else find_done_by_hash(material_hash)
 
     if existing:
         cached_session = existing.get("session_id", "")

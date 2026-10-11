@@ -147,6 +147,10 @@ def run_stage(stage_name: str, prompt_name: str, material: str,
 
     from src.pipeline.cost import estimate_cost
 
+    # === FIX: ensure parsed is dict ===
+    if not isinstance(parsed, dict):
+        parsed = {"_raw": parsed, "_error": "expected dict, got list"}
+
     parsed["_meta"] = {
         "stage": stage_name,
         "tokens_in": result["tokens_in"],

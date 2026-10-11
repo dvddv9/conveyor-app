@@ -4,8 +4,9 @@ Conveyor V5.7 — Streamlit UI.
 Запуск: streamlit run src/ui/streamlit_app.py
 """
 import json
+from pathlib import Path
 from datetime import datetime
-
+...
 import requests
 import streamlit as st
 
@@ -303,7 +304,32 @@ with tab_history:
                 filtered.append(r)
 
             st.dataframe(filtered, width="stretch")
-            st.caption(f"Показано: {len(filtered)} из {len(display_rows)}")
+            st.caption(f"Показано: {len(filtered)} из {len(display_rows)}")          
+            # === Download Markdown from history ===
+            st.divider()
+            st.markdown("**Download Markdown**")
+            dl_session = st.selectbox(
+                "Select session",
+                [r.get("session_id", "?") for r in filtered],
+                key="history_dl_session",
+            )
+            if dl_session:
+                _rp = Path(f"C:/AI/conveyor_app/data/result_{dl_session}.json")
+                if _rp.exists():
+                    _d = json.loads(_rp.read_text(encoding="utf-8"))
+                    _md = _d.get("final_markdown", "")
+                    if _md:
+                        st.download_button(
+                            "💾 Download Markdown",
+                            data=_md,
+                            file_name=f"report_{dl_session}.md",
+                            mime="text/markdown",
+                            key=f"dl_hist_{dl_session}",
+                        )
+                    else:
+                        st.warning("No final_markdown in result file")
+                else:
+                    st.warning(f"Result file not found: {_rp}")
 
     except Exception as e:
         st.error(f"Ошибка загрузки истории: {e}")
