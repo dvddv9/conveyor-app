@@ -54,6 +54,7 @@ Proving Conveyor works beyond code.
 | 1 | incident.log | logs | D1 | $0.0055 | REQUIRES_REVIEW | [→](multi/incident-log-pool-exhaustion.md) |
 | 2 | k8s_insecure.yaml | config | D2 | $0 | REQUIRES_REVIEW | [→](multi/k8s-insecure-config.md) |
 | 3 | payment_spec.md | spec | D2 | $0.0068 | REQUIRES_REVIEW | [→](multi/payment-spec-review.md) |
+| 4 | [50k RPS Transaction System](multi/transaction-50k-rps.md) | spec (architecture) | D3 | $0.0116 | REQUIRES_REVIEW |
 
 ---
 
@@ -69,7 +70,7 @@ Proving Conveyor works beyond code.
 | Ruby | 5 | 10 | 0 |
 | TypeScript | 4 | 9 | 0 |
 | Java | 3 | 9 | 0 |
-| **TOTAL** | **24** | **52** | **0** |
+| **Total:** 35 case studies (5 synthetic + 5 real + 5 hard + 4 multi + 16 other), ~$0.10. |
 
 **Recall: 100% (24/24 planted). Precision: 90% (9/10 sampled). FP: 0%.**
 
