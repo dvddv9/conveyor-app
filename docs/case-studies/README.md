@@ -26,10 +26,11 @@ Real-world validation: Conveyor V5.7 analyzed **30+ files across 9 languages** a
 | # | Project | Level | Cost | Findings | Link |
 |---|---------|-------|------|----------|------|
 | 1 | FastAPI | D4 | $0.0082 | OOM via `id(func)`, vendored divergence | [→](fastapi-oom-id-func.md) |
-| 2 | Django | D3 | $0.0068 | Async race, breaking 2028 | [→](django-async-race.md) |
+| 2 | Django | D3 | $0.0068 | Async race, breaking 2028 | [→](django- transaction-50k-rps.mdasync-race.md) |
 | 3 | Flask | D4 | $0.0065 | `SECRET_KEY=None`, cookie flags | [→](flask-secret-key.md) |
 | 4 | Express | D3 | $0.0069 | Prototype pollution (CVE-2022-24999) | [→](express-prototype-pollution.md) |
 | 5 | Go stdlib | D3 | $0.0074 | CL/TE smuggling, HTTP/2 race | [→](go-stdlib-cl-te.md) |
+| 6 | [Python 50k RPS — Inverted Redis SETNX](multi/python-50k-rps-redis-setnx.md) | spec (architecture) | D3 | $0.0113 | REQUIRES_REVIEW |
 
 ---
 
@@ -70,7 +71,7 @@ Proving Conveyor works beyond code.
 | Ruby | 5 | 10 | 0 |
 | TypeScript | 4 | 9 | 0 |
 | Java | 3 | 9 | 0 |
-| **Total:** 35 case studies (5 synthetic + 5 real + 5 hard + 4 multi + 16 other), ~$0.10. |
+| **Total:** 36 case studies (5 synthetic + 5 real + 5 hard + 5 multi + 16 other), ~$0.11. |
 
 **Recall: 100% (24/24 planted). Precision: 90% (9/10 sampled). FP: 0%.**
 
