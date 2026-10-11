@@ -14,3 +14,15 @@ build/
 dist/
 translate_*.py
 !examples/multi/incident.log
+# Temporary scripts (do not commit)
+fix_*.py
+build_*.py
+make_*.py
+translate_*.py
+extract_*.py
+add_*.py
+show_*.py
+update_*.py
+precision_*.py
+check_*.py
+rc*.py
