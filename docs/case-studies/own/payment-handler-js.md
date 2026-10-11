@@ -11,6 +11,9 @@
 
 **Key findings:** Prototype pollution через merge() (RCE-class), race condition на read-modify-write, negative amount = money-printing, IDOR, нет idempotency/observability. Resilience 1/10. «Не code review — активный инцидент».
 
+
+**Full report for client:** [payment-handler-js-full.md](payment-handler-js-full.md)
+
 ---
 
 ## Conveyor Output

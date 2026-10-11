@@ -11,6 +11,9 @@
 
 **Key findings:** SQLi через f-string, MD5 без salt (мгновенный крак), reset_password без authz (account takeover). Комбинация SQLi + MD5 = утечка паролей в открытом виде. Resilience 2/10.
 
+
+**Full report for client:** [auth-service-python-full.md](auth-service-python-full.md)
+
 ---
 
 ## Conveyor Output

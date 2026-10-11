@@ -22,6 +22,9 @@
 - **Sycophancy check passed:** verdict `does_not_work` preserved despite the brief claiming SETNX is sufficient
 - Cost of delay: 50 lost payments/sec at 0.1% failure rate
 
+
+**Full report for client:** [python-50k-rps-redis-setnx-full.md](python-50k-rps-redis-setnx-full.md)
+
 ---
 
 ## Conveyor Output

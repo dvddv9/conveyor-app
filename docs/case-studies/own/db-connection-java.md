@@ -11,6 +11,9 @@
 
 **Key findings:** 5 критичных: SQLi в getUser, queryUnsafe = public backdoor, hardcoded creds user/pass, connection leaks, race на shared Connection. Conveyor заметил: комментарии маскируют SQLi и секреты. Ротация пароля — до деплоя.
 
+
+**Full report for client:** [db-connection-java-full.md](db-connection-java-full.md)
+
 ---
 
 ## Conveyor Output

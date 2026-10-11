@@ -22,6 +22,9 @@
 - Sycophancy check: claimed 99.99% SLA / PCI DSS not confirmed
 - Cost of delay: 4.3B transactions/day at risk
 
+
+**Full report for client:** [transaction-50k-rps-full.md](transaction-50k-rps-full.md)
+
 ---
 
 ## Conveyor Output

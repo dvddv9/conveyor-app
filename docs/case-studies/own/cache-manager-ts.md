@@ -11,6 +11,9 @@
 
 **Key findings:** KEYS * блокирует Redis event loop + cross-tenant destruction, cache stampede (thundering herd), set() без TTL → OOM, нет try/catch. Refactoring: single-flight + distributed lock + negative caching + SCAN/UNLINK. Параллель: Facebook memcache lease.
 
+
+**Full report for client:** [cache-manager-ts-full.md](cache-manager-ts-full.md)
+
 ---
 
 ## Conveyor Output

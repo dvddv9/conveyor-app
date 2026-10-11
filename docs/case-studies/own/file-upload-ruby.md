@@ -11,6 +11,9 @@
 
 **Key findings:** 4 критичных вектора в 30 строках: path traversal, arbitrary read, executable upload (RCE), no auth. STRIDE 8/8. Incident plan: kill switch → audit → rotation → hardening.
 
+
+**Full report for client:** [file-upload-ruby-full.md](file-upload-ruby-full.md)
+
 ---
 
 ## Conveyor Output

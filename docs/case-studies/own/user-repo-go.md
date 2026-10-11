@@ -11,6 +11,9 @@
 
 **Key findings:** Goroutine-per-message leak, GetUser всегда err==nil (retry мёртв), retry без backoff, нет ctx/timeout, unbuffered channel. Conveyor исправил неточность: комментарий «unbounded channel» неверен — канал unbuffered (cap=0).
 
+
+**Full report for client:** [user-repo-go-full.md](user-repo-go-full.md)
+
 ---
 
 ## Conveyor Output

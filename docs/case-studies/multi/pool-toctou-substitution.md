@@ -18,6 +18,9 @@
 - **6 VERIFY questions** (no fabricated numbers)
 - **3-phase roadmap:** C (observability) -> A (minimal fix) -> B (queue rewrite)
 
+
+**Full report for client:** [pool-toctou-substitution-full.md](pool-toctou-substitution-full.md)
+
 ---
 
 ## Conveyor Output
