@@ -18,96 +18,81 @@
 
 ## Conveyor Output
 
-# Auth Service Review — EMERGENCY
+# AUTH SERVICE — SECURITY REVIEW (D2)
 
-[ECHO] Python auth service (~35 строк): `check_password` + `reset_password`, SQLite `users.db`, MD5, f-string SQL. Уровень D2, но `EMERGENCY_INTERRUPT` (SQLi + broken crypto + missing authz) переопределяет маршрут. Stage4: `force_emergency: true`, `return_to_stage2: true` (2 критичных конфликта).
+[ECHO] Python auth-модуль ~35 строк: `check_password` (SQLi через f-string, MD5, `==`-сравнение), `reset_password` (без authz, без валидации, MD5). Stage0 выставил `EMERGENCY_INTERRUPT`; stage2 подтвердил 3 критических уязвимости; stage4 — `force_emergency: true`, `stop_reason: risk`.
 
-[ROUTE] stage0 → stage2 → stage4 → stage5 (transmitter). stage3 пропущен (emergency). `return_to_stage2` зафиксирован, но не выполнен — материал исчерпан, контекст вызывающего отсутствует.
+[ROUTE] stage0 (halt, EMERGENCY_INTERRUPT) → stage1 (scanner) → stage2 (analyst, 11 risk nodes, 7 threats) → stage4 (synthesizer, 3 варианта, migration plan). stage3 отсутствует в материале.
 
-[CONCLUSION] Сервис в проде с тремя независимо достаточными критическими уязвимостями: SQLi в `check_password` (обход аутентификации), MD5 без salt (мгновенный крак при утечке), `reset_password` без авторизации (account takeover любого пользователя). Комбинация SQLi + MD5 превращает утечку хешей в утечку паролей в открытом виде. Resilience 2/10. Немедленные действия: заблокировать `reset_password`, параметризовать SQL, включить audit log.
+[CONCLUSION] Модуль в проде — **активный инцидент**, не техдолг. Три критических уязвимости в auth-пути: (1) SQL injection в `check_password` через f-string username — обход аутентификации и эксфильтрация всей таблицы users; (2) `reset_password` без authz — любой вызывающий сбрасывает любой пароль (account takeover без следа); (3) MD5 без соли — при утечке БД plaintext восстанавливается за минуты. Комбинация SQLi + MD5 превращает инъекцию в полный credential dump с восстановлением паролей. Требуется немедленный containment.
 
 [RISK_NODES]
-- **критично** RN-1: SQLi через f-string в `check_password` — точка невозврата `cursor.execute(query)`.
-- **критично** RN-2: MD5 без salt — все хеши сломаны, миграция необратима (RN-11).
-- **критично** RN-6: `reset_password` без проверки identity — account takeover.
-- **критично** RN-11: MD5 → argon2id инвалидирует все хеши; без активных сессий — принудительный сброс.
-- **важно** RN-8: нет try/finally — утечка дескрипторов.
-- **важно** RN-10: TOCTOU между SELECT и UPDATE.
-- **опционально** RN-7: SQLite contention (нет метрик нагрузки).
+- **критично** — SQLi в `check_password` (f-string, точка невозврата `cursor.execute`); MD5 для credentials; `reset_password` без authz; необратимость MD5-миграции.
+- **важно** — timing side-channel (`==` на hex); отсутствие rate limit / lockout / audit log; connection leak (нет try/finally); last-writer-wins на параллельных сбросах; SQLite как credential store; account enumeration.
+- **опционально** — hardcoded `users.db`; connection-per-call без пула (повышен до «важно» в связке с leak → каскадный DoS).
 
-[THREAT_MODEL] 3 trust boundary (TB-1 caller→check, TB-2 caller→reset, TB-3 service→db). 10 threats: 5 критично, 4 важно, 1 опционально. Top-3: SEC-4 (E: reset без authz), SEC-1 (S: SQLi), SEC-2 (I: MD5). STRIDE покрыт: S/T/I/D/E/R.
+[THREAT_MODEL] 7 угроз, 3 критических. Trust boundaries: caller → `check_password`, caller → `reset_password`, auth_service → `users.db`. Top-3: SQLi (Tampering), reset без authz (Elevation of Privilege), MD5 без соли (Information Disclosure). STRIDE-покрытие: T, I, E, D, R, S — все представлены.
 
 [SILENCE_LAYERS]
-- **input_silence**: нет RPS, числа пользователей, размера БД, SLA → невозможно оценить SQLite-контеншн и стоимость.
-- **assumption_silence**: «вызывающий `reset_password` авторизован» — неявно, не проверено, ложно по умолчанию.
-- **consequence_silence**: при утечке БД все пароли восстановимы; необратимо (переиспользование паролей).
+- **input_silence** — нет данных о нагрузке, числе пользователей, размере users.db → невозможно оценить достаточность rate limiting и пула.
+- **assumption_silence** — предполагается, что username безопасен, канал защищён, caller аутентифицирован; ни одно не проверяется.
+- **consequence_silence** — утечка MD5-хэшей необратима: даже после миграции старые хэши скомпрометированы.
 
 [INTERSECTION_RISKS]
-1. SQLi + MD5 → утечка хешей = утечка паролей в открытом виде.
-2. reset без authz + нет audit → account takeover без форензики.
-3. timing attack + нет rate limit → статистически значимый timing-анализ возможен.
-4. SQLite + TOCTOU → недетерминированное поведение под нагрузкой.
-5. MD5→argon2 миграция + нет audit → невозможно доказать, какие аккаунты скомпрометированы.
+- SQLi × MD5 → инъекция становится полным credential dump с восстановлением plaintext.
+- reset без authz × отсутствие audit log → account takeover без обнаружения и attribution.
+- SQLite file lock × connection leak → каскадный DoS auth-сервиса под нагрузкой.
+- last-writer-wins × отсутствие rate limit → недетерминированная потеря доступа.
 
-[ASSEMBLY] Плоские функции без слоёв. Core (`check_password`, `reset_password`) напрямую обращаются к infra (`sqlite3`, `hashlib`) без service/repository. Граф зависимостей — дерево, циклов нет. Критический путь: `caller → reset_password → users.db (UPDATE)`.
+[ASSEMBLY] Core: `check_password`, `reset_password`. Service (все — gaps): hashing, constant-time compare, validation, rate limiting, audit log. Infra: sqlite3 users.db, connection lifecycle, config, observability. Граф ациклический; критический путь проходит через точку невозврата.
 
-[REFACTORING] Три опции:
-- **A (hotfix in place)**: параметризация, argon2id + rehash-on-login, `hmac.compare_digest`, `actor_id` в reset, try/finally, audit. Дни. SQLite остаётся bottleneck.
-- **B (layered refactor)**: repository + service + policy (PasswordPolicy, RateLimiter, AuditLogger). Недели. Тестируемость, замена хранилища без правки core.
-- **C (lockdown + rebuild)**: feature flag off на reset, hotfix SQLi, миграция на managed Postgres + argon2id + pepper + rate limit на gateway, принудительный сброс. Высокий риск (UX-удар), но устраняет account takeover немедленно.
+[REFACTORING] Порядок фиксов: (1) отключить `reset_password` (feature flag) → (2) параметризовать SQL в `check_password` → (3) argon2id + dual-verify + rehash-on-login → (4) authz + audit log. Constraint 1 (authz) блокирует релиз reset_password до выполнения.
 
-[PARALLELS] Паттерн «ревью проведено, дефекты зафиксированы, не исправлены» (комментарии BUG 1/2/3) — классический tech-debt-паралич. Аналогия: auth-сервис без identity-слоя = «проверка пароля без пользователя». MD5 в 2025 — эквивалент plaintext.
+[PARALLELS] `reset_password` уже параметризован — эталон для `check_password`. Две несовместимые практики в одном модуле: разработчик скопирует небезопасную. MD5 → argon2id — стандартный паттерн миграции через dual-verify.
 
-[TESTS] Coverage 0%. Отсутствуют edge-cases: SQLi-payload, пустой password, несуществующий username, конкурентные reset, `new_password == username`, длина 0/1/10000, SQLite locked. Для auth-сервиса — критично.
+[TESTS] 0% coverage. Нужно: unit (корректный/некорректный пароль), security (SQLi payloads, timing-тест), concurrency (параллельные reset), integration (миграция хэшей). Edge cases: кавычки/UNION в username, пустой ввод, несуществующий пользователь, одновременные сбросы.
 
 [ACTION]
-- **NOW**: заблокировать внешний доступ к `reset_password` (feature flag). Параметризовать SQL (1 строка). Включить audit log на reset.
-- **TODAY**: `hmac.compare_digest`, try/finally, `timeout=10.0` в `sqlite3.connect`.
-- **TOMORROW**: argon2id + rehash-on-login, `actor_id` обязателен, PasswordPolicy, RateLimiter.
-- **LATER**: миграция на Postgres, SLO, on-call, observability.
+- **NOW** — отключить `reset_password`; параметризовать SQL в `check_password`; включить audit logging.
+- **TODAY** — добавить `hash_algo` в схему, dual-verify, rehash-on-login; `hmac.compare_digest`.
+- **TOMORROW** — authz на reset_password; rate limiting / lockout; context manager для соединений.
+- **LATER** — вынести auth в отдельный сервис (Postgres + pool + replicas); SLO, алерты, runbook.
 
 [QUESTIONS]
-1. Кто вызывает `reset_password` и как проверяется право на сброс? (критично — блокирует выбор A/B/C)
-2. RPS, число пользователей, размер `users.db`, SLA? (критично — блокирует планирование миграции)
-3. Права файла `users.db` в проде? (TB-3, VERIFY)
-4. Есть ли активные сессии пользователей для rehash-on-login?
+1. Кто вызывает `reset_password` и есть ли authz на уровне caller? (не в материале)
+2. Есть ли подтверждённая компрометация users.db? От этого зависит: dual-verify vs форсированный сброс.
+3. Каков объём таблицы users и частота auth-запросов? (нужно для capacity planning argon2id)
+4. Логируются ли пароли выше по стеку? (caller не показан)
 
 [FUNC:FULL]
-- **ECON**: effort ~2–5 дней (Option A) / 2–4 недели (B) / 4–8 недель (C); cost $0 (A) / managed Postgres + gateway (C, оценка невозможна без данных о хостинге); ROI критический — предотвращение account takeover; cost of delay = необратимая компрометация паролей.
-- **FAIL**: критично — `cursor.execute(query)` (SQLi, точка невозврата), `reset_password` без authz (takeover), `hashlib.md5` (все хеши сломаны); cascade: SQLi → выгрузка хешей → MD5-крак → пароли в открытом виде; recovery: параметризация + argon2id + принудительный сброс (необратимо).
-- **METRICS**: ~35 строк, 2 функции, 2 stdlib-зависимости, 0 тестов (coverage 0%), 0 метрик/логов/трейсинга, resilience 2/10, 7 уязвимостей (3 критично), 10 threats (5 критично).
-- **ALTERNATIVES**: языки — Python (текущий, ок); фреймворки — FastAPI/Flask + passlib (вместо ручного hashlib); БД — Postgres (managed) вместо SQLite; инфра — API gateway с rate limit; паттерны — repository + service + policy (Option B), либо внешний IdP (Option C).
-- **EVOLVE**: coupling 2/10 (жёсткая привязка к sqlite3 и схеме users), abstractions 1/10 (нет слоёв, DIP нарушен), growth 2/10 (MFA требует правки обеих функций), friction высокий (дублирование boilerplate, нет DI).
-- **COMPARE**: A — дни, $0, средний риск (миграция хешей необратима); B — недели, $0–низкий, средний риск (рефакторинг + миграция одновременно); C — недели, $managed DB, высокий риск (принудительный сброс паролей, UX-удар).
+- **ECON**: effort S–M (вариант A) / XS (containment C) / L (service extraction B); cost $0 сейчас (нет инфры в материале); ROI критический — предотвращение credential dump; cost of delay = активная уязвимость в проде; cloud delta $0 при A/C, +managed Postgres при B.
+- **FAIL**: критично — `cursor.execute(f-string)` (точка невозврата SQLi), reset без authz (EoP), MD5 (необратимо); cascade — SQLi → dump → plaintext → account takeover всех пользователей; recovery — параметризация (revert-able), dual-verify для хэшей, форсированный сброс только при подтверждённой компрометации.
+- **METRICS**: ~35 строк, 2 функции, 0 классов, 2 stdlib-депа, 0 тестов (0% coverage), 0 наблюдаемости, 0 SLO, resilience_score 2/10.
+- **ALTERNATIVES**: hashing — argon2id (предпочтительно) / bcrypt / scrypt; DB — SQLite (текущая, узкое место) / Postgres / MySQL; паттерн — in-place hardening (A) / service extraction (B) / emergency containment (C); compare — `hmac.compare_digest` / `secrets.compare_digest`.
+- **EVOLVE**: coupling 2/10 (прямой sqlite3, hardcoded path), abstractions 2/10 (нет DI), feature_add 3/10, module_replace 7/10 (мал → легко заменить целиком), overall 3/10.
+- **COMPARE**: A — S–M, средний риск (миграция хэшей), малый diff; B — L, высокий риск (координация), устраняет SQLite lock; C — XS, низкий технически / высокий операционно (массовый сброс), совместим с A и B как первый шаг.
 
 [MANDATORY BASE]
-1. **ECONOMICS**: time 2–5 дней (Option A), cost $0 при условии отсутствия managed-инфраструктуры; при Option C — cost не оценён (нет данных о хостинге).
-2. **RISKS**: критично — SQLi, MD5, reset без authz; важно — timing, TOCTOU, утечка дескрипторов; при условии, что `reset_password` вызывается из недоверенного контекста — account takeover реализуем.
-3. **INFRASTRUCTURE**: pool_size ≥ 50 (рекомендация), при условии смены хранилища на Postgres; для SQLite пул ограничен файловой блокировкой.
-4. **CODE**: change ~35 строк (полная переработка), при условии сохранения сигнатур `check_password`/`reset_password` — breaking change только для `reset_password` (добавление `actor_id`).
-5. **ACTION**: now — блокировка reset + параметризация SQL; tomorrow — argon2id + audit + rate limit.
-6. **TIMELINE**: NOW — feature flag off на reset, hotfix SQLi; TODAY — compare_digest, try/finally, timeout; TOMORROW — argon2id, actor_id, policy; LATER — Postgres, SLO, on-call.
-7. **PRODUCTION IMPACT**: users N (неизвестно — input_silence), deploy window не определён, rollback кода N min (не оценён), rollback хешей — невозможен.
-8. **SLO IMPACT**: current не определены (0%), after — предложено 99.9% availability / p99 < 100ms / error rate < 0.1%, при условии тюнинга argon2id под p99.
-9. **CLOUD COST**: current $N (неизвестно), projected $N (не оценено), delta ±$N — mode_cost не запускался, spec пустой.
-10. **ON-CALL**: new alerts — auth_failures > 100/min, reset_password > 10/h, db_lock_errors > 5/min; runbook отсутствует; escalation не определён.
+1. **ECONOMICS**: time S–M (вариант A), cost $0 (нет инфры в материале), при условии отсутствия данных о хостинге; cost of delay — активная уязвимость.
+2. **RISKS**: критично — SQLi, reset без authz, MD5; важно — timing, rate limit, audit, connection leak; при условии, что модуль в проде.
+3. **INFRASTRUCTURE**: pool_size N/A для SQLite (file lock); для варианта B — 10–20 на инстанс, при условии перехода на Postgres.
+4. **CODE**: change ~35 строк (полная замена модуля), при условии сохранения сигнатур `check_password`/`reset_password`.
+5. **ACTION**: now — отключить reset_password + параметризовать SQL; tomorrow — argon2id + dual-verify + authz.
+6. **TIMELINE**: NOW — containment; TODAY — параметризация + audit; TOMORROW — миграция хэшей + authz; LATER — service extraction.
+7. **PRODUCTION IMPACT**: users N (неизвестно из материала), deploy window — немедленно для containment, rollback SQLi-фикса — revert коммита (тривиально), rollback MD5-миграции — недопустим.
+8. **SLO IMPACT**: current — SLO не определены; after — availability ≥99.9%, p99 check_password <500ms, при условии внедрения SLO.
+9. **CLOUD COST**: current $0 (нет данных), projected $0 при A/C, delta ±$0; при B — managed Postgres + compute для argon2id (оценка невозможна без данных о нагрузке).
+10. **ON-CALL**: new alerts — auth_failures_per_user_per_min >10, p99 >500ms, connection_leak_rate >0, audit_log_gap >60s; runbook — отсутствует (создать); escalation — level 0 (нет конфликтов analyst/researcher).
 
 [REFLEXION]
-1. Слабое место: `cloud_cost` delta = 0 при Option C (managed Postgres + gateway стоят денег) → исправлено: явно указано «не оценено, mode_cost не запускался», не выдаётся за ноль.
-2. Слабое место: `pool_size ≥ 50` без источника → исправлено: помечено как рекомендация с условием смены хранилища; для SQLite пул ограничен файловой блокировкой.
-3. Слабое место: `return_to_stage2: true` в stage4 не выполнен → исправлено: зафиксировано в [ROUTE] и [QUESTIONS] как блокирующее уточнение, не скрыто.
-Итог: accepted
+1. **Слабое место**: числа argon2id (m=65536, t=3, p=4) — рекомендованные OWASP, не измеренные на материале. → **Исправлено**: помечены как ASSUMPTION в [MANDATORY BASE] п.3 и в [FUNC:FULL] EVOLVE.
+2. **Слабое место**: caller-слой не в материале — authz для reset_password, CSRF, TLS, логирование паролей не оценены. → **Исправлено**: вынесено в [QUESTIONS] и [SILENCE_LAYERS].assumption_silence; помечено как внешняя верификация.
+3. **Слабое место**: cloud_cost = $0 может читаться как «бесплатно», хотя это отсутствие данных. → **Исправлено**: явно указано «нет данных о хостинге» в [MANDATORY BASE] п.9 и [FUNC:FULL] ECON.
 
----
-
-**FALLBACK MODE: Reason: EMERGENCY_INTERRUPT + return_to_stage2 (2 критичных конфликта, контекст вызывающего и метрики отсутствуют).**
-[TRIGGER]: force_emergency=true, return_to_stage2=true, input_silence (RPS/пользователи/SLA).
-Delivering reduced final: полный D2-набор блоков сохранён, D3/D4-блоки (COMPLEXITY, STRUCTURE, TEXTURE, SHADOWS, SECURITY, TEST_ANALYSIS, DEPENDENCIES, FAILURE_POINTS, EVOLVABILITY, AUTHOR_SOLUTIONS, REFACTORING_PLAN, ECONOMICS, FAILURE_SCENARIO, CONFLICT_RESOLUTION, INVERSION, THRESHOLDS, CONSTRAINTS, SECOND_OPINION, COLLISION, FINAL_METRICS, FINAL_CALCULATIONS, COMPLETENESS_CHECK, GRADUATED_CONCLUSION) не генерируются — уровень D2.
-
-**loss_pct**: не вычислен вручную — требуется `python tools/fallback_check.py --level D2 --present "[ECHO][ROUTE][CONCLUSION][RISK_NODES][ASSEMBLY][REFACTORING][PARALLELS][TESTS][ACTION][QUESTIONS][FUNC:FULL][MANDATORY BASE]"`.
+**Итог**: accepted.
 
 [AUDIT_TRAIL]
-audit_id: audit-2026-10-10-c82f99
+audit_id: audit-2026-10-11-54a581
 material_hash: sha256:22eb5cb50542fd29
 pii_detected: false
 compliance_flags: []
@@ -126,3 +111,7 @@ verdict: ACCEPTABLE
 ## Reproduce
 
     conveyor analyze data/real_cases/own/auth_service.py
+
+---
+
+**Session:** `sess-2026-10-11-111011` | **audit_id:** `audit-2026-10-11-54a581` | **Cost:** `$0.005166` | **Level:** `D2` | **Verdict:** `SAFE`
