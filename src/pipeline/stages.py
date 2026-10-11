@@ -216,3 +216,22 @@ def stage5_transmitter(material: str, context: dict) -> str:
     result = llm_chat(system, user, temperature=0.0, max_tokens=MAX_TOKENS)
     return result["text"]
 
+
+
+def stage6_validator(final_markdown: str, task_type: str, level: str,
+                     material_type: str) -> dict:
+    """Stage 6: Validator - checks and supplements Stage 5 report."""
+    context = {
+        "task_type": task_type,
+        "level": level,
+        "material_type": material_type,
+        "final_markdown": final_markdown,
+    }
+    return run_stage(
+        stage_name="stage6_validator",
+        prompt_name="06_validator",
+        material=final_markdown,
+        context=context,
+        temperature=0.0,
+        max_tokens=4000,
+    )
