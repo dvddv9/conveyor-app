@@ -13,7 +13,7 @@ Real-world validation: Conveyor V5.7 analyzed **30+ files across 9 languages** a
 | 5 | OWASP Juice Shop | 10 | 14 | ~$0.07 |
 | 6 | Vulnerable Apps (DVGA, RailsGoat, DVWA, TerraGoat) | 5 | 17+ | ~$0.035 |
 | 7 | Comparison (Conveyor vs Raw Prompt) | 2 | 14 | ~$0.022 |
-| **TOTAL** | | **39** | **120+** | **~$0.28** |
+| | **TOTAL** | | **40** | **120+** | **~$0.29** |
 
 **Languages tested:** Python, JavaScript, TypeScript, Go, Java, C, Rust, Ruby, PHP, YAML, Terraform, Markdown.
 
@@ -52,6 +52,7 @@ Proving Conveyor works beyond code.
 | 1 | incident.log | logs | D1 | $0.0055 | REQUIRES_REVIEW | [→](multi/incident-log-pool-exhaustion.md) |
 | 2 | k8s_insecure.yaml | config | D2 | $0 | REQUIRES_REVIEW | [→](multi/k8s-insecure-config.md) |
 | 3 | payment_spec.md | spec | D2 | $0.0068 | REQUIRES_REVIEW | [→](multi/payment-spec-review.md) |
+| 7 | Connection Pool TOCTOU + SUBSTITUTION_ATTEMPT | multi (pool.py + config.yaml + incident.log) | D3 | $0.0088 | [->](multi/pool-toctou-substitution.md) |
 | 4 | [50k RPS Transaction System](multi/transaction-50k-rps.md) | spec (architecture) | D3 | $0.0116 | REQUIRES_REVIEW |
 
 ---
@@ -68,7 +69,7 @@ Proving Conveyor works beyond code.
 | Ruby | 5 | 10 | 0 |
 | TypeScript | 4 | 9 | 0 |
 | Java | 3 | 9 | 0 |
-| **Total:** 39 case studies (5 synthetic + 5 real + 5 hard + 6 multi + 10 Juice Shop + 5 vulnerable apps + 2 comparison + 1 other), ~$0.28. |
+| **Total:** 40 case studies (5 synthetic + 5 real + 5 hard + 7 multi + 10 Juice Shop + 5 vulnerable apps + 2 comparison + 1 other), ~$0.29.
 
 **Recall: 100% (24/24 planted). Precision: 90% (9/10 sampled). FP: 0%.**
 
