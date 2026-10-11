@@ -8,14 +8,12 @@ Real-world validation: Conveyor V5.7 analyzed **30+ files across 9 languages** a
 |---|----------|-------|-------------------|------------|
 | 1 | Real-world projects | 5 | 5+ | ~$0.036 |
 | 2 | Hard cases (real CVEs) | 5 | 5 CVEs | ~$0.039 |
-| 3 | Multi-material | 3 | 3 | ~$0.012 |
+| 3 | Multi-material + Multi-Domain | 6 | 20+ | ~$0.045 |
 | 4 | Own cases (FP test) | 6 | 52 | ~$0.034 |
 | 5 | OWASP Juice Shop | 10 | 14 | ~$0.07 |
-| 6 | DVGA (Python) | 2 | 11 | ~$0.014 |
-| 7 | RailsGoat (Ruby) | 1 | 3 | ~$0.007 |
-| 8 | DVWA (PHP) | 1 | 3 | ~$0.007 |
-| 9 | TerraGoat (Terraform) | 1 | EMERGENCY | ~$0.007 |
-| **TOTAL** | | **34** | **100+** | **~$0.23** |
+| 6 | Vulnerable Apps (DVGA, RailsGoat, DVWA, TerraGoat) | 5 | 17+ | ~$0.035 |
+| 7 | Comparison (Conveyor vs Raw Prompt) | 2 | 14 | ~$0.022 |
+| **TOTAL** | | **39** | **120+** | **~$0.28** |
 
 **Languages tested:** Python, JavaScript, TypeScript, Go, Java, C, Rust, Ruby, PHP, YAML, Terraform, Markdown.
 
@@ -26,11 +24,10 @@ Real-world validation: Conveyor V5.7 analyzed **30+ files across 9 languages** a
 | # | Project | Level | Cost | Findings | Link |
 |---|---------|-------|------|----------|------|
 | 1 | FastAPI | D4 | $0.0082 | OOM via `id(func)`, vendored divergence | [→](fastapi-oom-id-func.md) |
-| 2 | Django | D3 | $0.0068 | Async race, breaking 2028 | [→](django- transaction-50k-rps.mdasync-race.md) |
+| 2 | Django | D3 | $0.0068 | Async race, breaking 2028 | [→](django-async-race.md) |
 | 3 | Flask | D4 | $0.0065 | `SECRET_KEY=None`, cookie flags | [→](flask-secret-key.md) |
 | 4 | Express | D3 | $0.0069 | Prototype pollution (CVE-2022-24999) | [→](express-prototype-pollution.md) |
 | 5 | Go stdlib | D3 | $0.0074 | CL/TE smuggling, HTTP/2 race | [→](go-stdlib-cl-te.md) |
-| 6 | [Python 50k RPS — Inverted Redis SETNX](multi/python-50k-rps-redis-setnx.md) | spec (architecture) | D3 | $0.0113 | REQUIRES_REVIEW |
 
 ---
 
@@ -71,7 +68,7 @@ Proving Conveyor works beyond code.
 | Ruby | 5 | 10 | 0 |
 | TypeScript | 4 | 9 | 0 |
 | Java | 3 | 9 | 0 |
-| **Total:** 36 case studies (5 synthetic + 5 real + 5 hard + 5 multi + 16 other), ~$0.11. |
+| **Total:** 39 case studies (5 synthetic + 5 real + 5 hard + 6 multi + 10 Juice Shop + 5 vulnerable apps + 2 comparison + 1 other), ~$0.28. |
 
 **Recall: 100% (24/24 planted). Precision: 90% (9/10 sampled). FP: 0%.**
 
@@ -93,8 +90,7 @@ See [own/](own/) for full reports.
 | redirect.ts | Open redirect | [→](juice-shop/redirect.md) |
 | server.ts | God-file, startup без await, wildcard CORS, xssFilter отключён | [→](juice-shop/server.md) |
 | login.ts | **EMERGENCY** — PII + SECRETS на Stage 0, cost $0 | [→](juice-shop/login.md) |
-| login.ts | EMERGENCY (SQLi + secrets) | — |
-| server.ts | 11 risk nodes (god-file, CORS) | — |
+
 
 ---
 
