@@ -12,7 +12,6 @@ data/
 *.egg-info/
 build/
 dist/
-translate_*.py
 !examples/multi/incident.log
 # Temporary scripts (do not commit)
 fix_*.py
