@@ -318,19 +318,6 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         context_5["stage3"] = stage3
     final_markdown = stage5_transmitter(material, context_5)
 
-    # === FIX #6: Replace or add real session_id in header ===
-    import re as _re
-    if _re.search(r'Session:\\s*sess-[\\w-]+', final_markdown):
-        final_markdown = _re.sub(r'Session:\\s*sess-[\\w-]+', f'Session: {session_id}', final_markdown, count=1)
-    else:
-        _lines = final_markdown.split('\n', 2)
-        if len(_lines) >= 2:
-            final_markdown = _lines[0] + f'\n\n**Session:** {session_id}' + '\n' + '\n'.join(_lines[1:])
-
-    if verbose:
-        print(f"  → финальный Markdown: {len(final_markdown)} символов")
-        print()
-
     # === AUDIT ===
     if verbose:
         print("[Audit] Сбор audit-записи...")
