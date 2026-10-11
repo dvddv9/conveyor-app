@@ -640,28 +640,6 @@ Conveyor V5.7 was validated on 5 real open-source projects. See [docs/case-studi
 
 ---
 
-### Roadmap
-
-- [x] Tests — 44 (41 unit + 3 E2E)
-- [x] GitHub Actions (CI)
-- [x] UI filters (by level, verdict, pii_detected)
-- [x] `pyproject.toml` + CLI (`conveyor analyze/info`)
-- [x] Truncate large files (>12000 chars)
-- [x] Secrets detection (AWS, Stripe, GitHub, Slack, passwords, private keys)
-- [x] Cost tracker ($ per analysis)
-- [x] Idempotency (`cached: true`)
-- [x] Mode switcher (auto/cloud/local)
-- [ ] Stage 3/4 parallelism (`asyncio.gather`)
-- [ ] Streaming output (SSE)
-- [ ] Integrate `slice_input` into orchestrator
-- [ ] GitHub App (webhook on PR)
-\
-
----
-
-
-
-
 ### Hard Case Studies
 
 5 production-grade files (Java, C, Go) at D3–D4. Real CVEs, races, TOCTOU, UB.
@@ -703,17 +681,49 @@ Conveyor found **52** issues, **0** false positives.
 
 See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
 
-## License
 
 
+### OWASP Juice Shop (10 files, ~0.07 USD)
 
-AGPL-3.0 (see LICENSE).
+| File | Findings | Link |
+|------|----------|------|
+| search.ts | SQLi (CWE-89) | [->](docs/case-studies/juice-shop/search.md) |
+| fileUpload.ts | Zip-slip, XXE | [->](docs/case-studies/juice-shop/fileUpload.md) |
+| package.json | postinstall, JWT 0.4.0 | [->](docs/case-studies/juice-shop/package-json.md) |
+| profileImageUrlUpload.ts | SSRF + XSS | [->](docs/case-studies/juice-shop/profile-image-ssrf.md) |
+| basket.ts | IDOR | [->](docs/case-studies/juice-shop/basket.md) |
+| dataExport.ts | IDOR + PII | [->](docs/case-studies/juice-shop/dataExport.md) |
+| userProfile.ts | RCE (eval) | [->](docs/case-studies/juice-shop/userProfile.md) |
+| redirect.ts | Open redirect | [->](docs/case-studies/juice-shop/redirect.md) |
+| server.ts | God-file, wildcard CORS | [->](docs/case-studies/juice-shop/server.md) |
+| login.ts | EMERGENCY - PII + SECRETS, cost 0 | [->](docs/case-studies/juice-shop/login.md) |
 
+### Vulnerable Apps (5 files)
 
+| Project | Language | Findings | Link |
+|---------|----------|----------|------|
+| DVGA | Python/GraphQL | RCE x3, SQLi, SSRF | [->](docs/case-studies/dvga-views.md) |
+| RailsGoat | Ruby | Session fixation | [->](docs/case-studies/railsgoat-sessions.md) |
+| DVWA | PHP | SQLi (MySQL + SQLite) | [->](docs/case-studies/dvwa-sqli.md) |
+| TerraGoat | Terraform | EMERGENCY - hardcoded secrets | [->](docs/case-studies/terragoat-emergency.md) |
+| DVGA app.py | Python | Hardcoded JWT, os.popen RCE | [->](docs/case-studies/dvga-app.md) |
 
----
+### Multi-Domain (50-200k RPS + GDPR)
 
+| Case | Domain | Level | Cost | Link |
+|------|--------|-------|------|------|
+| 50k RPS Transaction (Go) | architecture + Go + K8s | D3 | 0.0116 | [->](docs/case-studies/multi/transaction-50k-rps.md) |
+| Python 50k RPS (Redis SETNX) | architecture + Python | D3 | 0.0113 | [->](docs/case-studies/multi/python-50k-rps-redis-setnx.md) |
+| 100-200k RPS + GDPR vs PCI DSS | architecture + legal | D3 | 0.0109 | [->](docs/case-studies/multi/100k-rps-gdpr-pci-dss.md) |
 
+### Comparison - Conveyor vs Raw Prompt
+
+| Case | Focus | Link |
+|------|-------|------|
+| Conveyor vs Raw Prompt | Metadata validity | [->](docs/case-studies/comparison/conveyor-vs-raw-prompt.md) |
+| D3 vs D4 Fallback | Solution vs boundary | [->](docs/case-studies/comparison/d3-vs-d4-fallback.md) |
+
+**Total:** 39 case studies across 7 languages and 12+ technologies.
 
 ## Author
 
