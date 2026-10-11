@@ -159,6 +159,7 @@ Two modes on 100-200k RPS material:
 | Cloud cost | ✅ "unknown" | ❌ invented |
 
 See [comparison/d3-vs-d4-fallback.md](comparison/d3-vs-d4-fallback.md).
+| Multi-Material Pool | Contract compliance, metadata validity, cost 57x | [->](comparison/pool-multi-material-vs-raw.md) |
 ------
 
 **Conclusion:** content is comparable; metadata validity is not.
