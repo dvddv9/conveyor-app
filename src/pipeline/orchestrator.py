@@ -313,6 +313,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     context_5 = {
         "stage0": stage0, "stage1": stage1, "stage2": stage2,
         "stage4": stage4,
+        "task_type": stage0.get("task_type", "other"),
     }
     if stage3:
         context_5["stage3"] = stage3

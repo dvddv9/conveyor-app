@@ -250,3 +250,25 @@ Example:
 [PLAN_B]
 - SEC-1: parameterized queries
 - SEC-2: argon2id + dual-verify
+
+## Калибровка от task_type (MANDATORY)
+
+Секции отчёта зависят от task_type (from Stage 0):
+
+| task_type | Обязательные секции |
+|-----------|---------------------|
+| review | [RISK_NODES], [PLAN_B], [TESTS], [MATRIX] |
+| architecture | [RISK_NODES], [ALTERNATIVES], [COMPARE], [MATRIX] |
+| incident | Timeline, [RISK_NODES], [PLAN_B], [ACTION] |
+| spec | [MATRIX], [CHANGELOG] (если v1->v2), [INTERSECTION_RISKS] |
+| compliance | [MATRIX] (ось Compliance), [PLAN_B], compliance_flags |
+| other | [RISK_NODES], [MATRIX] |
+
+Правила:
+1. review — ОБЯЗАТЕЛЬНО [PLAN_B] + [MATRIX].
+2. architecture — ОБЯЗАТЕЛЬНО [ALTERNATIVES] (3+) + [COMPARE].
+3. incident — ОБЯЗАТЕЛЬНО Timeline + [PLAN_B].
+4. spec — ОБЯЗАТЕЛЬНО [MATRIX] + [INTERSECTION_RISKS]. [CHANGELOG] — только если v1->v2.
+5. compliance — ОБЯЗАТЕЛЬНО [MATRIX] (ось Compliance) + [PLAN_B].
+
+Если task_type неизвестен — [RISK_NODES] + [MATRIX] (default).

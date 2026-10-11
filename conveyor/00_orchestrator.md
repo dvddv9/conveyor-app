@@ -80,3 +80,25 @@ Override: [CONFIG: KEY=VALUE].
 ## Тон
 
 Сухой, диспетчерский. Один JSON.
+
+
+## task_type (NEW)
+
+Определи task_type на основе material_type и запроса:
+
+| material_type | task_type |
+|--------------|-----------|
+| code | review |
+| architecture | architecture |
+| spec (с версией v1->v2) | spec |
+| spec (без версии) | spec |
+| logs (incident) | incident |
+| config (compliance) | compliance |
+| other | other |
+
+Верни в JSON:
+{
+  ...
+  "task_type": "review" | "architecture" | "incident" | "spec" | "compliance" | "other",
+  ...
+}
