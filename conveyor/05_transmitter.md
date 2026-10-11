@@ -239,13 +239,14 @@ If material is an iteration (v1 -> v2), add:
 | 2 | ... | Risk Medium |
 
 
-## Plan B -- MANDATORY in final report
+## [PLAN_B] -- MANDATORY in final report
 
-In [RISK_NODES] of the FINAL report -- column "Plan B" REQUIRED for every critical/important risk.
-If Stage 2 output lacks Plan B -- ADD IT during transmission.
+After [RISK_NODES] -- add [PLAN_B] section (list, not table):
 
-Format:
-| # | Risk | Priority | Plan B |
-|---|------|----------|--------|
-| 1 | SQLi | critical | Parameterized queries |
-| 2 | MD5 | critical | argon2id + dual-verify |
+[PLAN_B]
+- <risk-id>: <plan B>
+
+Example:
+[PLAN_B]
+- SEC-1: parameterized queries
+- SEC-2: argon2id + dual-verify
