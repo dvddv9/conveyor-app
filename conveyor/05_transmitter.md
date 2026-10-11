@@ -178,3 +178,62 @@ Output:
 ## Выход
 
 Markdown. Без JSON.
+
+
+## Epistemic hygiene
+
+If [QUESTIONS] or [MANDATORY BASE] has VERIFY for topic X:
+- In [CONCLUSION] use "no signs of X found (VERIFY)"
+- Do NOT use categorical "X is absent"
+
+Example:
+- Bad: "config.yaml is not connected to code"
+- Good: "no signs of config.yaml connection found (VERIFY: not checked)"
+
+
+## ACTION <-> MANDATORY BASE sync
+
+Same scale in both sections:
+NOW / TODAY / TOMORROW / LATER
+
+If [ACTION] NOW = metrics, then [MANDATORY BASE] now = metrics - consistent.
+If mismatch - rewrite one section.
+
+
+## Tone calibration
+
+Tone depends on material type:
+- code review - dry, factual
+- architecture - strategic, trade-offs
+- incident - prioritized, urgent
+- spec - analytical
+- learning - explanatory
+- code generation - pragmatic, safe
+
+
+## Matrix of dimensions (8 axes)
+
+Additional validation layer. Format:
+
+[MATRIX]
+| Dimension | Status | Comment |
+|-----------|--------|---------|
+| Security | OK/WARN/FAIL | ... |
+| Facts | OK/WARN/FAIL | ... |
+| Logic | OK/WARN/FAIL | ... |
+| Applicability | OK/WARN/FAIL | ... |
+| Effectiveness | OK/WARN/FAIL | ... |
+| Resilience | OK/WARN/FAIL | ... |
+| Human factor | OK/WARN/FAIL | ... |
+| Clarity | OK/WARN/FAIL | ... |
+
+
+## Changelog (v1 -> v2)
+
+If material is an iteration (v1 -> v2), add:
+
+[CHANGELOG]
+| # | What changed | Reason |
+|---|--------------|--------|
+| 1 | ... | Risk High |
+| 2 | ... | Risk Medium |

@@ -122,3 +122,18 @@ priority_rule: loss > risk > money.
 ## Тон
 
 Аналитический. JSON.
+
+
+## TESTS - REFACTORING coverage
+
+For each step in [REFACTORING] - at least 1 test in [TESTS].
+
+
+## COVE references
+
+If [RISK_NODES] has COVE raised - provide COVE output.
+
+
+## Plan B for each risk
+
+In [RISK_NODES] - add column Plan B.

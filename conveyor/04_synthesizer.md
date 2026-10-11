@@ -149,3 +149,34 @@ escalation: level, action.
 ## Тон
 
 Стратегический. JSON.
+
+
+## ECON - mandatory components
+
+ECON must include:
+1. Cloud cost - delta (if known)
+2. Engineering cost - days x rate (if rate unknown - not set)
+3. ROI
+4. Cost of delay
+
+Example:
+- Bad: cost 0 (stdlib-only)
+- Good: cloud delta 0; engineering 2-3 days (rate not set)
+
+
+## Artifacts
+
+If material requires - generate artifacts:
+
+[ARTIFACTS]
+### Artifact 1: SQL migration
+<sql>
+
+### Artifact 2: Dockerfile
+<dockerfile>
+
+### Artifact 3: Gantt (Mermaid)
+`mermaid
+gantt
+    title ...
+`
