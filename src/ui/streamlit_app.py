@@ -95,13 +95,22 @@ with tab_analyze:
                 if material:
                     st.caption(f"{len(material)} символов")
 
-            analyze_btn = st.button(
+            col_btn, col_force = st.columns([3, 1])
+            with col_btn:
+                analyze_btn = st.button(
                 "🚀 Запустить анализ",
                 type="primary",
                 width="stretch",
                 disabled=not material.strip(),
                 key="single_analyze_btn",
-            )
+                )
+            with col_force:
+                force_flag = st.checkbox(
+                    "Force re-analyze",
+                    value=False,
+                    key="single_force_flag",
+                    help="Ignore cache and re-run analysis",
+                )
 
         with col_right:
             st.subheader("Результат")
@@ -437,6 +446,7 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                     "material": material,
                     "filename": filename,
                     "verbose": False,
+                    "force": force_flag,
                 },
                 timeout=300,
             )
