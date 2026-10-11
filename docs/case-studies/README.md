@@ -148,6 +148,20 @@ See [comparison/](comparison/) for full analysis.
 | Retry | ✅ | ❌ |
 | Emergency gate | ✅ | ❌ |
 
+### D3 (Solution) vs D4 (Fallback)
+
+Two modes on 100-200k RPS material:
+
+| Criterion | D3 (Conveyor) | D4 (Raw Prompt) |
+|-----------|---------------|------------------|
+| Focus | Solution | Boundary acknowledgement |
+| material_hash | ✅ real | ❌ fake |
+| audit_id | ✅ hex | ❌ not hex |
+| Level | ✅ D3 | ❌ D4 (inflated) |
+| Stage order | ✅ 1→2→3∥4→5 | ❌ 1→2→4→3→5 |
+| Cloud cost | ✅ "unknown" | ❌ invented |
+
+See [comparison/d3-vs-d4-fallback.md](comparison/d3-vs-d4-fallback.md).
 ------
 
 **Conclusion:** content is comparable; metadata validity is not.
