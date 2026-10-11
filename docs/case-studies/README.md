@@ -89,6 +89,8 @@ See [own/](own/) for full reports.
 | dataExport.ts | IDOR + PII leak | [→](juice-shop/dataExport.md) |
 | userProfile.ts | **RCE (eval)** | [→](juice-shop/userProfile.md) |
 | redirect.ts | Open redirect | [→](juice-shop/redirect.md) |
+| server.ts | God-file, startup без await, wildcard CORS, xssFilter отключён | [→](juice-shop/server.md) |
+| login.ts | **EMERGENCY** — PII + SECRETS на Stage 0, cost $0 | [→](juice-shop/login.md) |
 | login.ts | EMERGENCY (SQLi + secrets) | — |
 | server.ts | 11 risk nodes (god-file, CORS) | — |
 
