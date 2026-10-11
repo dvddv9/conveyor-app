@@ -13,3 +13,4 @@ data/
 build/
 dist/
 translate_*.py
+!examples/multi/incident.log
