@@ -272,3 +272,21 @@ Example:
 5. compliance — ОБЯЗАТЕЛЬНО [MATRIX] (ось Compliance) + [PLAN_B].
 
 Если task_type неизвестен — [RISK_NODES] + [MATRIX] (default).
+
+
+## Session_id и audit_id — MANDATORY
+
+НЕ выдумывать session_id. Использовать ТОЛЬКО реальный из pipeline (передан в context).
+Формат: sess-YYYY-MM-DD-HHMMSS (текущая дата, не 2025-01-15).
+
+НЕ генерировать [AUDIT_TRAIL] — он добавляется pipeline'ом автоматически.
+Если pipeline не передал audit_id — НЕ добавлять [AUDIT_TRAIL] вообще.
+
+## force_emergency — уточнение
+
+force_emergency: true ТОЛЬКО если действия НЕМЕДЛЕННЫЕ (сегодня, stop).
+Если рекомендации — hotfix завтра/TODAY — force_emergency: false, обычный отчёт.
+
+Пример:
+- force_emergency: true + ACTION: NOW: stop, kill switch — OK
+- force_emergency: true + ACTION: hotfix завтра — ПРОТИВОРЕЧИЕ

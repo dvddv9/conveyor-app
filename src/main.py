@@ -53,6 +53,11 @@ class AnalyzeResponse(BaseModel):
     tokens_out: int = 0
     cost_usd: float = 0.0
     cached: bool = False
+    audit_id: str = ""
+    material_hash: str = ""
+    verdict: str = ""
+    pii_detected: bool = False
+    compliance_flags: list = []
 
 
 class HistoryItem(BaseModel):
@@ -159,6 +164,11 @@ async def analyze(req: AnalyzeRequest):
                 tokens_out=tokens_out_c,
                 cost_usd=cached.get("cost_usd", 0.0),
                 cached=True,
+                audit_id=cached.get("audit", {}).get("audit_id", ""),
+                material_hash=cached.get("audit", {}).get("material_hash", ""),
+                verdict=cached.get("audit", {}).get("critique_verdict", ""),
+                pii_detected=bool(cached.get("audit", {}).get("pii_detected", False)),
+                compliance_flags=cached.get("audit", {}).get("compliance_flags", []),
             )
 
     try:
@@ -188,6 +198,7 @@ async def analyze(req: AnalyzeRequest):
     stage4 = result.get("stage4") or {}
     cost_usd = sum_stage_costs([stage0, stage1, stage2, stage3, stage4])
 
+    _audit = result.get("audit", {}) or {}
     return AnalyzeResponse(
         session_id=result["session_id"],
         filename=result["filename"],
@@ -198,6 +209,11 @@ async def analyze(req: AnalyzeRequest):
         tokens_in=tokens_in,
         tokens_out=tokens_out,
         cost_usd=cost_usd,
+        audit_id=_audit.get("audit_id", ""),
+        material_hash=_audit.get("material_hash", ""),
+        verdict=_audit.get("critique_verdict", ""),
+        pii_detected=bool(_audit.get("pii_detected", False)),
+        compliance_flags=_audit.get("compliance_flags", []),
     )
 
 

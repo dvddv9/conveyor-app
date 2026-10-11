@@ -62,7 +62,7 @@ COMPLIANCE_TRIGGERS = {
 
 def compute_hash(material: str) -> str:
     h = hashlib.sha256(material.encode("utf-8", errors="replace"))
-    return f"sha256:{h.hexdigest()[:16]}"
+    return f"sha256:{h.hexdigest()}"
 
 
 def detect_pii(text: str) -> dict:
