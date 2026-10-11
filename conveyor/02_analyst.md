@@ -134,8 +134,15 @@ For each step in [REFACTORING] - at least 1 test in [TESTS].
 If [RISK_NODES] has COVE raised - provide COVE output.
 
 
-## Plan B for each risk -- MANDATORY
+## Plan B -- as separate section
 
-In [RISK_NODES] -- column Plan B is REQUIRED for EVERY critical/important risk.
-Format: | # | Risk | Priority | Plan B |
-If no Plan B -- mark [NO_PLAN_B] and raise priority.
+After [RISK_NODES] -- add [PLAN_B] section (list, not table):
+
+[PLAN_B]
+- <risk-id>: <plan B>
+- <risk-id>: <plan B>
+
+Example:
+[PLAN_B]
+- SEC-1: parameterized queries
+- SEC-2: argon2id + dual-verify
