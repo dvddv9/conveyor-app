@@ -25,3 +25,5 @@ update_*.py
 precision_*.py
 check_*.py
 rc*.py
+# Test scripts (do not commit)
+test_*.py
