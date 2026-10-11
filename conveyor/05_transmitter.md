@@ -182,7 +182,7 @@ Markdown. Без JSON.
 
 ## Epistemic hygiene
 
-If [QUESTIONS] or [MANDATORY BASE] has VERIFY for topic X:
+MANDATORY: If [QUESTIONS] or [MANDATORY BASE] has VERIFY for topic X:
 - In [CONCLUSION] use "no signs of X found (VERIFY)"
 - Do NOT use categorical "X is absent"
 

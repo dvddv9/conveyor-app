@@ -153,7 +153,7 @@ escalation: level, action.
 
 ## ECON - mandatory components
 
-ECON must include:
+ECON MUST include (MANDATORY):
 1. Cloud cost - delta (if known)
 2. Engineering cost - days x rate (if rate unknown - not set)
 3. ROI
