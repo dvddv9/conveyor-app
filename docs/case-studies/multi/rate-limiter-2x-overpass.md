@@ -22,6 +22,9 @@
 - **honest boundaries:** `ratio 2.00` framed as transient, not sustained
 - **task_type=review** applied (calibration)
 
+
+**Full report for client:** [rate-limiter-2x-overpass-full.md](rate-limiter-2x-overpass-full.md)
+
 ---
 
 ## Conveyor Output
