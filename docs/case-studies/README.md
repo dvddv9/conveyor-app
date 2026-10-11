@@ -131,7 +131,27 @@ See [own/](own/) for full reports.
 |------|----------|------|
 | ec2.tf | **EMERGENCY** — hardcoded secrets detected at Stage 0 | [→](terragoat-emergency.md) |
 
----
+------
+
+## Comparison — Conveyor vs Raw Prompt
+
+Same material (Python 50k RPS spec) — Conveyor pipeline vs raw LLM prompt.
+See [comparison/](comparison/) for full analysis.
+
+| Criterion | Conveyor | Raw Prompt |
+|-----------|----------|------------|
+| material_hash | ✅ real SHA-256 | ❌ fake (`fintech50k...`) |
+| audit_id | ✅ hex-valid | ❌ not hex (`f7k2m9`) |
+| Stage order | ✅ 1→2→3→4→5 | ❌ 1→2→4→3→5 |
+| D-level | ✅ D3 (correct) | ❌ D4 (inflated) |
+| Cost | ✅ $0.011264 | ❌ not specified |
+| Retry | ✅ | ❌ |
+| Emergency gate | ✅ | ❌ |
+
+------
+
+**Conclusion:** content is comparable; metadata validity is not.
+Conveyor guarantees valid metadata, systematic structure, no hallucinated numbers.
 
 ## Why these case studies matter
 
