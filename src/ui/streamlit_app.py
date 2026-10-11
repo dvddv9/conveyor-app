@@ -216,7 +216,7 @@ with tab_analyze:
                                             c3.markdown(f"**PII:** {'да' if pii else 'нет'}")
                                             st.caption(f"Session: {r.get('session_id', '?')}")
                                             st.divider()
-                                            st.markdown(r.get("final_markdown", "") or "_пусто_")
+                                            st.markdown((r.get("final_markdown", "") or "_пусто_").replace("$", "\\$"))
                                             st.download_button(
                                                 "💾 Скачать Markdown",
                                                 data=r.get("final_markdown", "") or "",
@@ -432,7 +432,7 @@ if analyze_btn and material.strip() and result_placeholder is not None:
 
                     st.divider()
                     st.markdown("### 📄 Отчёт")
-                    st.markdown(data.get("final_markdown", ""))
+                    st.markdown(data.get("final_markdown", "").replace("$", "\\$"))
 
                     st.divider()
                     st.download_button(

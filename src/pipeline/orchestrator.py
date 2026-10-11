@@ -415,6 +415,13 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 async def run_pipeline_async(material: str, filename: str, verbose: bool = False,
                               session_suffix: str = "") -> dict:
     """Async pipeline."""
+    # Truncate if too large
+    truncated = False
+    original_size = len(material)
+    if original_size > MAX_CHARS:
+        material = material[:MAX_CHARS]
+        truncated = True
+
     from src.pipeline.async_stages import (
         async_stage0_orchestrator, async_stage1_scanner, async_stage2_analyst,
         async_stage3_researcher, async_stage4_synthesizer, async_stage5_transmitter,
@@ -472,6 +479,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     result_file = DATA_DIR / f"result_{session_id}.json"
     result_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     return result
+
 
 
 def main():
