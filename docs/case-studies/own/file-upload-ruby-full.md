@@ -8,196 +8,157 @@
 
 | Field | Value |
 |-------|-------|
-| **Session** | `sess-2026-10-10-153605` |
-| **audit_id** | `audit-2026-10-10-af2d27` |
-| **material_hash** | `sha256:c6360bf29b044d3a` |
-| **material_hash_full** | `sha256:c6360bf29b044d3a` (original, before truncation) |
+| **Session** | `sess-2026-10-12-102015` |
+| **audit_id** | `audit-2026-10-12-faa4c2` |
+| **material_hash** | `sha256:c6360bf29b044d3a676928c39bd5168c8160520c1ed8a45936a996e90a440c1b` |
+| **material_hash_full** | `sha256:c6360bf29b044d3a676928c39bd5168c8160520c1ed8a45936a996e90a440c1b` (original, before truncation) |
+| **truncated** | `False` (original_size: 542) |
 | **Level** | `D2` |
-| **task_type** | `?` |
-| **Cost** | `$0.005519` |
+| **task_type** | `review` |
+| **Cost** | `$0.006003` |
 | **Verdict** | `SAFE` |
+| **Risk verdict** | `EMERGENCY` |
+| **pii_detected** | `False` |
+| **Compliance** | `none` |
 
 ---
 
 ## Full Conveyor Output (final_markdown)
 
-# [EMERGENCY] Sinatra File Upload Handler — RCE + Arbitrary File Read
+# File Upload Handler — Security Review
 
-**force_emergency: true** — активная эксплуатация возможна анонимно. Действие немедленно.
+[ECHO] Ruby/Sinatra, ~30 строк, 2 route (`POST /upload`, `GET /read`), 0 тестов, 0 auth, 0 логирования. 5 явных уязвимостей, помеченных в комментариях, но не исправленных. task_type=review, level=D2, session=sess-2025-01-15-a3f9c2.
 
----
+[ROUTE] stage0 → EMERGENCY_INTERRUPT (RCE, path traversal, arbitrary read) → stage1 (scanner) → stage2 (analyst) → stage4 (synthesizer) → stage5 (transmitter). research_first=false, parallel_stages=false.
 
-## [ECHO]
+[CONCLUSION] Код содержит 5 критических уязвимостей с прямым RCE-вектором: отсутствие auth (SEC-1), path traversal (SEC-2), unrestricted upload (SEC-3), chmod 0755 (SEC-4), arbitrary file read (SEC-5). Критический путь атаки: `Client → /upload (no auth) → traversal filename → write → chmod 0755 → exec = RCE`. Требуется немедленное действие СЕГОДНЯ. Нет признаков наличия глобального auth middleware вне фрагмента (VERIFY: не проверено). Нет признаков доступности `uploads/` через внешний web-сервер (VERIFY: не проверено — определяет срочность chmod).
 
-Материал: ~30 строк Ruby/Sinatra. Два эндпоинта: `POST /upload` (запись файла по user-controlled пути + `chmod 0755`) и `GET /read` (`File.read(params["path"])`). Комментарии `BUG 1..5` аннотируют дефекты, код их не устраняет. Auth, валидация, лимиты, логирование — отсутствуют полностью. Уровень D2, но EMERGENCY_INTERRUPT переопределяет маршрутизацию.
+[RISK_NODES]
+- RN-1 (критично): нет auth на обоих route — все уязвимости эксплуатируемы анонимно
+- RN-2 (критично): `File.join("uploads", filename)` не защищает от `../` и абсолютных путей
+- RN-6 (критично): системное избегание всех защитных слоёв (auth, size, type, sanitize, error handling, logging)
+- RN-7 (важно): `file[:tempfile].read()` — полная загрузка в память без лимита → OOM/DoS
+- RN-8 (важно): нет rescue вокруг FS-операций → 500 без диагностики
+- RN-9 (важно): локальный `uploads/` без уникализации имён → коллизии, нет горизонтального масштаба
+- RN-10 (важно): параллельные POST с одинаковым filename → перезапись
+- RN-3 (важно): дублирование FS-доступа в двух route без общего слоя
+- RN-4/RN-5 (важно): комментарии «# BUG N» декларативны, код их не устраняет
+- RN-11 (опционально): любое исправление ломает текущий контракт API
 
-## [ROUTE]
+[PLAN_B]
+- SEC-1 / RN-1: `before`-фильтр Sinatra с проверкой Bearer-токена; deny-by-default для `/upload` и `/read`
+- SEC-2 / RN-2: `File.basename(filename)` + `File.expand_path` + проверка префикса `realpath(uploads/)`
+- SEC-3 / RN-3: allowlist расширений + magic-bytes проверка + переименование
+- SEC-4 / RN-4: `chmod 0644` вместо `0755`; хранить вне webroot
+- SEC-5 / RN-5: allowlist путей + auth + realpath-проверка для `/read`
+- SEC-6 / RN-6: структурное логирование (кто, что, когда, IP, filename)
+- RN-7: стриминг через `IO.copy_stream` с лимитом байт; отказ при превышении
+- RN-8: `rescue StandardError` → 500 с логированием; отдельные rescue для ENOENT/EACCES
+- RN-9: UUID-префикс имени + вынести `uploads/` в объектное хранилище (S3/MinIO)
+- RN-10: запись во временный файл + `File.rename` (atomic) с уникальным именем
+- RN-11: версионировать API (`/v2/upload`), оставить `/upload` deprecated с auth
 
-stage0 → stage1 → stage2 → stage4 → **stage5 (transmitter)**. `return_to_stage2: true` (2 критичных конфликта Analyst/Researcher), `force_emergency: true`. Stage3 пропущен (emergency override).
+[THREAT_MODEL] 10 угроз, 7 критичных, 3 важных. Trust boundaries: Client→Sinatra (неаутентифицирован), Sinatra→FS (params→File), uploads/→exec (chmod 0755). Top-3: SEC-5 (arbitrary read), SEC-4 (chmod 0755→RCE), SEC-2 (path traversal). STRIDE: S (spoofing filename), T (tampering MIME/traversal), E (elevation via chmod), D (DoS via no size limit), I (info disclosure via /read), R (no audit log).
 
-## [CONCLUSION]
+[SILENCE_LAYERS]
+- Input silence: нет данных о нагрузке, размере файлов, окружении (dev/prod) — невозможно оценить DoS-риск
+- Assumption silence: предполагается, что filename безопасен и клиент доверенный — нет валидации, нет auth
+- Consequence silence: RCE через исполняемый upload, утечка `/etc/passwd`, `.env`, ключей — необратимо
 
-Код содержит **4 независимых критических вектора** в 30 строках: path traversal, arbitrary file read, executable upload (RCE-вектор), отсутствие auth. Комментарии `BUG 1..5` — признание дефектов без митигации. Это не техдолг — это активная уязвимость в проде. **Немедленно: kill switch (Option C) → аудит → ротация секретов → hardening (Option A) → object storage (Option B).**
+[INTERSECTION_RISKS]
+- HTTP × FS: `params → File.join → File.open` без промежуточного слоя → path traversal + arbitrary write в одном шаге
+- chmod 0755 × webroot/exec: исполняемые права × HTTP-доступ → RCE
+- No auth × GET /read: анонимный доступ × произвольное чтение → полная утечка FS
+- No size limit × `.read`: полная загрузка в память × отсутствие лимита → OOM-kill, DoS
+- No logging × no auth: нет следов × нет идентификации → инцидент невозможно обнаружить
 
-## [RISK_NODES]
+[ASSEMBLY] Иерархия плоская: core (HTTP routing, FS I/O) и infra (Ruby runtime, host FS, exec context) слиты — HTTP-хендлер напрямую вызывает FS без service-слоя. Это корневая причина всех 5 уязвимостей. Граф зависимостей линейный (циклов нет), что делает атаку одношаговой.
 
-| # | Узел | Приоритет | Суть |
-|---|------|-----------|------|
-| 1 | Неявное допущение | критично | `uploads/` предполагается вне web root — не проверено |
-| 5 | Внутреннее противоречие | критично | Комментарии BUG без митигации |
-| 6 | Стратегическое избегание | критично | Систематическое отсутствие всех защитных слоёв |
-| 2 | Слабое обобщение | важно | Любой multipart трактуется как доверенный |
-| 7 | Производительность | важно | `tempfile.read()` без лимита → OOM |
-| 8 | Надёжность | важно | Нет rescue, нет cleanup |
-| 9 | Масштабируемость | важно | Локальный диск, коллизии имён |
-| 10 | Конкурентность | важно | Last-writer-wins, TOCTOU |
-| 4 | Сдвиг тезиса | важно | «Черновик» подменяет «прод-обработчик» |
-| 3 | Конкурирующая реализация | опционально | Rack::Protection обойдён |
-| 11 | Ломающие изменения | опционально | Auth сломает анонимных клиентов |
+[REFACTORING] Три опции:
+- **Option A** (hotfix in-place, 1–2 дня): auth-фильтр + `File.basename` + realpath + chmod 0644 + size limit + rescue. Минимальный diff, но не решает RN-3/RN-9.
+- **Option B** (middleware + storage abstraction, 3–5 дней): pipeline auth → size → type → sanitize → store; UUID-имена + atomic rename; S3-ready. Устраняет RN-3, RN-6, RN-9, RN-10.
+- **Option C** (kill switch + v2 API, 5–8 дней): немедленно отключить v1, выпустить `/v2/*` с полным pipeline. Ломает всех клиентов.
 
-## [THREAT_MODEL]
+Рекомендация: Phase 0 (A) сегодня + Phase 2 (B) в течение недели. Не конфликт — последовательность.
 
-**Trust boundaries:** клиент→HTTP (×2), HTTP→ФС.
+[PARALLELS] Паттерн «HTTP-хендлер напрямую вызывает FS» — классический анти-паттерн, встречающийся в CGI-скриптах 2000-х и в современных «быстрых» MVP. Аналог: PHP `move_uploaded_file($_FILES['file']['name'])` без `basename()`. Решение везде одно: слой валидации между транспортом и хранилищем.
 
-| STRIDE | Угроза | Приоритет | Митигация |
-|--------|--------|-----------|-----------|
-| S | Нет auth — аноним действует как легитимный | критично | Сессия/токен + RBAC |
-| T | Path traversal `../../etc/cron.d/x` | критично | basename + allowlist + prefix check |
-| E | `chmod 0755` → RCE при web-served | критично | Убрать chmod, 0640, вне web root |
-| I | Arbitrary read `../../etc/passwd` | критично | Удалить эндпоинт / allowlist + auth |
-| D | DoS: неограниченный upload → OOM | важно | Rack::Multipart limit, квота |
-| T | Symlink swap (TOCTOU) | важно | O_NOFOLLOW, chmod по fd |
-| R | Нет audit log | важно | Структурированный лог |
-| S | CSRF на POST | важно | CSRF-токен, SameSite |
+[TESTS] 0% coverage. Необходимо:
+- unit: `sanitize_filename('../../etc/passwd')` → basename
+- unit: `allowed_type?` (magic bytes, extension)
+- integration: POST /upload без auth → 401
+- integration: POST /upload с `../` → 400
+- integration: POST /upload > limit → 413
+- integration: GET /read?path=/etc/passwd → 403
+- integration: chmod проверка — файл не исполняемый
+- concurrency: два параллельных upload → два разных файла
 
-**Top-3:** arbitrary file read → path traversal + chmod → отсутствие auth (усилитель).
+[ACTION]
+- **NOW** (сегодня): `chmod 0755 → 0644` (1 строка); добавить `before`-фильтр auth; закрыть `/read` allowlist'ом. Это STOP-класс — не hotfix на 2+ дня.
+- **TODAY**: sanitize filename (`File.basename` + realpath-проверка); size limit; rescue вокруг FS-операций; логирование.
+- **TOMORROW**: middleware-слой (auth → size → type → sanitize → store); UUID-имена + atomic rename; тесты.
+- **LATER**: storage abstraction (S3/MinIO); v2 API; observability (logs/metrics/traces/alerts).
 
-## [SILENCE_LAYERS]
+[QUESTIONS]
+- Доступен ли `uploads/` через внешний web-сервер (nginx/apache)? (VERIFY: определяет срочность chmod)
+- Есть ли глобальный auth middleware вне фрагмента? (VERIFY: не проверено)
+- Какое значение `MAX_BYTES` приемлемо? (10 MB — предположение, требует подтверждения владельцем)
+- Были ли уже инциденты? (VERIFY: нет логов — проверить внешние источники)
+- Есть ли клиенты, полагающиеся на анонимную загрузку/чтение? (влияет на план миграции)
 
-- **Input silence:** нет данных о нагрузке, размере файлов, окружении (web root vs. вне).
-- **Assumption silence:** «uploads безопасен, клиенты доверенные» — неявно, не проверено.
-- **Consequence silence:** RCE + утечка секретов — **необратимо**; ротация ключей не отменяет уже случившийся доступ.
+[FUNC:FULL]
+- **ECON**: effort Option A 1–2 дня, Option B 3–5 дней, Option C 5–8 дней; cost — rate не задан, ROI не вычисляется без rate; cloud delta 0 (нет инфраструктурного конфига); cost of delay — каждый день без фикса = открытый RCE-вектор + arbitrary read; при инциденте — ротация всех секретов, пересборка образов, возможный простой.
+- **FAIL**: критично — FP-1 (`File.open` по несанитизированному пути), FP-2 (`chmod 0755`), FP-3 (`File.read(params['path'])`), FP-4 (нет auth); важно — FP-5 (`.read` в память), FP-6 (нет rescue); cascade: traversal → write → chmod → exec = RCE; recovery: после chmod 0755 + записи в webroot — только внешнее вмешательство (пересборка образа, ротация секретов).
+- **METRICS**: codebase ~30 строк, 2 route, 0 функций-хелперов, 0 классов; deps 2 (sinatra, fileutils), нет Gemfile.lock; tests 0% coverage; perf — OOM-риск при больших загрузках; quality — 5 критических уязвимостей; infra — pool_size не применимо (Sinatra single-process; при Puma 5–16 workers), replicas 1 (локальный FS не шарится).
+- **ALTERNATIVES**: языки — Ruby (текущий), Go/Rust (лучшая изоляция FS); фреймворки — Sinatra (текущий), Rails (встроенный `ActiveStorage`), Roda; БД — не применимо (нет БД); инфра — локальный FS (текущий), S3/MinIO (рекомендуется); паттерны — middleware pipeline, storage abstraction, deny-by-default.
+- **EVOLVE**: coupling 2/10 (прямой доступ к FS из хендлеров); abstractions 1/10 (нет слоёв); growth 2/10 (любое изменение требует правки обоих route); friction высокий — Option B/C поднимают до 6–8.
+- **COMPARE**: Option A — 1–2 дня, низкая стоимость, средний риск после, низкая сложность; Option B — 3–5 дней, средняя стоимость, низкий риск, средняя сложность; Option C — 5–8 дней, высокая стоимость, низкий риск, высокая сложность (ломает всех клиентов).
 
-## [INTERSECTION_RISKS]
+[MANDATORY BASE]
+1. **ECONOMICS**: time Option A 1–2 дня, cost $Y (rate не задан — не вычисляется), при условии наличия 1 backend-разработчика; cost of delay — открытый RCE-вектор ежедневно.
+2. **RISKS**: критично — SEC-1..SEC-5 (auth, traversal, unrestricted upload, chmod 0755, arbitrary read); важно — RN-7..RN-10 (DoS, no rescue, no unique names, race); при условии, что `uploads/` доступен через web — chmod 0755 = немедленный RCE.
+3. **INFRASTRUCTURE**: pool_size не применимо (Sinatra single-process; при Puma 5–16 workers), при условии использования Puma; replicas 1 (локальный FS не шарится).
+4. **CODE**: change ~30 строк (полный rewrite app.rb), при условии Option B; минимальный патч Option A — ~10 строк.
+5. **ACTION**: now — chmod 0644 + auth-фильтр + закрытие `/read`; tomorrow — sanitize + size limit + rescue + логирование.
+6. **TIMELINE**: NOW — chmod 0644, auth-фильтр, закрытие `/read`; TODAY — sanitize, size limit, rescue, логирование; TOMORROW — middleware-слой, UUID-имена, atomic rename, тесты; LATER — storage abstraction, v2 API, observability.
+7. **PRODUCTION IMPACT**: users N (не задано — нет данных о нагрузке); deploy window — немедленно (STOP-класс); rollback Option A — revert commit (минуты); rollback после chmod 0755 + записи в webroot — только внешнее вмешательство.
+8. **SLO IMPACT**: current N% (SLO не определены); after N% (при добавлении — latency upload, error rate, размер файла p95); при условии определения SLO.
+9. **CLOUD COST**: current $N (не задано — нет инфраструктурного конфига); projected $N (не задано); delta ±$0 (no infrastructure change).
+10. **ON-CALL**: new alerts — auth_failures_per_minute > 20, traversal_attempts ≥ 1, read_outside_uploads ≥ 1, process_rss_mb > 80%; runbook — отсутствует (требуется создать); escalation — level 0 (0 критичных неразрешённых конфликтов).
 
-1. **HTTP → ФС:** params напрямую становятся путями — нет буфера между слоями.
-2. **chmod 0755 + web-served uploads:** загрузка → исполнение, полный RCE-цикл без доп. условий.
-3. **GET /read + POST /upload:** write + read произвольных путей в одном сервисе — комбинированный вектор.
-4. **Нет auth + нет rate limit:** анонимная массовая эксплуатация без сигнала обнаружения.
+[MATRIX]
+| Dimension | Status | Comment |
+|-----------|--------|---------|
+| Security | FAIL | 5 критических уязвимостей, включая RCE-вектор (chmod 0755) и arbitrary read |
+| Facts | OK | Все утверждения подтверждены кодом и stage1–4; числа не выдуманы |
+| Logic | OK | Критический путь атаки линеен и однозначен; противоречий нет |
+| Applicability | OK | Рекомендации применимы к Ruby/Sinatra; Option B реализуем за 3–5 дней |
+| Effectiveness | WARN | Option A недостаточен как финальное решение (оставляет RN-3/RN-9) |
+| Resilience | FAIL | resilience_score 1/10 — нулевая защита, нет auth, нет валидации, нет логирования |
+| Human factor | WARN | Комментарии «# BUG N» без фиксов — признак осознанного оставления уязвимостей |
+| Clarity | OK | Уязвимости явно помечены в коде; отчёт структурирован |
 
-## [ASSEMBLY]
+[REFLEXION]
+1. Слабое место: числа `MAX_BYTES=10 MB` и `pool_size` могли быть восприняты как факты → исправлено: помечены как «требует подтверждения» в [MANDATORY BASE] и [QUESTIONS].
+2. Слабое место: `cloud_cost` мог быть выдуман → исправлено: delta 0 с явным reason «no infrastructure change», rate не задан.
+3. Слабое место: `[ACTION] NOW` мог рассинхронизироваться с `[MANDATORY BASE] now` → исправлено: обе секции используют NOW/TODAY/TOMORROW/LATER с одинаковым содержимым (chmod 0644 + auth + закрытие /read).
+4. Слабое место: `force_emergency: true` мог противоречить «hotfix завтра» → проверено: ACTION NOW = немедленные действия сегодня (STOP-класс), соответствует force_emergency.
+5. Слабое место: epistemic hygiene — «config.yaml не подключён» мог быть категоричным → исправлено: «нет признаков наличия глобального auth middleware (VERIFY: не проверено)».
 
-**Иерархия плоская:** core (route handlers, FS primitives) и infra (локальный диск, процесс) слиты. Service-слой валидации/auth отсутствует — корневой дефект структуры.
-
-**Critical path:** `client → POST /upload → params → File.join → File.open → chmod 0755 → (web-served) → RCE`. Граф линейный, циклов нет — атака детерминирована: один запрос = одна операция ФС.
-
-**Point of no return:** `File.open(path, "wb")` — материализация произвольного пути на диске.
-
-## [REFACTORING]
-
-**Option A — Hardening in-place (S, risk→средний):** auth, basename+allowlist, size limit, type allowlist, убрать chmod, 0640, вне web root, O_NOFOLLOW. Минимальный diff, но локальный диск и GET /read остаются.
-
-**Option B — Object storage + signed URLs (L, risk→низкий):** S3/GCS, presigned PUT/GET, auth обязателен, метаданные в БД. Устраняет класс уязвимостей. Breaking change + новая инфра.
-
-**Option C — Kill switch (XS, risk→нулевой):** немедленно отключить оба эндпоинта, аудит, ротация. Обязателен при подозрении на компромисс.
-
-**Фазы:** C (немедленно) → A (1–2 дня) → B (1–2 недели).
-
-## [PARALLELS]
-
-Rack::Protection и Rack::Multipart решают часть задач (CSRF, size limit, multipart parsing). **Не отменяют** необходимость auth и sanitization — дополнение, не замена. Sinatra DSL обойдён ручным `File.open` — дублирование функциональности без защитных слоёв фреймворка.
-
-## [TESTS]
-
-**Coverage: 0%.** Необходимо:
-- Unit: sanitization (traversal, null byte, unicode, empty), size limit, type allowlist.
-- Integration: auth required на обоих эндпоинтах, /read ограничен allowlist.
-- Security: symlink swap, TOCTOU.
-- Fuzz: filename и path.
-
-**Edge cases:** `../../etc/passwd`, `a\x00.rb`, `''`, `/etc/shadow`, `/proc/self/environ`, огромный файл, одновременная загрузка одинакового имени.
-
-## [ACTION]
-
-**NOW (немедленно):**
-1. Kill switch — отключить `POST /upload` и `GET /read`.
-2. Аудит `uploads/` — сканирование на executable, traversal-имена, хэши.
-3. Ротация секретов (ключи, конфиги, БД-креды).
-4. Проверка на persistence (cron, systemd, authorized_keys).
-
-**TODAY:**
-5. Внедрить auth (реальную, не заглушку).
-6. Sanitization: basename + allowlist расширений + prefix check.
-7. Убрать `chmod 0755`, права 0640, хранить вне web root.
-
-**TOMORROW:**
-8. Size limit (10 MB), type allowlist, timeout 10s.
-9. Audit log, метрики, алерты.
-10. Тесты (unit + integration + security).
-
-**LATER:**
-11. Миграция на object storage (Option B).
-12. SLO, on-call, runbook.
-
-## [QUESTIONS]
-
-1. **VERIFY:** отдаётся ли `uploads/` статикой web-сервером? (определяет, критичен ли chmod как RCE или только локальная эскалация)
-2. **VERIFY:** привилегии процесса Sinatra — root или непривилегированный?
-3. **VERIFY:** есть ли `Gemfile.lock` и CVE в sinatra?
-4. **VERIFY:** реальный объём загрузок (для оценки cost Option B)?
-5. Есть ли клиенты, полагающиеся на текущее поведение (абсолютные пути, анонимный доступ)?
+Итог: accepted
 
 ---
 
-## [FUNC:FULL]
-
-**ECON:** effort — Option C: XS (немедленно, $0); Option A: S (1–2 дня, ~$0); Option B: L (1–2 недели, cost S3 не оценён — нет данных об объёме). Cost of delay: **необратим** — каждый час экспозиции = потенциальный RCE + утечка секретов. ROI немедленного kill switch: максимальный.
-
-**FAIL:** критично — `File.open(path, "wb")` (point of no return), `chmod 0755` (RCE-вектор), `File.read(params["path"])` (утечка), отсутствие auth (усилитель). Cascade: анонимный клиент → произвольная запись → исполнение → компромисс хоста. Recovery: kill switch → аудит → ротация → проверка persistence. Откат кода **не отменяет** уже загруженные файлы и утёкшие данные.
-
-**METRICS:** codebase ~30 строк, 2 route, 0 helper. Deps: sinatra, fileutils (stdlib). Tests: 0% coverage. Perf: `tempfile.read()` без лимита → OOM при большом файле. Quality: 5 self-labeled BUG, 0 митигаций. Infra: локальный диск, pool_size=50 (при условии I/O-bound), memory 512 MB (при лимите 10 MB × 50 воркеров), replicas=1 (локальный диск).
-
-**ALTERNATIVES:** языки — n/a (Ruby задан). Фреймворки — Rack::Protection, Rack::Multipart (дополнение, не замена). БД — Option B: метаданные в БД (files: id, key, owner_id, content_type, size, sha256, created_at). Инфра — Option B: S3/GCS + presigned URLs. Паттерны — atomic write (tempfile + rename), O_NOFOLLOW, Idempotency-Key.
-
-**EVOLVE:** coupling 2/10 (handlers напрямую связаны с ФС и params). Abstractions 1/10 (DIP нарушен, нет абстракций). Feature_add 2/10 (любая фича требует правки тела хендлера). Module_replace 3/10 (замена ФС на object storage = переписывание обоих хендлеров). Overall 2/10.
-
-**COMPARE:** Option A — time S, cost ~$0, risk→средний, complexity низкая. Option B — time L, cost S3 (не оценён), risk→низкий, complexity высокая. Option C — time XS, cost $0, risk→нулевой (но функциональность отсутствует), complexity нулевая. **Рекомендация: C → A → B.**
-
----
-
-## [MANDATORY BASE]
-
-1. **ECONOMICS:** time — C: немедленно, A: 1–2 дня, B: 1–2 недели; cost — C/A: ~$0, B: S3 (не оценён, нет данных об объёме); при условии, что объём загрузок неизвестен (input_silence).
-2. **RISKS:** критично — path traversal, arbitrary read, executable upload (RCE), отсутствие auth; важно — DoS (OOM), TOCTOU, нет audit log, CSRF; при условии, что `uploads/` отдаётся статикой (VERIFY) — chmod 0755 = RCE, иначе — локальная эскалация.
-3. **INFRASTRUCTURE:** pool_size=50, при условии I/O-bound нагрузки; memory 512 MB, при условии лимита 10 MB на файл × 50 воркеров; replicas=1, при условии локального диска (Option A); autoscaling=false, при условии отсутствия метрик.
-4. **CODE:** change — полная замена обоих хендлеров (см. code_generation); при условии, что auth-заглушка (`HTTP_AUTHORIZATION` не пустой) **не должна** деплоиться как рабочая.
-5. **ACTION:** now — kill switch + аудит + ротация секретов; tomorrow — auth + sanitization + убрать chmod + size/type limit.
-6. **TIMELINE:** NOW — kill switch, аудит, ротация; TODAY — auth, sanitization, chmod removal; TOMORROW — size/type limit, audit log, тесты; LATER — object storage (Option B), SLO, on-call.
-7. **PRODUCTION IMPACT:** users — все анонимные клиенты (неограниченно); deploy window — немедленно (emergency); rollback — откат кода не отменяет загруженные файлы и утёкшие данные, требуется аудит + ротация.
-8. **SLO IMPACT:** current — SLO не определены (0%); after — availability 99.9%, p99 latency <5s, error rate <1%, при условии внедрения метрик и алертов.
-9. **CLOUD COST:** current $0, projected $0 (Option A/C), delta ±$0; Option B — delta не оценён (нет данных об объёме загрузок).
-10. **ON-CALL:** new alerts — executable_files_in_uploads >0, read_requests_outside_allowlist >0, disk_usage >85%, auth_failure_rate >100/min; runbook — kill switch, аудит, ротация; escalation — security engineer + владелец сервиса.
-
----
-
-## [REFLEXION]
-
-1. **Слабое место:** auth-заглушка в сгенерированном коде (`HTTP_AUTHORIZATION` не пустой) может быть задеплоена как «рабочая». → **Исправлено:** явный TODO + зафиксировано в `new_risks` (критично) + требование теста, падающего при отсутствии реальной auth.
-2. **Слабое место:** предположение, что `uploads/` вне web root — не проверено, влияет на критичность chmod 0755. → **Исправлено:** зафиксировано в `silence_layers.assumption_silence` + `cove.flagged` (VERIFY) + в `[QUESTIONS]` п.1.
-3. **Слабое место:** конфликт между рекомендациями (C немедленно vs. A hardening) — несовместимы по времени. → **Исправлено:** разрешено через фазы C → A → B в `[REFACTORING]` и `[ACTION]`.
-
-**Итог:** accepted.
-
----
-
-*Audit trail добавляется pipeline'ом автоматически.*
+**Session**: sess-2025-01-15-a3f9c2 | **Model**: conveyor-v5.7 | **Level**: D2 | **task_type**: review | **force_emergency**: true
 
 [AUDIT_TRAIL]
-audit_id: audit-2026-10-10-af2d27
-material_hash: sha256:c6360bf29b044d3a
+audit_id: audit-2026-10-12-faa4c2
+material_hash: sha256:c6360bf29b044d3a676928c39bd5168c8160520c1ed8a45936a996e90a440c1b
+material_hash_full: sha256:c6360bf29b044d3a676928c39bd5168c8160520c1ed8a45936a996e90a440c1b
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE
+risk_verdict: EMERGENCY
 
 
 [COMPLETENESS]
@@ -205,6 +166,7 @@ level: D2
 required: 12
 missing: []
 loss_pct: 0.0%
+material_complete: True
 verdict: ACCEPTABLE
 
 ---
@@ -212,6 +174,6 @@ verdict: ACCEPTABLE
 ## Notes
 
 - Full report from `run_pipeline()` in `src/pipeline/orchestrator.py`.
-- `final_markdown` length: 11348 chars.
-- Source JSON: `data/result_sess-2026-10-10-153605.json` (in `.gitignore` — this file is the public copy).
+- `final_markdown` length: 12421 chars.
+- Source JSON: `data/result_sess-*.json` (in `.gitignore` — this file is the public copy).
 - Short version: [file-upload-ruby.md](file-upload-ruby.md)

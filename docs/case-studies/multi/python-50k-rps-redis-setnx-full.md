@@ -1,5 +1,10 @@
 # python-50k-rps-redis-setnx: FULL REPORT
 
+> **⚠️ LEGACY (pre-v5.7):** `material_hash` truncated to 16 hex.
+> Source material and JSON no longer available (pre-v5.7 artifacts, superseded by pipeline V5.7).
+> See [docs/PROOF.md](../../PROOF.md#доказательство-11--пересборка-старых-отчётов-hash-16--64-hex).
+
+
 **Полный отчёт pipeline Conveyor V5.7.**
 
 ---
