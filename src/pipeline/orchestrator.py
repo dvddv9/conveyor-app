@@ -138,11 +138,13 @@ def generate_audit_id() -> str:
 
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               truncated: bool = False, original_size: int = 0,
-              material_hash_full: str = None) -> dict:
+              material_hash_full: str = None,
+              force_emergency: bool = False) -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
     critique = "REQUIRES_REVIEW" if (pii or compliance) else "SAFE"
+    risk_verdict = "EMERGENCY" if force_emergency else "SAFE"
 
     audit = {
         "audit_id": generate_audit_id(),
@@ -156,6 +158,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         },
         "model": model,
         "critique_verdict": critique,
+        "risk_verdict": risk_verdict,
         "pii_detected": bool(pii),
         "pii_details": pii,
         "compliance_flags": compliance,
@@ -240,7 +243,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
+        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True)
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -264,6 +267,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             f"pii_detected: {str(audit['pii_detected']).lower()}\n"
             f"compliance_flags: {audit['compliance_flags']}\n"
             f"critique_verdict: {audit['critique_verdict']}\n"
+        f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         )
         emergency_md = emergency_md + audit_block
 
@@ -356,7 +360,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # === AUDIT ===
     if verbose:
         print("[Audit] Сбор audit-записи...")
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
+    force_emergency = bool(stage4.get('force_emergency', False))
+
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency)
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -373,6 +379,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"pii_detected: {str(audit['pii_detected']).lower()}\n"
         f"compliance_flags: {audit['compliance_flags']}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
+        f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
     )
     final_markdown = final_markdown + audit_block
 
@@ -485,7 +492,9 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     final_markdown = await async_stage5_transmitter(material, context_5)
     # Strip any [AUDIT_TRAIL]/[COMPLETENESS] from LLM output (pipeline adds its own)
     final_markdown = strip_llm_audit_blocks(final_markdown)
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
+    force_emergency = bool(stage4.get('force_emergency', False))
+
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
@@ -494,6 +503,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         f"pii_detected: {str(audit['pii_detected']).lower()}\n"
         f"compliance_flags: {audit['compliance_flags']}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
+        f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
     )
     required = REQUIRED_BLOCKS.get(level, [])
     missing = [b for b in required if b not in final_markdown]
