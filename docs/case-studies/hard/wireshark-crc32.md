@@ -164,3 +164,27 @@ verdict: ACCEPTABLE
 
 - **Known behavior:** copyright emails in the license header trigger `pii_detected: true` → `GDPR` + `152-ФЗ`. This is formal (any email = potential PII under GDPR), not a leak of user data. Documented as known limitation.
 - **`material_complete`:** slice was truncated (`crc32_ccitt_tvb_offset_seed` incomplete) — see fix in `orchestrator.py` (field `material_complete` added).
+
+---
+
+## PII false positive (documented)
+
+`pii_detected: true` triggered on **copyright header emails**:
+- `gerald@wireshark.org` (Gerald Combs — Wireshark author)
+- `ross@guest.adelaide.edu.au` (Ross Williams — "A Painless Guide to CRC")
+
+**This is a false positive.** These are public contacts in a license header, not user PII.
+GDPR / 152-ФЗ do not apply to copyright attribution.
+
+**Known limitation:** regex catches any email, including copyright headers.
+Future fix: whitelist domains (wireshark.org, gnu.org, fsf.org) or skip first 30 lines.
+
+---
+
+## material_hash vs material_hash_full
+
+- `material_hash` — SHA-256 of the **analyzed slice** (first 12000 chars, `MAX_CHARS`)
+- `material_hash_full` — SHA-256 of the **original material** (before truncation)
+- `truncated: true` + `original_size: N` — indicate truncation
+
+This allows verification against the source file even when the slice is truncated.
