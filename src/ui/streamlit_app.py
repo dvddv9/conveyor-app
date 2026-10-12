@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.7 — Streamlit UI.
+Vishap V5.8 — Streamlit UI.
 Запуск: streamlit run src/ui/streamlit_app.py
 """
 import json
@@ -16,12 +16,12 @@ HISTORY_LIMIT = 20
 
 
 st.set_page_config(
-    page_title="Vishap V5.7",
+    page_title="Vishap V5.8",
     page_icon="🔬",
     layout="wide",
 )
 
-st.title("🔬 Vishap V5.7")
+st.title("🔬 Vishap V5.8")
 st.caption("6-стадийный LLM-конвейер для анализа кода")
 
 try:
@@ -345,7 +345,7 @@ with tab_history:
 
 
 with tab_about:
-    st.subheader("ℹ️ Vishap V5.7")
+    st.subheader("ℹ️ Vishap V5.8")
 
     # === Режим LLM ===
     st.markdown("### 🔧 Режим LLM")
@@ -396,7 +396,7 @@ with tab_about:
     st.divider()
 
     st.markdown("""
-**Vishap V5.7** — 6-стадийный LLM-конвейер для анализа инженерного материала.
+**Vishap V5.8** — 6-стадийный LLM-конвейер для анализа инженерного материала.
 
 ### Архитектура
 

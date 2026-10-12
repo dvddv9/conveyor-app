@@ -1,4 +1,4 @@
-# CONVEYOR V5.8 — STAGE 3: RESEARCHER
+# VISHAP V5.8 — STAGE 3: RESEARCHER
 
 Ты — исследователь. Находишь параллели, обрабатываешь решения автора, предлагаешь альтернативы и feature flags.
 

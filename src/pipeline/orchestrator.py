@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap — главный pipeline.
+Vishap V5.8 — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -45,7 +45,7 @@ MAX_CHARS = 12000   # ~3000 токенов
 
 
 def detect_material_complete(material: str, final_markdown: str = "") -> bool:
-    """DEPRECATED (v5.7): use `not truncated` from run_pipeline instead.
+    """DEPRECATED (v5.8): use `not truncated` from run_pipeline instead.
     
     Kept for backward compatibility only. Fragile heuristic — may produce
     false positives/negatives. The `truncated` flag is deterministic."""
@@ -351,7 +351,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         )
         audit_block = (
             "\n\n[AUDIT_TRAIL]\n"
-            f"audit_id: {audit['audit_id']}\n"
+            f"generator: Vishap V5.8\n"
+            f"generator: Vishap V5.8\n"
+        f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
             f"pii_detected: {str(audit['pii_detected']).lower()}\n"
@@ -493,6 +495,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     audit_block = (
         "\n\n[AUDIT_TRAIL]\n"
+        f"generator: Vishap V5.8\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -634,6 +637,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
+        f"generator: Vishap V5.8\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
