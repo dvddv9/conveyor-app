@@ -23,41 +23,17 @@ from src.pipeline.stages import (
 from src.storage.history import add_entry
 from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
 from src.pipeline.cost import sum_stage_costs
+from src.tools.redact import redact_pii  # dogfood P0: pre-LLM PII redaction
+from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 
 MAX_CHARS = 12000   # ~3000 токенов
 
 
 # === Audit (встроенный compliance-scan) ===
 
-PII_PATTERNS = {
-    "email": re.compile(r"(?<![\w%])[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
-    "phone_ru": re.compile(r"\+7\d{10}|\b8\d{10}\b"),
-    "passport_ru": re.compile(r"\b\d{4}\s?\d{6}\b"),
-    "snils": re.compile(r"\b\d{3}-\d{3}-\d{3}[ -]?\d{2}\b"),
-    "iban": re.compile(r"\b[A-Z]{2}\d{2}[A-Z0-9]{10,30}\b"),
-    # Secrets
-    "aws_access_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
-    "aws_secret_key": re.compile(r"(?i)aws_secret_access_key\s*[:=]\s*[\"']?[A-Za-z0-9/+=]{40}[\"']?"),
-    "stripe_live_key": re.compile(r"\bsk_live_[A-Za-z0-9]{20,}\b"),
-    "stripe_test_key": re.compile(r"\bsk_test_[A-Za-z0-9]{20,}\b"),
-    "github_token": re.compile(r"\bghp_[A-Za-z0-9]{36}\b"),
-    "slack_token": re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"),
-    "google_api_key": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
-    "private_key": re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
-    "hardcoded_password": re.compile(r"(?i)\bpassword\s*[:=]\s*[\"'][^\"']{8,}[\"']"),
-    "hardcoded_secret": re.compile(r"(?i)\b(secret|api_key|access_key|token)\s*[:=]\s*[\"'][^\"']{12,}[\"']"),
-}
+# PII_PATTERNS moved to src/tools/patterns.py (dogfood: circular import fix)
 
-COMPLIANCE_TRIGGERS = {
-    "HIPAA": ["patient", "diagnosis", "medical record", "hipaa", "ehr"],
-    "PCI-DSS": ["payment", "card", "cvv", "credit card", "pci"],
-    "GDPR": ["personal data", "gdpr", "eu citizen", "right to erasure"],
-    "152-ФЗ": ["персональные данные", "152-фз", "оператор данных"],
-    "EU AI Act": ["llm", "foundation model", "ai system", "eu ai act"],
-    # SECRETS выставляется только через detect_pii (см. ниже),
-    # keyword-triggers удалены: они ловили имена переменных, а не секреты.
-    # "SECRETS": [...],
-}
+# COMPLIANCE_TRIGGERS moved to src/tools/patterns.py
 
 
 
@@ -154,7 +130,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               truncated: bool = False, original_size: int = 0,
               material_hash_full: str = None,
               force_emergency: bool = False,
-              context: str = "") -> dict:
+              context: str = "",
+              redaction_map: dict = None) -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
@@ -177,6 +154,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "pii_detected": bool(pii),
         "pii_details": pii,
         "compliance_flags": compliance,
+        "redaction_applied": bool(redaction_map),
+        "redaction_map": redaction_map or {},
         "truncated": truncated,
         "original_size": original_size,
     }
@@ -219,6 +198,19 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     if verbose:
         print("[Stage 0] Orchestrator...")
+    # === DOGFOOD P0: redact PII/secrets BEFORE any LLM call ===
+    material_original = material
+    material, redaction_map = redact_pii(material)
+    if redaction_map:
+        if verbose:
+            print(f"[Redact] PII/secrets redacted: {redaction_map}")
+        # Audit on ORIGINAL material (for compliance verdict)
+        original_audit_pii = detect_pii(material_original)
+        original_audit_compliance = detect_compliance(material_original, original_audit_pii)
+    else:
+        original_audit_pii = {}
+        original_audit_compliance = []
+
     stage0 = stage0_orchestrator(material, filename)
     route = stage0.get("route", [])
     level = stage0.get("level", "D3")
@@ -258,7 +250,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}")
+        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {})
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -377,7 +369,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         print("[Audit] Сбор audit-записи...")
     force_emergency = bool(stage4.get('force_emergency', False))
 
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}")
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map)
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -487,6 +479,16 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         async_stage3_researcher, async_stage4_synthesizer, async_stage5_transmitter,
     )
     session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
+    # === DOGFOOD P0: redact PII/secrets BEFORE any LLM call ===
+    material_original = material
+    material, redaction_map = redact_pii(material)
+    if redaction_map:
+        original_audit_pii = detect_pii(material_original)
+        original_audit_compliance = detect_compliance(material_original, original_audit_pii)
+    else:
+        original_audit_pii = {}
+        original_audit_compliance = []
+
     stage0 = await async_stage0_orchestrator(material, filename)
     route = stage0.get("route", [])
     level = stage0.get("level", "D3")
@@ -509,7 +511,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     final_markdown = strip_llm_audit_blocks(final_markdown)
     force_emergency = bool(stage4.get('force_emergency', False))
 
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}")
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
