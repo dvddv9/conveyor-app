@@ -1,5 +1,9 @@
 # Case Study: D3 (Conveyor) vs D4 Fallback (Raw Prompt)
 
+> **⚠️ LEGACY (pre-v5.7):** `material_hash` truncated to 16 hex.
+> Source material and JSON no longer available.
+
+
 **Date:** 2026-10-11
 **Material:** Same spec — 100-200k RPS payment platform, PCI DSS + GDPR
 **Task:** Compare two modes — full pipeline (D3) vs fallback (D4)

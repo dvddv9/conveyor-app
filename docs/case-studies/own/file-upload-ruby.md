@@ -191,7 +191,7 @@ Rack::Protection и Rack::Multipart решают часть задач (CSRF, si
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-af2d27
-material_hash: sha256:c6360bf29b044d3a
+material_hash: sha256:52685edef8d065aa9e08cca2a14830ae0d0ae822ba829818a8fa165e31246c94
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

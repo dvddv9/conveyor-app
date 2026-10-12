@@ -339,7 +339,7 @@ Effort A ~1–2 дня, B ~1 нед, C ~3–4 нед. Cost $0 инфрастру
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-ad9b28
-material_hash: sha256:cb0aefcb191a9614
+material_hash: sha256:6180a0a6398a29617d2538ebe1802e9c1b25fcf31d4972a36bcda2d4acb62e88
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

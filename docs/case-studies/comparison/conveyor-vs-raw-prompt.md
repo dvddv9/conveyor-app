@@ -1,5 +1,9 @@
 # Case Study: Conveyor vs Raw Prompt — Metadata Validation
 
+> **⚠️ LEGACY (pre-v5.7):** `material_hash` truncated to 16 hex.
+> Source material and JSON no longer available.
+
+
 **Date:** 2026-10-11
 **Material:** Same spec — Python 50k RPS transaction system (FastAPI + Kafka + Citus + Redis + EKS + Vault)
 **Task:** Compare Conveyor pipeline vs raw LLM prompt (same content, no pipeline)

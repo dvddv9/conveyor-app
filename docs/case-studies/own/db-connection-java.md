@@ -210,7 +210,7 @@ stage0 → gate_check: **EMERGENCY_INTERRUPT** (SQLi + hardcoded secrets) → ro
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-cdedc7
-material_hash: sha256:5975e359de0b86c1
+material_hash: sha256:e261f6aa379b002ea291da4c80d594723085de90cda65014195a3a7c7c0ecc2a
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

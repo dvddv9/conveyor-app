@@ -311,7 +311,7 @@ pool_size=16 (источник: parallelize.DefaultParallelism) · maxBatchAge=5
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-bda3b5
-material_hash: sha256:16756fcac7c7d94e
+material_hash: sha256:6cb9c1a959c605dff978f748f00311003e66fd88babc3e579bc49290c0bf2a04
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

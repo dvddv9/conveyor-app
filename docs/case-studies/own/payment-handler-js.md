@@ -109,7 +109,7 @@ Delivering reduced final: полный D2-формат сохранён, [FUNC:F
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-a0819f
-material_hash: sha256:5a14c7a7617da0c8
+material_hash: sha256:bd228f623fe8c6aedcbaea696d59cbb5570598850fd1afcd30bda9cf492e79c5
 pii_detected: false
 compliance_flags: ['PCI-DSS']
 critique_verdict: REQUIRES_REVIEW

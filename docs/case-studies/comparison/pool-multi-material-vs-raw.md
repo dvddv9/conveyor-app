@@ -1,5 +1,9 @@
 # Case Study: Multi-Material Pool Analysis — Conveyor vs Raw Prompt
 
+> **⚠️ LEGACY (pre-v5.7):** `material_hash` truncated to 16 hex.
+> Source material and JSON no longer available.
+
+
 **Date:** 2026-10-11
 **Material:** multi (pool.py + config.yaml + incident.log)
 **Task:** Compare Conveyor pipeline vs raw LLM prompt on the same multi-material input

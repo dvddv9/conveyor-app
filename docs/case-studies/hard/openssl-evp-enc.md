@@ -98,7 +98,7 @@
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-9f955b
-material_hash: sha256:f898e07130dba112
+material_hash: sha256:f4977957d84b3fdbfeb53e0320ccbe29a94b5b79ead883607d064af02505b6d5
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

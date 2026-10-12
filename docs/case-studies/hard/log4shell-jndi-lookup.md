@@ -222,7 +222,7 @@ stage3 отсутствует в route. `force_emergency: true` из stage4 → 
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-115968
-material_hash: sha256:1fdd9c82d9ca39cc
+material_hash: sha256:b7133238f645a5e2bef6b7d217bd9b64507f4346820ccacfa5dd9a8cd408f007
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

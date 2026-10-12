@@ -388,7 +388,7 @@ stage0 → stage1 (scanner) → stage2 (analyst) → stage4 (synthesizer) → **
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-24866e
-material_hash: sha256:5ffa0e951032da7a
+material_hash: sha256:9c70c894c35dd8e475d2914999fbf07d23f34fcf358a842f537d6e94074c537b
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

@@ -24,7 +24,7 @@ Stage 0 обнаружил критический риск → pipeline оста
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-81112c
-material_hash: sha256:6a4987411b3ae7ba
+material_hash: sha256:184ed8c1860e749c2ff02f94f4404070afd580ea7b67e5143a8c0dd8512460b3
 pii_detected: false
 compliance_flags: ['PCI-DSS', 'SECRETS']
 critique_verdict: REQUIRES_REVIEW

@@ -93,7 +93,7 @@
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-c36a89
-material_hash: sha256:398fa95620c5d95a
+material_hash: sha256:8d8cfd52ac4e19edb079a3ffa81d503b4c446d05f8e1e08d7c1f185f4bb9cda0
 pii_detected: false
 compliance_flags: []
 critique_verdict: SAFE

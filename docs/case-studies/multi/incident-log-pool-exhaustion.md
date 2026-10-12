@@ -74,7 +74,7 @@
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-10-e301e8
-material_hash: sha256:7400e0cd30aacb82
+material_hash: sha256:c8e9cbb709eb5573fc79c43ae58cfba4e617316f06bb1e7119a8594eb0d9e5e3
 pii_detected: false
 compliance_flags: ['PCI-DSS']
 critique_verdict: REQUIRES_REVIEW

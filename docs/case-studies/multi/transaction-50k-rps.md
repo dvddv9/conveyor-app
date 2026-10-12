@@ -123,7 +123,7 @@
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-11-76e21a
-material_hash: sha256:55baa8721e899d6a
+material_hash: sha256:68bc1084fd1a0aef2f949a4ad681f9654c9357d357ec0dbad85a15cb9678b1ca
 pii_detected: false
 compliance_flags: ['PCI-DSS']
 critique_verdict: REQUIRES_REVIEW
