@@ -55,9 +55,14 @@ class AnalyzeResponse(BaseModel):
     cached: bool = False
     audit_id: str = ""
     material_hash: str = ""
+    material_hash_full: str = ""
+    truncated: bool = False
+    original_size: int = 0
     verdict: str = ""
     pii_detected: bool = False
     compliance_flags: list = []
+    audit: dict = {}
+    completeness: dict = {}
 
 
 class HistoryItem(BaseModel):
@@ -163,6 +168,11 @@ async def analyze(req: AnalyzeRequest):
                 tokens_in=tokens_in_c,
                 tokens_out=tokens_out_c,
                 cost_usd=cached.get("cost_usd", 0.0),
+                audit=cached.get("audit", {}),
+                completeness=cached.get("completeness", {}),
+                material_hash_full=cached.get("audit", {}).get("material_hash_full", cached.get("material_hash", "")),
+                truncated=cached.get("audit", {}).get("truncated", False),
+                original_size=cached.get("audit", {}).get("original_size", 0),
                 cached=True,
                 audit_id=cached.get("audit", {}).get("audit_id", ""),
                 material_hash=cached.get("audit", {}).get("material_hash", ""),
@@ -212,8 +222,13 @@ async def analyze(req: AnalyzeRequest):
         audit_id=_audit.get("audit_id", ""),
         material_hash=_audit.get("material_hash", ""),
         verdict=_audit.get("critique_verdict", ""),
+        material_hash_full=_audit.get("material_hash_full", ""),
+        truncated=_audit.get("truncated", False),
+        original_size=_audit.get("original_size", 0),
         pii_detected=bool(_audit.get("pii_detected", False)),
         compliance_flags=_audit.get("compliance_flags", []),
+        audit=result.get("audit", {}),
+        completeness=result.get("completeness", {}),
     )
 
 
