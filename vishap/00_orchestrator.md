@@ -102,3 +102,11 @@ Override: [CONFIG: KEY=VALUE].
   "task_type": "review" | "architecture" | "incident" | "spec" | "compliance" | "other",
   ...
 }
+
+## session_id — НЕ ГЕНЕРИРОВАТЬ
+
+НЕ выдумывать session_id. Если в context нет session_id — оставь поле пустым (`""`) или не включай его.
+
+Примеры-заглушки типа `sess-2025-01-01-a1b2c3` — ЗАПРЕЩЕНЫ.
+Реальный session_id генерирует pipeline и передаёт через context.
+

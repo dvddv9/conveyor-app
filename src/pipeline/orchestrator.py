@@ -170,6 +170,22 @@ def map_cwe_to_owasp(cwe_ids: list, year: str = "2025") -> list:
     return owasp
 
 
+
+
+def sanitize_session_id(text: str, real_session_id: str) -> str:
+    """Replace hallucinated session_id (e.g. sess-2025-01-01-XXXX) with real one.
+
+    Dogfood fix: LLM in Stage 0 may hallucinate session_id
+    (copies example from training data). Overwrite with real one.
+    """
+    import re as _re
+    if not text or not real_session_id:
+        return text
+    # Any sess-YYYY-MM-DD-XXXX where YYYY != current year
+    text = _re.sub(r"sess-20\d{2}-\d{2}-\d{2}-[a-z0-9]+", real_session_id, text)
+    return text
+
+
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               truncated: bool = False, original_size: int = 0,
               material_hash_full: str = None,
@@ -273,6 +289,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         original_audit_compliance = []
 
     stage0 = stage0_orchestrator(material, filename)
+    # Dogfood fix: always set real session_id (LLM may hallucinate or omit)
+    if isinstance(stage0, dict):
+        stage0["session_id"] = session_id
     route = stage0.get("route", [])
     level = stage0.get("level", "D3")
     research_first = stage0.get("research_first", False)
@@ -478,6 +497,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     final_markdown = stage5_transmitter(material, context_5)
     # Strip any [AUDIT_TRAIL]/[COMPLETENESS] from LLM output (pipeline adds its own)
     final_markdown = strip_llm_audit_blocks(final_markdown)
+    # Dogfood fix: sanitize hallucinated session_id in markdown
+    final_markdown = sanitize_session_id(final_markdown, session_id)
 
     # === AUDIT ===
     if verbose:
@@ -613,6 +634,9 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         original_audit_compliance = []
 
     stage0 = await async_stage0_orchestrator(material, filename)
+    # Dogfood fix: always set real session_id (LLM may hallucinate or omit)
+    if isinstance(stage0, dict):
+        stage0["session_id"] = session_id
     route = stage0.get("route", [])
     level = stage0.get("level", "D3")
     research_first = stage0.get("research_first", False)
@@ -632,6 +656,8 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     final_markdown = await async_stage5_transmitter(material, context_5)
     # Strip any [AUDIT_TRAIL]/[COMPLETENESS] from LLM output (pipeline adds its own)
     final_markdown = strip_llm_audit_blocks(final_markdown)
+    # Dogfood fix: sanitize hallucinated session_id in markdown
+    final_markdown = sanitize_session_id(final_markdown, session_id)
     force_emergency = bool(stage4.get('force_emergency', False))
 
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
