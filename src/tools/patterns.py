@@ -124,3 +124,106 @@ def cwe_to_owasp(cwe_id: str, year: str = "2025") -> str:
     if not entry:
         return ""
     return entry.get(year, "")
+
+
+# Exploitability patterns (Dogfood P2: reachability, auth, blast radius)
+EXPLOIT_PATTERNS = {
+    # Entry points (reachable from outside)
+    "entrypoint_web": re.compile(
+        r"@app\.(route|get|post|put|delete|patch)\s*\(|"
+        r"@router\.(get|post|put|delete|patch)\s*\(|"
+        r"@\w+\.(get|post|put|delete|patch)\s*\(",
+        re.IGNORECASE,
+    ),
+    "entrypoint_func": re.compile(
+        r"\bdef\s+(handler|process|handle|route|api_|endpoint)\w*\s*\(",
+        re.IGNORECASE,
+    ),
+    "entrypoint_main": re.compile(r"if\s+__name__\s*==\s*['\"]__main__['\"]"),
+
+    # Auth checks (if present — not exploitable directly)
+    "auth_decorator": re.compile(
+        r"@\w*(login_required|requires_auth|authenticated|authorized)\w*|"
+        r"Depends\(\s*\w*(auth|current_user|get_user|verify)\w*\s*\)",
+        re.IGNORECASE,
+    ),
+    "auth_check": re.compile(
+        r"\bif\s+(not\s+)?\w*(is_authenticated|is_authorized|has_permission|check_auth)\b",
+        re.IGNORECASE,
+    ),
+
+    # Blast radius indicators
+    "blast_db": re.compile(
+        r"\b(db\.execute|cursor\.execute|session\.execute|conn\.execute|"
+        r"\.query\(|\.raw\(|\.filter\(|\.filter_by\()",
+        re.IGNORECASE,
+    ),
+    "blast_shell": re.compile(
+        r"\b(os\.system|os\.popen|subprocess\.(call|run|Popen|check_output|check_call))",
+        re.IGNORECASE,
+    ),
+    "blast_fs": re.compile(
+        r"\b(open\s*\(|shutil\.(copy|move|rmtree)|os\.(remove|unlink|rmdir))",
+        re.IGNORECASE,
+    ),
+    "blast_network": re.compile(
+        r"\b(requests\.(get|post|put|delete|patch)|urllib\.|http\.client|socket\.)",
+        re.IGNORECASE,
+    ),
+    "blast_eval": re.compile(r"\b(eval|exec|__import__)\s*\(", re.IGNORECASE),
+}
+
+
+def detect_exploitability(material: str) -> dict:
+    """Detect exploitability: reachability, auth, blast radius.
+
+    Returns:
+        {
+            "reachable": bool,
+            "auth_required": bool,
+            "exploit_path": str,
+            "blast_radius": str ("high"|"medium"|"low"),
+            "entry_points": list[str],
+            "blast_indicators": list[str],
+        }
+    """
+    entry_points = []
+    blast_indicators = []
+
+    for name, pattern in EXPLOIT_PATTERNS.items():
+        if pattern.search(material):
+            if name.startswith("entrypoint_"):
+                entry_points.append(name.replace("entrypoint_", ""))
+            elif name.startswith("blast_"):
+                blast_indicators.append(name.replace("blast_", ""))
+
+    reachable = bool(entry_points)
+    auth_required = bool(
+        EXPLOIT_PATTERNS["auth_decorator"].search(material) or
+        EXPLOIT_PATTERNS["auth_check"].search(material)
+    )
+
+    # Blast radius: high if shell/eval, medium if db/network, low if fs-only
+    if "shell" in blast_indicators or "eval" in blast_indicators:
+        blast = "high"
+    elif "db" in blast_indicators or "network" in blast_indicators:
+        blast = "medium"
+    elif "fs" in blast_indicators:
+        blast = "low"
+    else:
+        blast = "none"
+
+    # Exploit path: entry_point -> auth? -> blast
+    if reachable:
+        path = " -> ".join(entry_points + (["auth?"] if not auth_required else ["auth-required"]) + blast_indicators)
+    else:
+        path = "not reachable from public entrypoint"
+
+    return {
+        "reachable": reachable,
+        "auth_required": auth_required,
+        "exploit_path": path,
+        "blast_radius": blast,
+        "entry_points": entry_points,
+        "blast_indicators": blast_indicators,
+    }

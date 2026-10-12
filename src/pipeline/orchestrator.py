@@ -29,6 +29,7 @@ from src.tools.provenance import get_provenance  # dogfood P2: source tracking
 from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
+from src.tools.patterns import detect_exploitability
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
 
 MAX_CHARS = 12000   # ~3000 токенов
@@ -184,6 +185,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
     risk_verdict = "EMERGENCY" if force_emergency else "SAFE"
     cwe_ids = detect_cwe(material)
     owasp_categories = map_cwe_to_owasp(cwe_ids, year="2025")
+    exploitability = detect_exploitability(material)
     provenance = get_provenance()
 
     audit = {
@@ -201,6 +203,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "risk_verdict": risk_verdict,
         "cwe_ids": cwe_ids,
         "owasp_categories": owasp_categories,
+        "exploitability": exploitability,
         "provenance": provenance,
         "pii_detected": bool(pii),
         "pii_details": pii,
@@ -354,6 +357,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
         f"owasp_categories: {audit.get('owasp_categories', [])}\n"
+        f"exploitability_reachable: {audit.get('exploitability', {}).get('reachable', False)}\n"
+        f"exploitability_auth_required: {audit.get('exploitability', {}).get('auth_required', False)}\n"
+        f"exploitability_blast_radius: {audit.get('exploitability', {}).get('blast_radius', 'none')}\n"
         f"provenance_source: {audit.get('provenance', {}).get('source', 'unknown')}\n"
         f"provenance_commit: {audit.get('provenance', {}).get('git_commit_short', '')}\n"
         )
@@ -493,6 +499,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
         f"owasp_categories: {audit.get('owasp_categories', [])}\n"
+        f"exploitability_reachable: {audit.get('exploitability', {}).get('reachable', False)}\n"
+        f"exploitability_auth_required: {audit.get('exploitability', {}).get('auth_required', False)}\n"
+        f"exploitability_blast_radius: {audit.get('exploitability', {}).get('blast_radius', 'none')}\n"
         f"provenance_source: {audit.get('provenance', {}).get('source', 'unknown')}\n"
         f"provenance_commit: {audit.get('provenance', {}).get('git_commit_short', '')}\n"
     )
@@ -631,6 +640,9 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
         f"owasp_categories: {audit.get('owasp_categories', [])}\n"
+        f"exploitability_reachable: {audit.get('exploitability', {}).get('reachable', False)}\n"
+        f"exploitability_auth_required: {audit.get('exploitability', {}).get('auth_required', False)}\n"
+        f"exploitability_blast_radius: {audit.get('exploitability', {}).get('blast_radius', 'none')}\n"
         f"provenance_source: {audit.get('provenance', {}).get('source', 'unknown')}\n"
         f"provenance_commit: {audit.get('provenance', {}).get('git_commit_short', '')}\n"
     )
