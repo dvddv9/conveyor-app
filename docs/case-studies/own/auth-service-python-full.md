@@ -11,6 +11,7 @@
 | **Session** | `sess-2026-10-11-111011` |
 | **audit_id** | `audit-2026-10-11-54a581` |
 | **material_hash** | `sha256:22eb5cb50542fd29` |
+| **material_hash_full** | `sha256:22eb5cb50542fd29` (original, before truncation) |
 | **Level** | `D2` |
 | **task_type** | `?` |
 | **Cost** | `$0.005166` |
