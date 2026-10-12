@@ -401,4 +401,46 @@ def run_stage(stage_name: str, prompt_name: str, material: str,
 
 Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is called for real.
 
+
+
+---
+
+## Доказательство 10 — STONESOUP CWE-129B (SARD, реальный security-кейс)
+
+**Материал:** `C` — STONESOUP CWE-129B (IARPA SARD, Improper Validation of Array Index)
+
+**Что нашёл Conveyor:**
+
+| Что | Результат |
+|-----|-----------|
+| CWE-129 | ✅ подтверждён: `stonesoup_index = char - 48` (нет bounds-check) в `else if (char < 58)` |
+| CWE-787 | ✅ подтверждён как следствие: `count[negative]++` → OOB write **перед** буфером |
+| Эксплуатируемость | тривиальная — любой ASCII < 48 (`'!'`, `' '`, `'\n'`) |
+| Risk nodes | 14 (RN-1..RN-14) |
+| STRIDE | 7 угроз |
+| Intersection risks | 4 пересечения |
+| Doc/code drift | ✅ найден (docs: function pointer call; код: `strlen()`) |
+| Refactoring | 3 варианта (A: bounds-check 0.5d, B: lookup 1.5d, C: full refactor 3d) |
+| Changelog | 5 записей |
+| Честность | heap layout не гарантирован стандартом → VERIFY |
+
+**audit_id:** `audit-2026-10-12-1965de`
+**material_hash:** `sha256:f1f81814ead697723c29abf602d414679c4ac4afc3aa700310f5237b5f9ba2bb`
+**critique_verdict:** `SAFE`
+**force_emergency:** `true` — OOB write + потенциальный контроль потока → STOP деплоя
+
+**Что это доказывает:**
+- Conveyor **находит реальные CVE-классы** на SARD-кейсах
+- **Не верит документации** — проверяет код, находит расхождение (doc/code drift)
+- **Честен** — не фабрикует `material_hash`, если stage его не произвёл
+- **Разделяет оси** — `critique_verdict: SAFE` (PII/compliance) + `force_emergency: true` (риск)
+
+**Полный отчёт:** [docs/case-studies/hard/stonesoup-cwe-129b.md](case-studies/hard/stonesoup-cwe-129b.md)
+
+**Воспроизвести:**
+
+    python -m src.pipeline.orchestrator --input examples/hard/stonesoup-cwe-129b.c
+
+**Это — уровень security researcher. Не симуляция.**
+
 *Generated: 2026-10-12 | Conveyor V5.7*
