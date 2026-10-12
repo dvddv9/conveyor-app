@@ -18,6 +18,7 @@ from src.pipeline.batch import run_batch
 from src.storage.history import load_history, add_entry
 from src.api.auth import verify_api_key, is_auth_enabled
 from src.api.rate_limit import rate_limit_analyze, rate_limit_read
+from src.tools.sarif import to_sarif
 
 
 @asynccontextmanager
@@ -302,6 +303,35 @@ async def analyze_batch(req: BatchRequest):
         count=len(response_items),
         max_concurrent=req.max_concurrent,
     )
+
+
+@app.post("/analyze/sarif", dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
+async def analyze_sarif(req: AnalyzeRequest):
+    """Run analysis and return SARIF 2.1.0 JSON (for GitHub Code Scanning)."""
+    result = await analyze(req)
+
+    audit = result.audit.model_dump() if hasattr(result, "audit") else {}
+
+    # Extract SAST/SCA from audit if present (dict)
+    sast_result = None
+    sca_result = None
+    if isinstance(audit, dict):
+        sast_tools = audit.get("sast_tools", {})
+        if sast_tools:
+            sast_result = {
+                "total_findings": audit.get("sast_findings", 0),
+                "high_priority": audit.get("sast_high_priority", 0),
+                "bandit": {"available": True, "summary": sast_tools.get("bandit", {}), "findings": []},
+                "semgrep": {"available": True, "summary": sast_tools.get("semgrep", {}), "findings": []},
+            }
+
+    sarif = to_sarif(
+        audit=audit if isinstance(audit, dict) else {},
+        sast_result=sast_result,
+        sca_result=sca_result,
+        source_file=req.filename,
+    )
+    return JSONResponse(content=sarif)
 
 
 @app.get("/history", response_model=list[HistoryItem])
