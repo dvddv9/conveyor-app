@@ -121,7 +121,7 @@ MOCK_STAGE0_EMERGENCY = {
 
 @patch("src.pipeline.orchestrator.stage0_orchestrator", return_value=MOCK_STAGE0_EMERGENCY)
 def test_emergency_interrupt_returns_early(s0):
-    result = orchestrator.run_pipeline("secret = 'hardcoded'", "s.py", verbose=False)
+    result = orchestrator.run_pipeline("secret = 'hardcoded_secret_12345'", "s.py", verbose=False)
     assert result.get("emergency") is True
     assert "audit" in result
     assert "[AUDIT_TRAIL]" in result["final_markdown"]

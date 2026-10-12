@@ -288,8 +288,11 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # === GATE: EMERGENCY от LLM понижается до WARNING,
     # если audit не нашёл РЕАЛЬНЫХ секретов/PII ===
     if "EMERGENCY_INTERRUPT" in flags:
-        _pii = detect_pii(material)
-        _comp = detect_compliance(material, _pii)
+        # Dogfood fix: use material_original (before redaction) — otherwise
+        # PII/secrets are already replaced with <..._REDACTED> placeholders.
+        _audit_material = material_original if "material_original" in dir() else material
+        _pii = detect_pii(_audit_material)
+        _comp = detect_compliance(_audit_material, _pii)
         _secret_keys = (
             "aws_access_key", "aws_secret_key", "stripe_live_key",
             "stripe_test_key", "github_token", "slack_token",
@@ -303,7 +306,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # which incorrectly silenced RCE, SQLi, path traversal.
         _critical_hits = []
         for _risk_name, _risk_pattern in CRITICAL_RISK_PATTERNS.items():
-            if _risk_pattern.search(material):
+            if _risk_pattern.search(_audit_material):
                 _critical_hits.append(_risk_name)
 
         _has_real_emergency = _has_secrets_or_pii or bool(_critical_hits)
