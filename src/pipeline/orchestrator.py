@@ -121,7 +121,8 @@ def generate_audit_id() -> str:
 
 
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
-              truncated: bool = False, original_size: int = 0) -> dict:
+              truncated: bool = False, original_size: int = 0,
+              material_hash_full: str = None) -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
@@ -132,6 +133,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "session_id": session_id,
         "timestamp": datetime.now(UTC).isoformat(),
         "material_hash": compute_hash(material),
+        "material_hash_full": material_hash_full or compute_hash(material),
         "material_size": {
             "lines": len(material.splitlines()),
             "chars": len(material),
@@ -165,6 +167,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # Truncate if too large
     truncated = False
     original_size = len(material)
+    material_hash_full = compute_hash(material)  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
         truncated = True
@@ -221,7 +224,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size)
+        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -241,6 +244,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             "\n\n[AUDIT_TRAIL]\n"
             f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
+        f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
             f"pii_detected: {str(audit['pii_detected']).lower()}\n"
             f"compliance_flags: {audit['compliance_flags']}\n"
             f"critique_verdict: {audit['critique_verdict']}\n"
@@ -334,7 +338,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # === AUDIT ===
     if verbose:
         print("[Audit] Сбор audit-записи...")
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size)
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -347,6 +351,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
+        f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
         f"pii_detected: {str(audit['pii_detected']).lower()}\n"
         f"compliance_flags: {audit['compliance_flags']}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
@@ -432,6 +437,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     # Truncate if too large
     truncated = False
     original_size = len(material)
+    material_hash_full = compute_hash(material)  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
         truncated = True
@@ -459,11 +465,12 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     if stage3:
         context_5["stage3"] = stage3
     final_markdown = await async_stage5_transmitter(material, context_5)
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size)
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
+        f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
         f"pii_detected: {str(audit['pii_detected']).lower()}\n"
         f"compliance_flags: {audit['compliance_flags']}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
