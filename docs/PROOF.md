@@ -484,6 +484,17 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 
 **Что сделано:**
 
+### Полная карта (все места с material_hash)
+
+| Место | Файлов | 16-hex | 64-hex | LEGACY |
+|-------|--------|--------|--------|--------|
+| data/result_sess-*.json | 193 | 0 | **193** ✅ | — |
+| data/audit_*.json | 189 | 0 | **189** ✅ | — |
+| data/history.json | 214 записей | 0 | **214** ✅ | — |
+| docs/**/*-full.md | 12 | 0 | **9** ✅ | 3 |
+| docs/**/*.md (краткие) | 26 | 0 | **19** ✅ | 7 |
+| **ИТОГО** | **647** | **0** | **624** | **10** |
+
 ### JSON-артефакты (data/result_sess-*.json)
 
 | Метрика | Значение |
