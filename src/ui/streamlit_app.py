@@ -563,6 +563,26 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                         redaction_map = audit.get("redaction_map", {})
                         if redaction_map:
                             st.caption(f"🔒 Redacted before LLM: {redaction_map}")
+
+                    # === v5.8: Download JSON (полный result) ===
+                    import json as _json
+                    json_data = _json.dumps(data, ensure_ascii=False, indent=2)
+                    st.download_button(
+                        "📥 Скачать JSON (полный result)",
+                        data=json_data,
+                        file_name=f"result_{data.get('session_id', 'unknown')}.json",
+                        mime="application/json",
+                        key="json_dl",
+                    )
+
+                    # === v5.8: Детали аудита ===
+                    with st.expander("🔍 Детали аудита (JSON)", expanded=False):
+                        st.markdown("**audit:**")
+                        st.json(audit)
+                        st.markdown("**Provenance:**")
+                        st.json(audit.get("provenance", {}))
+                        st.markdown("**Exploitability:**")
+                        st.json(audit.get("exploitability", {}))
             else:
                 result_placeholder.error(
                     f"Ошибка API: {response.status_code}"
