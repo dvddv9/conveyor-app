@@ -55,3 +55,72 @@ CRITICAL_RISK_PATTERNS = {
     "ldap_injection": re.compile(r"search\s*\([^)]*\+\s*[a-z_]+"),
     "xxe": re.compile(r"(etree\.parse|XMLParser|parseString)\s*\(.*resolve_entities"),
 }
+
+
+# OWASP Top 10 mapping (2021 + 2025 preview)
+# Dogfood P1: map CWE to OWASP category for compliance reports.
+CWE_TO_OWASP = {
+    # Injection
+    "CWE-89":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "SQL Injection"},
+    "CWE-79":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "XSS"},
+    "CWE-78":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "OS Command Injection"},
+    "CWE-94":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Code Injection"},
+    "CWE-77":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Command Injection"},
+    "CWE-129":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Array Index"},
+    "CWE-787":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "OOB Write"},
+    "CWE-125":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "OOB Read"},
+    "CWE-917":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Expression Language Injection"},
+
+    # Broken Access Control
+    "CWE-22":   {"2021": "A01:2021 Broken Access Control", "2025": "A01:2025 Broken Access Control", "name": "Path Traversal"},
+    "CWE-352":  {"2021": "A01:2021 Broken Access Control", "2025": "A01:2025 Broken Access Control", "name": "CSRF"},
+    "CWE-639":  {"2021": "A01:2021 Broken Access Control", "2025": "A01:2025 Broken Access Control", "name": "IDOR"},
+    "CWE-284":  {"2021": "A01:2021 Broken Access Control", "2025": "A01:2025 Broken Access Control", "name": "Improper Access Control"},
+    "CWE-863":  {"2021": "A01:2021 Broken Access Control", "2025": "A01:2025 Broken Access Control", "name": "Incorrect Authorization"},
+
+    # Cryptographic Failures
+    "CWE-327":  {"2021": "A02:2021 Cryptographic Failures", "2025": "A02:2025 Cryptographic Failures", "name": "Broken Crypto"},
+    "CWE-328":  {"2021": "A02:2021 Cryptographic Failures", "2025": "A02:2025 Cryptographic Failures", "name": "Weak Hash"},
+    "CWE-330":  {"2021": "A02:2021 Cryptographic Failures", "2025": "A02:2025 Cryptographic Failures", "name": "Weak Random"},
+    "CWE-798":  {"2021": "A07:2021 Auth Failures", "2025": "A07:2025 Auth Failures", "name": "Hardcoded Credentials"},
+
+    # Insecure Design
+    "CWE-434":  {"2021": "A04:2021 Insecure Design", "2025": "A04:2025 Insecure Design", "name": "Unrestricted Upload"},
+
+    # Security Misconfiguration
+    "CWE-611":  {"2021": "A05:2021 Security Misconfiguration", "2025": "A05:2025 Security Misconfiguration", "name": "XXE"},
+    "CWE-1004": {"2021": "A05:2021 Security Misconfiguration", "2025": "A05:2025 Security Misconfiguration", "name": "Cookie without HttpOnly"},
+    "CWE-16":   {"2021": "A05:2021 Security Misconfiguration", "2025": "A05:2025 Security Misconfiguration", "name": "Configuration"},
+
+    # Vulnerable Components
+    "CWE-1035": {"2021": "A06:2021 Vulnerable Components", "2025": "A06:2025 Vulnerable Components", "name": "Vulnerable Component"},
+
+    # Auth Failures
+    "CWE-287":  {"2021": "A07:2021 Auth Failures", "2025": "A07:2025 Auth Failures", "name": "Improper Authentication"},
+    "CWE-306":  {"2021": "A07:2021 Auth Failures", "2025": "A07:2025 Auth Failures", "name": "Missing Authentication"},
+
+    # Software and Data Integrity
+    "CWE-502":  {"2021": "A08:2021 Software and Data Integrity", "2025": "A08:2025 Software and Data Integrity", "name": "Insecure Deserialization"},
+
+    # Logging and Monitoring
+    "CWE-778":  {"2021": "A09:2021 Logging Failures", "2025": "A09:2025 Logging Failures", "name": "Insufficient Logging"},
+
+    # SSRF
+    "CWE-918":  {"2021": "A10:2021 SSRF", "2025": "A10:2025 SSRF", "name": "SSRF"},
+}
+
+
+def cwe_to_owasp(cwe_id: str, year: str = "2025") -> str:
+    """Map CWE to OWASP Top 10 category.
+
+    Args:
+        cwe_id: e.g. "CWE-89"
+        year: "2021" or "2025"
+
+    Returns:
+        OWASP category string or empty.
+    """
+    entry = CWE_TO_OWASP.get(cwe_id)
+    if not entry:
+        return ""
+    return entry.get(year, "")

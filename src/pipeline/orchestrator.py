@@ -27,6 +27,7 @@ from src.tools.redact import redact_pii  # dogfood P0: pre-LLM PII redaction
 from src.tools.sast import run_sast  # dogfood P1: deterministic SAST
 from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
+from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
 
 MAX_CHARS = 12000   # ~3000 токенов
@@ -140,6 +141,33 @@ def detect_language(filename: str) -> str:
     }.get(ext, "other")
 
 
+
+
+def detect_cwe(text: str) -> list:
+    """Detect CWE IDs mentioned in material (CWE-XXX format).
+
+    Returns list of unique CWE IDs found.
+    """
+    import re as _re
+    matches = _re.findall(r"\bCWE-(\d+)\b", text)
+    seen = []
+    for m in matches:
+        cwe = f"CWE-{m}"
+        if cwe not in seen:
+            seen.append(cwe)
+    return seen
+
+
+def map_cwe_to_owasp(cwe_ids: list, year: str = "2025") -> list:
+    """Map list of CWE IDs to unique OWASP Top 10 categories."""
+    owasp = []
+    for cwe in cwe_ids:
+        cat = cwe_to_owasp(cwe, year=year)
+        if cat and cat not in owasp:
+            owasp.append(cat)
+    return owasp
+
+
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               truncated: bool = False, original_size: int = 0,
               material_hash_full: str = None,
@@ -153,6 +181,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
     compliance = detect_compliance(material, pii)
     critique = "REQUIRES_REVIEW" if (pii or compliance) else "SAFE"
     risk_verdict = "EMERGENCY" if force_emergency else "SAFE"
+    cwe_ids = detect_cwe(material)
+    owasp_categories = map_cwe_to_owasp(cwe_ids, year="2025")
 
     audit = {
         "audit_id": generate_audit_id(),
@@ -167,6 +197,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "model": model,
         "critique_verdict": critique,
         "risk_verdict": risk_verdict,
+        "cwe_ids": cwe_ids,
+        "owasp_categories": owasp_categories,
         "pii_detected": bool(pii),
         "pii_details": pii,
         "compliance_flags": compliance,
@@ -317,6 +349,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             f"compliance_flags: {audit['compliance_flags']}\n"
             f"critique_verdict: {audit['critique_verdict']}\n"
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
+        f"cwe_ids: {audit.get('cwe_ids', [])}\n"
+        f"owasp_categories: {audit.get('owasp_categories', [])}\n"
         )
         emergency_md = emergency_md + audit_block
 
@@ -452,6 +486,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"compliance_flags: {audit['compliance_flags']}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
+        f"cwe_ids: {audit.get('cwe_ids', [])}\n"
+        f"owasp_categories: {audit.get('owasp_categories', [])}\n"
     )
     final_markdown = final_markdown + audit_block
 
@@ -586,6 +622,8 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         f"compliance_flags: {audit['compliance_flags']}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
+        f"cwe_ids: {audit.get('cwe_ids', [])}\n"
+        f"owasp_categories: {audit.get('owasp_categories', [])}\n"
     )
     required = REQUIRED_BLOCKS.get(level, [])
     missing = [b for b in required if b not in final_markdown]
