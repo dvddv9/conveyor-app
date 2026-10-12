@@ -17,7 +17,7 @@
 | 7 | CLI live run | см. ниже |
 | 8 | Test file | см. ниже |
 | 9 | `stages.py` LLM | см. ниже |
-| 2 | Старые отчёты | TODO |
+| 2 | Старые отчёты — hash 16 | ✅ FIXED (9 rebuilt + 3 LEGACY + 4 pre-v5.7 JSON) |
 
 **Commits:** 85+ | **Tests:** 41 | **CI:** green
 
