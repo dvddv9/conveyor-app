@@ -91,7 +91,8 @@ stop_reason: logic | risk
 stop_action: return_to_stage2 | force_emergency | force_fallback
 
 - Logic stop — вход противоречив → return_to_stage2.
-- Risk stop — необратимость, цена ошибки → force_emergency.
+- Risk stop — необратимость, цена ошибки → force_emergency, НО ТОЛЬКО если рекомендация — немедленный STOP (сегодня).
+- Если рекомендация — hotfix на 2+ дня → force_emergency: false (обычный отчёт).
 
 Различать. Не путать.
 
@@ -128,7 +129,8 @@ cove: questions, verdict (confirmed | requires_external_verification), flagged.
 
 - return_to_stage2: true при 4 условиях.
 - return_to_stage3: true при запросе аналогов.
-- force_emergency: true при EMERGENCY.
+- force_emergency: true ТОЛЬКО при EMERGENCY + немедленное действие (STOP / kill switch / disable).
+- EMERGENCY с планом на дни → force_emergency: false.
 - force_fallback: true на 3-й итерации или 3+ конфликта.
 
 ## Выход — JSON
