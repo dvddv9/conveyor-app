@@ -171,6 +171,7 @@ EXPLOIT_PATTERNS = {
         re.IGNORECASE,
     ),
     "blast_eval": re.compile(r"\b(eval|exec|__import__)\s*\(", re.IGNORECASE),
+    "blast_heap": re.compile(r"\b(malloc|calloc|realloc)\s*\([^)]*sizeof\s*\(\s*\w+\s*\)[^)]*\)"),
 }
 
 
@@ -204,7 +205,7 @@ def detect_exploitability(material: str) -> dict:
     )
 
     # Blast radius: high if shell/eval, medium if db/network, low if fs-only
-    if "shell" in blast_indicators or "eval" in blast_indicators:
+    if "shell" in blast_indicators or "eval" in blast_indicators or "heap" in blast_indicators:
         blast = "high"
     elif "db" in blast_indicators or "network" in blast_indicators:
         blast = "medium"
