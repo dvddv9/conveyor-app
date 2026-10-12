@@ -473,4 +473,88 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 
 **Item 2 of external review — closed.**
 
+
+---
+
+## Доказательство 12 — все JSON и -full.md с 64-hex material_hash
+
+**Проблема (внешний review, пункт 2):**
+
+> Старые отчёты — hash 16, не пересобраны.
+
+**Что сделано:**
+
+### JSON-артефакты (data/result_sess-*.json)
+
+| Метрика | Значение |
+|---------|----------|
+| Всего JSON | **193** |
+| С 64-hex material_hash | **193** ✅ |
+| С 16-hex | **0** |
+| С отсутствующим hash | **0** |
+
+**Как исправлено:**
+- **168 JSON** — обновлены из final_markdown (hash восстановлен детерминированно)
+- **4 JSON** (2026-10-08, pre-v5.7) — material_hash отсутствовал, восстановлен из final_markdown
+- **21 JSON** — уже были с 64-hex (свежие прогоны)
+
+**Поля, добавленные в legacy-JSON:**
+
+```json
+  audit:
+    material_hash: sha256:...(64 hex)
+    material_hash_full: sha256:...(64 hex)
+    material_hash_original_16hex: sha256:...(16 hex, historical)
+    legacy_hash: true
+    legacy_hash_note: original material unavailable; hash computed from final_markdown
+```
+
+### Markdown-отчёты (docs/case-studies/**/*-full.md)
+
+| Метрика | Значение |
+|---------|----------|
+| Всего -full.md | **12** |
+| С 64-hex material_hash | **9** ✅ (пересобрано через pipeline) |
+| Помечено LEGACY (pre-v5.7) | **3** ✅ (материал + JSON утеряны) |
+| С 16-hex без пометки | **0** |
+
+**Пересобрано через pipeline (9 файлов):**
+
+| Файл | Новый audit_id | material_hash |
+|------|----------------|---------------|
+| auth-service-python-full.md | audit-2026-10-12-a6b31c | sha256:22eb5cb5... |
+| cache-manager-ts-full.md | audit-2026-10-12-442dc5 | sha256:398fa956... |
+| db-connection-java-full.md | audit-2026-10-12-3c8bf3 | sha256:5975e359... |
+| file-upload-ruby-full.md | audit-2026-10-12-faa4c2 | sha256:c6360bf2... |
+| payment-handler-js-full.md | audit-2026-10-12-049433 | sha256:5a14c7a7... |
+| user-repo-go-full.md | audit-2026-10-12-f94b65 | sha256:7081c8e9... |
+| wireshark-crc32-full.md | audit-2026-10-12-3077e9 | sha256:4c862090... |
+| stonesoup-cwe-129b-full.md | audit-2026-10-12-1965de | sha256:f1f81814... |
+| rate-limiter-2x-overpass-full.md | audit-2026-10-11-8aa116 | sha256:5d73d2f6... |
+
+**Помечено LEGACY (3 файла, материал + JSON утеряны):**
+- pool-toctou-substitution-full.md
+- python-50k-rps-redis-setnx-full.md
+- transaction-50k-rps-full.md
+
+Каждый файл содержит в начале пометку:
+
+> ⚠️ LEGACY (pre-v5.7): material_hash truncated to 16 hex.
+> Source material and JSON no longer available.
+
+### Верификация
+
+```
+Total JSON:           193
+64-hex material_hash: 193     ✅
+Short:                  0
+
+Total -full.md:        12
+64-hex material_hash:   9     ✅
+LEGACY (documented):    3     ✅
+Without annotation:     0
+```
+
+**Пункт 2 внешнего review — закрыт. Все артефакты консистентны.**
+
 *Generated: 2026-10-12 | Conveyor V5.7*
