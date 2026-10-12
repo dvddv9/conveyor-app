@@ -363,7 +363,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "missing": missing,
         "missing_count": len(missing),
         "loss_pct": loss_pct,
-            "material_complete": detect_material_complete(material, final_markdown),
+        "material_complete": detect_material_complete(material, final_markdown),
         "threshold": LOSS_THRESHOLD,
         "verdict": "ACCEPTABLE" if loss_pct <= LOSS_THRESHOLD else "INCOMPLETE",
     }
@@ -379,6 +379,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"required: {len(required)}\n"
         f"missing: {missing}\n"
         f"loss_pct: {loss_pct}%\n"
+        f"material_complete: {completeness.get('material_complete', True)}\n"
         f"verdict: {completeness['verdict']}\n"
     )
     final_markdown = final_markdown + completeness_block
@@ -472,12 +473,15 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     loss_pct = round(len(missing) / len(required) * 100, 1) if required else 0.0
     completeness = {"level": level, "required_count": len(required), "missing": missing,
                     "missing_count": len(missing), "loss_pct": loss_pct,
+                    "material_complete": detect_material_complete(material, final_markdown),
                     "threshold": LOSS_THRESHOLD,
                     "verdict": "ACCEPTABLE" if loss_pct <= LOSS_THRESHOLD else "INCOMPLETE"}
     final_markdown += (
         "\n\n[COMPLETENESS]\n"
         f"level: {level}\nrequired: {len(required)}\nmissing: {missing}\n"
-        f"loss_pct: {loss_pct}%\nverdict: {completeness['verdict']}\n"
+        f"loss_pct: {loss_pct}%\n"
+        f"material_complete: {completeness.get('material_complete', True)}\n"
+        f"verdict: {completeness['verdict']}\n"
     )
     result = {"session_id": session_id, "timestamp": datetime.now(UTC).isoformat(),
               "filename": filename, "material_size": len(material), "stage0": stage0,
