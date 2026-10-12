@@ -24,6 +24,8 @@ from src.storage.history import add_entry
 from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
 from src.pipeline.cost import sum_stage_costs
 from src.tools.redact import redact_pii  # dogfood P0: pre-LLM PII redaction
+from src.tools.sast import run_sast  # dogfood P1: deterministic SAST
+from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
 
@@ -127,12 +129,25 @@ def generate_audit_id() -> str:
     return f"audit-{today}-{rand}"
 
 
+
+
+def detect_language(filename: str) -> str:
+    """Detect language from filename for SAST tool selection."""
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    return {
+        "py": "python", "go": "go", "js": "javascript", "ts": "typescript",
+        "java": "java", "rs": "rust",
+    }.get(ext, "other")
+
+
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               truncated: bool = False, original_size: int = 0,
               material_hash_full: str = None,
               force_emergency: bool = False,
               context: str = "",
-              redaction_map: dict = None) -> dict:
+              redaction_map: dict = None,
+              sast_result: dict = None,
+              sca_result: dict = None) -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
@@ -157,6 +172,13 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "compliance_flags": compliance,
         "redaction_applied": bool(redaction_map),
         "redaction_map": redaction_map or {},
+        "sast_findings": (sast_result or {}).get("total_findings", 0),
+        "sast_high_priority": (sast_result or {}).get("high_priority", 0),
+        "sast_tools": {
+            "bandit": ((sast_result or {}).get("bandit") or {}).get("summary", {}),
+            "semgrep": ((sast_result or {}).get("semgrep") or {}).get("summary", {}),
+        } if sast_result else {},
+        "sca_vulnerabilities": ((sca_result or {}).get("pip_audit") or {}).get("summary", {}).get("total", 0),
         "truncated": truncated,
         "original_size": original_size,
     }
@@ -181,6 +203,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # Truncate if too large
     truncated = False
     original_size = len(material)
+    session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
     material_hash_full = compute_hash(material, context=f"{filename}:{session_id}")  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
@@ -188,7 +211,6 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         if verbose:
             print(f"[!] Материал {original_size} символов > {MAX_CHARS} — обрезан")
 
-    session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
 
     if verbose:
         print(f"=== Conveyor Pipeline ===")
@@ -270,7 +292,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {})
+        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {}, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -342,6 +364,29 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     if verbose:
         print("[Stage 1] Scanner...")
     stage1 = stage1_scanner(material, {"stage0": stage0})
+
+    # === Dogfood P1: deterministic SAST/SCA before Stage 2 ===
+    _lang = detect_language(filename)
+    _sast_result = None
+    _sca_result = None
+    if _lang in ("python", "go", "javascript", "typescript", "java", "rust"):
+        try:
+            _sast_result = run_sast(filename, language=_lang)
+            if verbose:
+                print(f"[SAST] {_lang}: {_sast_result.get('total_findings', 0)} findings "
+                      f"({_sast_result.get('high_priority', 0)} high)")
+        except Exception as _e:
+            if verbose:
+                print(f"[SAST] error: {_e}")
+    if filename.endswith("requirements.txt"):
+        try:
+            _sca_result = run_sca(filename)
+            if verbose:
+                _n = _sca_result.get("pip_audit", {}).get("summary", {}).get("total", 0)
+                print(f"[SCA] pip-audit: {_n} vulnerabilities")
+        except Exception as _e:
+            if verbose:
+                print(f"[SCA] error: {_e}")
     if verbose:
         print()
 
@@ -389,7 +434,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         print("[Audit] Сбор audit-записи...")
     force_emergency = bool(stage4.get('force_emergency', False))
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map)
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -489,6 +534,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     # Truncate if too large
     truncated = False
     original_size = len(material)
+    session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
     material_hash_full = compute_hash(material, context=f"{filename}:{session_id}")  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
@@ -498,7 +544,6 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         async_stage0_orchestrator, async_stage1_scanner, async_stage2_analyst,
         async_stage3_researcher, async_stage4_synthesizer, async_stage5_transmitter,
     )
-    session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
     # === DOGFOOD P0: redact PII/secrets BEFORE any LLM call ===
     material_original = material
     material, redaction_map = redact_pii(material)
@@ -531,7 +576,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     final_markdown = strip_llm_audit_blocks(final_markdown)
     force_emergency = bool(stage4.get('force_emergency', False))
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map)
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
