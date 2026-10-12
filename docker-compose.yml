@@ -1,0 +1,40 @@
+services:
+  api:
+    build: .
+    container_name: conveyor-api
+    ports:
+      - "5001:5001"
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      - CONVEYOR_API_KEY=${CONVEYOR_API_KEY:-}
+      - PORT=5001
+    volumes:
+      - ./data:/app/data
+      - ./docs:/app/docs
+    restart: unless-stopped
+
+  ui:
+    build: .
+    container_name: conveyor-ui
+    command: python -m streamlit run src/ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:5001
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: conveyor-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles:
+      - local-llm
+
+volumes:
+  ollama_data:
