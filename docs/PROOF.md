@@ -568,4 +568,46 @@ Without annotation:     0
 
 **Пункт 2 внешнего review — закрыт. Все артефакты консистентны.**
 
+
+---
+
+## Доказательство 13 — material_hash 64-hex во ВСЕХ местах (748)
+
+**Что проверено:** все поля `material_hash` во всех артефактах pipeline.
+
+| Место | Всего | 64-hex | LEGACY | Short |
+|-------|-------|--------|--------|-------|
+| `data/result_sess-*.json` (top + audit) | 193 | **193** ✅ | — | 0 |
+| `data/result_sess-*.json` (stage-level) | 11 | **11** ✅ | — | 0 |
+| `data/audit_*.json` | 189 | **189** ✅ | — | 0 |
+| `data/history.json` | 317 | **314** ✅ | 3 | 0 |
+| `docs/**/*-full.md` | 12 | **9** ✅ | 3 | 0 |
+| `docs/**/*.md` (краткие) | 26 | **19** ✅ | 7 | 0 |
+| **ИТОГО** | **748** | **735** | **13** | **0** |
+
+**0 файлов с коротким `material_hash` без пометки LEGACY.**
+
+**LEGACY-записи (13):**
+- 3 в `history.json` (pre-v5.7, `material_hash: null` + `legacy_hash: true`)
+- 3 в `docs/**/*-full.md` (материал + JSON утеряны)
+- 7 в `docs/**/*.md` (краткие версии LEGACY-кейсов)
+
+**Что исправлено:**
+- 193 result JSON: `material_hash` + `material_hash_full` — в top-level И в audit
+- 11 stage-level: `sha256:` префикс добавлен
+- 189 audit JSON: 64-hex
+- 3 history: LEGACY
+- 19 md (краткие): 64-hex
+
+**Проверка — `AND` (не `OR`):**
+
+```
+result_sess-*.json: top AND audit = 71 chars → 193/193 ✅
+audit_*.json:        material_hash = 71 chars → 189/189 ✅
+history.json:        64-hex or LEGACY       → 317/317 ✅
+deep check:          no short hash          → 0       ✅
+```
+
+**Внешний review — пункт про material_hash — закрыт окончательно.**
+
 *Generated: 2026-10-12 | Conveyor V5.7*
