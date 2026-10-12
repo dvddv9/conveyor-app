@@ -1,6 +1,6 @@
 # Conveyor V5.7 - Proof of Work
 
-**Otvет на review подруги: 6 из 10 пунктов закрыто, 3 доказательства приложены.**
+**Response to external code review: 6 of 10 items closed, 3 evidence attached.**
 
 ---
 
@@ -449,7 +449,7 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 
 ## Доказательство 11 — пересборка старых отчётов (hash 16 → 64 hex)
 
-**Проблема (подруга, пункт 2):**
+**Problem (external review, item 2):**
 > Старые отчёты — hash 16, не пересобраны. `pool-toctou-substitution-full.md` (7 часов): `material_hash: sha256:a2abaec2ddd78e46` — 16 символов.
 
 **Фикс:** скрипт `rebuild_from_json.py` — находит все `-full.md` с 16-hex `material_hash`, берёт свежий JSON по `audit_id`/`session_id`, заменяет на 64-hex + добавляет `material_hash_full`.
@@ -471,6 +471,6 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 - `material_hash_full` — 64 hex (original, before truncation)
 - `truncated` / `original_size` — если применимо
 
-**Пункт 2 подруги — закрыт.**
+**Item 2 of external review — closed.**
 
 *Generated: 2026-10-12 | Conveyor V5.7*
