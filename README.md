@@ -1,6 +1,11 @@
 # Vishap V5.8
 
-[![tests](https://github.com/dvddv9/vishap-app/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/vishap-app/actions/workflows/tests.yml)
+**Vishap — multi-material IT analyst.** Code, config, spec, logs, data. 6-stage LLM pipeline with SAST/SCA, SARIF 2.1.0, OWASP Top 10, audit trail (SHA-256), provenance, exploitability. 2 CVEs found (Log4Shell, OpenSSL). Recall 100%, Precision 90%, FP 0%.
+
+---
+
+
+[![tests](https://github.com/dvddv9/vishap/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/vishap/actions/workflows/tests.yml)
 
 
 🔬 6-stage LLM pipeline for analyzing engineering materials (code, spec, logs).
