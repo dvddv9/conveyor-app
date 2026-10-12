@@ -7,14 +7,17 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from src.config import APP_NAME, PORT
 from src.pipeline.orchestrator import run_pipeline
 from src.pipeline.batch import run_batch
 from src.storage.history import load_history, add_entry
+from src.api.auth import verify_api_key, is_auth_enabled
+from src.api.rate_limit import rate_limit_analyze, rate_limit_read
 
 
 @asynccontextmanager
@@ -30,6 +33,15 @@ app = FastAPI(
     description="Conveyor V5.7 — 6-стадийный LLM-конвейер для анализа кода",
     version="5.7.0",
     lifespan=lifespan,
+)
+
+# CORS: only localhost:8501 (Streamlit UI) by default (dogfood P0 fix)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8501", "http://127.0.0.1:8501"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
 
 
@@ -130,7 +142,7 @@ async def health():
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
 
 
-@app.post("/analyze", response_model=AnalyzeResponse)
+@app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
 async def analyze(req: AnalyzeRequest):
     """
     Запускает полный pipeline Conveyor V5.7.
@@ -232,7 +244,7 @@ async def analyze(req: AnalyzeRequest):
     )
 
 
-@app.post("/analyze/batch", response_model=BatchResponse)
+@app.post("/analyze/batch", response_model=BatchResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
 async def analyze_batch(req: BatchRequest):
     """
     Параллельный анализ списка материалов.
@@ -311,7 +323,7 @@ async def history(limit: int = 20):
     ]
 
 
-@app.post("/history/clear")
+@app.post("/history/clear", dependencies=[Depends(verify_api_key), Depends(rate_limit_read)])
 async def history_clear():
     """Очищает историю."""
     from src.storage.history import save_history
@@ -326,7 +338,7 @@ async def get_mode_endpoint():
     return ModeResponse(mode=get_mode(), valid_modes=list(VALID_MODES))
 
 
-@app.post("/mode", response_model=ModeResponse)
+@app.post("/mode", response_model=ModeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_read)])
 async def set_mode_endpoint(req: ModeRequest):
     """Устанавливает режим LLM (auto / cloud / local)."""
     from src.storage.mode import set_mode, get_mode, VALID_MODES
@@ -340,9 +352,12 @@ async def set_mode_endpoint(req: ModeRequest):
 
 if __name__ == "__main__":
     import uvicorn
+    # Dogfood P0 fix: if no API key set, bind only to 127.0.0.1.
+    host = "0.0.0.0" if is_auth_enabled() else "127.0.0.1"
+    print(f"[Auth] API key {'set' if is_auth_enabled() else 'NOT set'} -- binding to {host}")
     uvicorn.run(
         "src.main:app",
-        host="0.0.0.0",
+        host=host,
         port=PORT,
         reload=False,
     )
