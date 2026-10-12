@@ -1,4 +1,4 @@
-# Conveyor V5.7
+# Conveyor V5.8
 
 [![tests](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml)
 
@@ -15,6 +15,20 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.8
+
+- **SAST/SCA integration** -- Bandit + Semgrep + pip-audit before Stage 2.
+- **SARIF 2.1.0 output** -- POST /analyze/sarif for GitHub Code Scanning.
+- **OWASP Top 10 mapping** -- 28 CWE to OWASP (CWE-89 -> A03:2025 Injection).
+- **Provenance tracking** -- source, git commit, branch, author in audit.
+- **Secret pre-commit** -- .pre-commit-config.yaml + gitleaks + bandit + ruff.
+- **Exploitability** -- reachable, auth_required, blast_radius, exploit_path.
+- **PII redaction before LLM** -- 15 regex (email, phone, AWS, Stripe, GitHub).
+- **API auth + rate limit** -- X-API-Key + 10/min + CORS + 127.0.0.1 fallback.
+- **CRITICAL_RISK_PATTERNS** -- RCE, SQLi, path traversal, XXE prevent downgrade.
+
+---
 ## What it does
 
 
@@ -124,6 +138,9 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 | LLM | DeepSeek (cloud) / Ollama (local fallback) |
 
 | Storage | JSON (`data/history.json`, `data/audit_*.json`, `data/result_*.json`) |
+| SAST | Bandit + Semgrep |
+| SCA | pip-audit |
+| SARIF | 2.1.0 |
 
 | Audit | Built-in PII detection + compliance flags |
 
@@ -644,7 +661,7 @@ git --no-pager log --oneline
 
 ## Case Studies
 
-Conveyor V5.7 was validated on 5 real open-source projects. See [docs/case-studies](docs/case-studies/) for detailed findings:
+Conveyor V5.8 was validated on 5 real open-source projects. See [docs/case-studies](docs/case-studies/) for detailed findings:
 
 | Project | Level | Cost | Key findings |
 |---------|-------|------|--------------|
@@ -743,6 +760,42 @@ See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
 
 **Total:** 41+ case studies across 7 languages and 12+ technologies (incl. Wireshark crc32.c, SARD 501270 metadata-only).
 
+
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [SECURITY.md](SECURITY.md) | Threat model + controls + honest boundaries |
+| [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | 10 honest limitations |
+| [docs/FAQ.md](docs/FAQ.md) | 10 common questions |
+| [docs/COMPARISON.md](docs/COMPARISON.md) | vs CodeRabbit / Qodo / Graphite / Snyk / Semgrep |
+| [docs/COST.md](docs/COST.md) | Full economics + ROI |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Pipeline diagram + storage |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | v5.8 / v6.0 / non-goals |
+| [docs/PRECOMMIT.md](docs/PRECOMMIT.md) | Pre-commit hooks setup |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [docs/PROOF.md](docs/PROOF.md) | Evidence: CLI run, tests, STONESOUP |
+
+---
+
+## Deployment
+
+**Docker:**
+
+    cp .env.example .env
+    # Edit .env: set DEEPSEEK_API_KEY
+    docker compose up -d
+    curl http://localhost:5001/health
+
+**systemd (VPS):**
+
+    sudo cp deploy/systemd/conveyor.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now conveyor
+
+See [deploy/README.md](deploy/README.md) for details.
+
+---
 ## Author
 
 
