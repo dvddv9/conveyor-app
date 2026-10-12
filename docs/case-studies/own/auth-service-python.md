@@ -16,7 +16,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # AUTH SERVICE — SECURITY REVIEW (D2)
 
@@ -110,7 +110,7 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/auth_service.py
+    vishap analyze data/real_cases/own/auth_service.py
 
 ---
 

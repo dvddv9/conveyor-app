@@ -10,11 +10,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Redis/Valkey `redis_networking.c` — Анализ networking/client lifecycle слоя
 
-**Level:** D4 · **Material:** C source (slice, truncated at 5000 lines) · **Session:** sess-2025-01-01-a3f9c2 · **Model:** orchestrator-v5.7
+**Level:** D4 · **Material:** C source (slice, truncated at 5000 lines) · **Session:** sess-2026-10-12-XXXXXX · **Model:** vishap-orchestrator-v5.8
 **Flags:** `force_emergency=true` (stage4) · `return_to_stage2=true` · `subst_count=0`
 
 ---
@@ -356,4 +356,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/redis_networking.c
+    vishap analyze data/real_cases/hard/redis_networking.c

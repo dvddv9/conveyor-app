@@ -1,6 +1,6 @@
-# Security Policy — Conveyor V5.7
+# Security Policy — Vishap V5.8
 
-**Conveyor is a security-analysis tool. Its own security is documented here.**
+**Vishap is a security-analysis tool. Its own security is documented here.**
 
 ---
 
@@ -12,7 +12,7 @@
 |-------|----------|--------|
 | Material (code, spec, logs) | User -> API -> LLM | May contain PII, secrets, prompt injection |
 | API (:5001) | External -> FastAPI | Unauthenticated access, DoS |
-| LLM (DeepSeek cloud) | Conveyor -> DeepSeek | Data exfiltration |
+| LLM (DeepSeek cloud) | Vishap -> DeepSeek | Data exfiltration |
 | API key (DEEPSEEK_API_KEY) | .env -> process | Leak via git, logs |
 | Audit trail (data/*.json) | Pipeline -> disk | Hash collisions, PII in logs |
 
@@ -50,7 +50,7 @@ Audit trail keeps redaction_applied + redaction_map for compliance.
 
 **Location:** `src/api/auth.py`
 
-- If CONVEYOR_API_KEY set -> X-API-Key header required.
+- If VISHAP_API_KEY set -> X-API-Key header required.
 - If empty -> API binds to 127.0.0.1 only.
 
 ### 3. API rate limiting
@@ -99,7 +99,7 @@ EMERGENCY_INTERRUPT is NOT downgraded if:
 ## What is NOT implemented (honest boundaries)
 
 ### 1. Material sandbox - NOT implemented
-Conveyor does not execute material. But private code goes to DeepSeek cloud. Use mode=local (Ollama) for private data.
+Vishap does not execute material. But private code goes to DeepSeek cloud. Use mode=local (Ollama) for private data.
 
 ### 2. Prompt injection detection - PARTIAL
 SUBST_MAX_ATTEMPTS=2 threshold. No semantic detection.
@@ -108,7 +108,7 @@ SUBST_MAX_ATTEMPTS=2 threshold. No semantic detection.
 Redaction at analysis time, not commit time. Use gitleaks/TruffleHog separately.
 
 ### 4. SAST integration - NOT implemented
-Conveyor is LLM-based. For deterministic SAST, add Bandit/Semgrep in CI.
+Vishap is LLM-based. For deterministic SAST, add Bandit/Semgrep in CI.
 
 ### 5. Dependency CVE scanning - NOT implemented
 requirements.txt uses >= without pinning. Use pip-audit separately.
@@ -135,7 +135,7 @@ requirements.txt uses >= without pinning. Use pip-audit separately.
 
 ## Security checklist for deployment
 
-- [ ] CONVEYOR_API_KEY set (not empty)
+- [ ] VISHAP_API_KEY set (not empty)
 - [ ] .env NOT in git
 - [ ] DEEPSEEK_API_KEY rotated if leaked
 - [ ] CORS restricted to your UI origin
@@ -145,4 +145,4 @@ requirements.txt uses >= without pinning. Use pip-audit separately.
 
 ---
 
-*Last updated: 2026-10-12 | Conveyor V5.7*
+*Last updated: 2026-10-12 | Vishap V5.8*

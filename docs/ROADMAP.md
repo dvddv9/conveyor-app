@@ -1,10 +1,10 @@
-# Roadmap — Conveyor
+# Roadmap — Vishap
 
 **Куда идёт проект. Что отложено и почему.**
 
 ---
 
-## v5.7.1 — 2026-10-12 (текущий)
+## v5.8 — 2026-10-12 (текущий)
 
 **Статус:** production-ready.
 
@@ -97,7 +97,7 @@
 
 ### 3. Mobile app
 
-**Почему отложено:** Conveyor - для разработчиков. Mobile не приоритет.
+**Почему отложено:** Vishap - для разработчиков. Mobile не приоритет.
 
 **Когда:** Никогда (нет use case).
 
@@ -116,7 +116,7 @@
 - **Не** deterministic SAST (есть Semgrep, Bandit)
 - **Не** PR review bot (есть CodeRabbit, Graphite)
 
-**Conveyor - комплементарен.** Не заменяет — дополняет.
+**Vishap - комплементарен.** Не заменяет — дополняет.
 
 ---
 
@@ -131,4 +131,4 @@ GitHub Issues — https://github.com/dvddv9/vishap/issues
 
 ---
 
-*Last updated: 2026-10-12 | Conveyor V5.7.1*
+*Last updated: 2026-10-12 | Vishap V5.8*

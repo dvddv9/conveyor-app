@@ -27,7 +27,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Rate Limiter Over-Admission — D3 Review
 
@@ -142,7 +142,7 @@
 ---
 
 **Verdict**: `requires_external_verification`
-**session_id**: `sess-2025-01-01-a1b2c3`
+**session_id**: `sess-2026-10-12-XXXXXX`
 **material_hash**: `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` (placeholder — реальный sha256 не вычислен; требуется `tools/analyze.py --mode hash`)
 **force_emergency**: `true` — risk stop: 2× over-admission к возможно-платёжному downstream; уже проведённые транзакции необратимы.
 
@@ -165,4 +165,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/rate_limiter_spec.txt
+    vishap analyze data/real_cases/multi/rate_limiter_spec.txt

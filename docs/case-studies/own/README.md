@@ -29,7 +29,7 @@ against **known ground truth**.
 - **Precision: 90%** — random sample of 10 findings checked manually:
   - 9 — real bugs
   - 1 — script artifact (not Conveyor)
-  - 0 — invented by Conveyor
+  - 0 — invented by Vishap
 
 - **False positives: 0** — no invented findings.  - cross-cutting issues (SRP violations, missing observability)
   - attack chains (SQLi + MD5 = plaintext leak)
@@ -58,9 +58,9 @@ This is fact-checking of comments, not blind trust.
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/auth_service.py
-    conveyor analyze data/real_cases/own/payment_handler.js
-    conveyor analyze data/real_cases/own/user_repo.go
-    conveyor analyze data/real_cases/own/file_upload.rb
-    conveyor analyze data/real_cases/own/cache_manager.ts
-    conveyor analyze data/real_cases/own/DbConnection.java
+    vishap analyze data/real_cases/own/auth_service.py
+    vishap analyze data/real_cases/own/payment_handler.js
+    vishap analyze data/real_cases/own/user_repo.go
+    vishap analyze data/real_cases/own/file_upload.rb
+    vishap analyze data/real_cases/own/cache_manager.ts
+    vishap analyze data/real_cases/own/DbConnection.java

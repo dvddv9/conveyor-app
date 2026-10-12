@@ -1,5 +1,5 @@
 # Gitleaks configuration
-title = "Conveyor secrets policy"
+title = "Vishap secrets policy"
 
 [extend]
 useDefault = true

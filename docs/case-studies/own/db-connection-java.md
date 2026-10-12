@@ -16,11 +16,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # DbConnection.java — Security & Reliability Review
 
-**Level:** D2 · **Session:** sess-2025-01-15-a7c3e1 · **Flags:** EMERGENCY_INTERRUPT · **Route:** stage4 → stage3 (stage3 skipped, research_first=false)
+**Level:** D2 · **Session:** sess-2026-10-12-XXXXXX · **Flags:** EMERGENCY_INTERRUPT · **Route:** stage4 → stage3 (stage3 skipped, research_first=false)
 
 ---
 
@@ -227,4 +227,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/DbConnection.java
+    vishap analyze data/real_cases/own/DbConnection.java

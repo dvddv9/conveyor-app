@@ -11,7 +11,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Code Review: `src/pipeline/stages.py` (v2)
 

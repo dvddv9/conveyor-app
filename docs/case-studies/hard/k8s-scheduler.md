@@ -10,11 +10,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Kubernetes Scheduler — Stage 5 Final Report
 
-**Level:** D4 | **Session:** sess-2025-01-15-a7c3e9 | **Model:** orchestrator-v5.7
+**Level:** D4 | **Session:** sess-2026-10-12-XXXXXX | **Model:** vishap-orchestrator-v5.8
 **Material:** `pkg/scheduler/scheduler.go` (Go, Kubernetes) — **TRUNCATED mid-statement** (`comps, err := newFrameworkComp`)
 **Flags:** REJECT_TOO_LARGE · VERIFY×4 · force_emergency=true
 
@@ -328,4 +328,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/k8s_scheduler.go
+    vishap analyze data/real_cases/hard/k8s_scheduler.go

@@ -1,6 +1,6 @@
 # file-upload-ruby: FULL REPORT
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -23,11 +23,11 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
 # File Upload Handler — Security Review
 
-[ECHO] Ruby/Sinatra, ~30 строк, 2 route (`POST /upload`, `GET /read`), 0 тестов, 0 auth, 0 логирования. 5 явных уязвимостей, помеченных в комментариях, но не исправленных. task_type=review, level=D2, session=sess-2025-01-15-a3f9c2.
+[ECHO] Ruby/Sinatra, ~30 строк, 2 route (`POST /upload`, `GET /read`), 0 тестов, 0 auth, 0 логирования. 5 явных уязвимостей, помеченных в комментариях, но не исправленных. task_type=review, level=D2, session=sess-2026-10-12-XXXXXX.
 
 [ROUTE] stage0 → EMERGENCY_INTERRUPT (RCE, path traversal, arbitrary read) → stage1 (scanner) → stage2 (analyst) → stage4 (synthesizer) → stage5 (transmitter). research_first=false, parallel_stages=false.
 
@@ -149,7 +149,7 @@
 
 ---
 
-**Session**: sess-2025-01-15-a3f9c2 | **Model**: conveyor-v5.7 | **Level**: D2 | **task_type**: review | **force_emergency**: true
+**Session**: sess-2026-10-12-XXXXXX | **Model**: vishap-v5.8 | **Level**: D2 | **task_type**: review | **force_emergency**: true
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-12-faa4c2

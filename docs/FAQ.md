@@ -1,4 +1,4 @@
-# FAQ - Conveyor V5.7
+# FAQ - Vishap V5.8
 
 **Ответы на частые вопросы.**
 
@@ -29,7 +29,7 @@
 
 ## Почему AGPL, а не MIT?
 
-**AGPL** - free to use, modify, distribute. **SaaS allowed**, но если Conveyor - network service - нужно открыть source.
+**AGPL** - free to use, modify, distribute. **SaaS allowed**, но если Vishap - network service - нужно открыть source.
 
 **MIT** позволяет closed-source SaaS. Для security-инструмента AGPL - правильнее: transparency.
 
@@ -56,7 +56,7 @@
 
 ## Как обновляется, если появится новый CVE?
 
-**Conveyor не имеет встроенной CVE базы.** Он анализирует код - не сверяет с базой.
+**Vishap не имеет встроенной CVE базы.** Он анализирует код - не сверяет с базой.
 
 **Что делать:**
 - Для CVE зависимостей - pip-audit, npm audit, govulncheck отдельно.
@@ -72,9 +72,9 @@
 | Graphite | Code (PR stack) | Code only | No | No |
 | Snyk | Deps + code (SAST) | Deps + code | Partial | Partial |
 | Semgrep | Code (SAST) | Code only | No | Yes |
-| **Conveyor** | Code, config, spec, data, logs | **5 types** | **Yes (SHA-256)** | **Yes (AGPL)** |
+| **Vishap** | Code, config, spec, data, logs | **5 types** | **Yes (SHA-256)** | **Yes (AGPL)** |
 
-**Где Conveyor сильнее:** multi-material, audit trail, self-hosted, determinism.
+**Где Vishap сильнее:** multi-material, audit trail, self-hosted, determinism.
 
 **Где проигрывает:** CI-интеграция (у CodeRabbit/Graphite - готовая), SARIF output, IDE integration.
 
@@ -84,7 +84,7 @@
 **Инфраструктура:** $0 (если локально).
 **CI:** $0 (GitHub Actions free tier).
 
-**Сравнение с senior-аналитиком:** $800/день x 1 час = $100 за один ручной анализ. Conveyor - $0.007. **14 000x дешевле.**
+**Сравнение с senior-аналитиком:** $800/день x 1 час = $100 за один ручной анализ. Vishap - $0.007. **14 000x дешевле.**
 
 ## Можно ли использовать локально без интернета?
 
@@ -98,11 +98,11 @@
 
 **Как:** POST /mode -> {"mode": "local"}.
 
-## Что делать, если Conveyor нашёл ложное срабатывание?
+## Что делать, если Vishap нашёл ложное срабатывание?
 
 **Проверить вручную** - LLM может ошибаться.
 
-**Использовать VERIFY-пометки** - Conveyor явно помечает «не проверено».
+**Использовать VERIFY-пометки** - Vishap явно помечает «не проверено».
 
 **Сравнить с SAST** - если Semgrep/Bandit не подтверждает - вероятно FP.
 
@@ -110,4 +110,4 @@
 
 ---
 
-*Last updated: 2026-10-12 | Conveyor V5.7*
+*Last updated: 2026-10-12 | Vishap V5.8*

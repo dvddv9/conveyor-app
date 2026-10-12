@@ -10,7 +10,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # OpenSSL EVP Cipher Init — D3 Analysis
 
@@ -115,4 +115,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/openssl_evp_enc.c
+    vishap analyze data/real_cases/hard/openssl_evp_enc.c

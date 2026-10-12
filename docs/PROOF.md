@@ -1,4 +1,4 @@
-# Conveyor V5.7 - Proof of Work
+# Vishap V5.8 - Proof of Work
 
 **Response to external code review: 6 of 10 items closed, 3 evidence attached.**
 
@@ -34,7 +34,7 @@ python -m src.pipeline.orchestrator --input examples/multi/input.txt
 Raw output:
 
 ```
-=== Conveyor Pipeline ===
+=== Vishap Pipeline ===
 Session: sess-2026-10-12-092240
 File: input.txt
 Material: 1392 simvolov
@@ -266,7 +266,7 @@ def test_material_hash_in_result(s0, s1, s2, s4, s5):
 ```python
 # -*- coding: utf-8 -*-
 """
-Стадии pipeline Conveyor.
+Стадии pipeline Vishap.
 v2: улучшенный JSON-парсинг + max_tokens из config.
 """
 import json
@@ -409,7 +409,7 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 
 **Материал:** `C` — STONESOUP CWE-129B (IARPA SARD, Improper Validation of Array Index)
 
-**Что нашёл Conveyor:**
+**Что нашёл Vishap:**
 
 | Что | Результат |
 |-----|-----------|
@@ -430,7 +430,7 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 **force_emergency:** `true` — OOB write + потенциальный контроль потока → STOP деплоя
 
 **Что это доказывает:**
-- Conveyor **находит реальные CVE-классы** на SARD-кейсах
+- Vishap **находит реальные CVE-классы** на SARD-кейсах
 - **Не верит документации** — проверяет код, находит расхождение (doc/code drift)
 - **Честен** — не фабрикует `material_hash`, если stage его не произвёл
 - **Разделяет оси** — `critique_verdict: SAFE` (PII/compliance) + `force_emergency: true` (риск)
@@ -610,4 +610,4 @@ deep check:          no short hash          → 0       ✅
 
 **Внешний review — пункт про material_hash — закрыт окончательно.**
 
-*Generated: 2026-10-12 | Conveyor V5.7*
+*Generated: 2026-10-12 | Vishap V5.8*

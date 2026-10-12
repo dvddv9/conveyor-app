@@ -1,6 +1,6 @@
-# Case Studies — Conveyor V5.7
+# Case Studies — Vishap V5.8
 
-Real-world validation: Conveyor V5.7 analyzed **30+ files across 9 languages** and found **actionable findings** in each.
+Real-world validation: Vishap V5.8 analyzed **30+ files across 9 languages** and found **actionable findings** in each.
 
 ## Summary
 
@@ -165,7 +165,7 @@ See [comparison/d3-vs-d4-fallback.md](comparison/d3-vs-d4-fallback.md).
 ------
 
 **Conclusion:** content is comparable; metadata validity is not.
-Conveyor guarantees valid metadata, systematic structure, no hallucinated numbers.
+Vishap guarantees valid metadata, systematic structure, no hallucinated numbers.
 
 ## Why these case studies matter
 
@@ -195,4 +195,4 @@ These are the kinds of findings a **senior engineer with security focus** would 
 
 ```bash
 pip install -e ".[dev]"
-conveyor analyze path/to/file.py
+vishap analyze path/to/file.py

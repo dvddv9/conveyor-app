@@ -14,7 +14,7 @@
 
 
 
-\## What Conveyor found
+\## What Vishap found
 
 
 
@@ -74,7 +74,7 @@ Prototype pollution (CVE-2022-24999) is top-10 Node.js vulnerability.
 
 
 
-\*\*Conveyor found it in 60 seconds.\*\*
+\*\*Vishap found it in 60 seconds.\*\*
 
 
 
@@ -90,5 +90,5 @@ Cost: \*\*$0.0069\*\*.
 
 
 
-&#x20;   conveyor analyze data/real\_cases/express\_router.js
+&#x20;   vishap analyze data/real\_cases/express\_router.js
 

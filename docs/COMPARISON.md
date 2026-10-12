@@ -1,4 +1,4 @@
-# Comparison — Conveyor vs Alternatives
+# Comparison — Vishap vs Alternatives
 
 **Честное сравнение с code-review и security-инструментами.**
 
@@ -14,17 +14,17 @@
 | **Snyk** | Deps + code (SAST) | Deps + code | Partial | PCI-DSS, GDPR flags | Free + $25/dev/mo | Partial (Enterprise) | No (deterministic) |
 | **Semgrep** | Code (SAST rules) | Code only | No | Custom rules | Free + $40/user/mo | Yes (CE) | No (deterministic) |
 | **Bandit / gosec** | Code (SAST) | Code only | No | No | Free | Yes | No |
-| **Conveyor** | Code, config, spec, data, logs | **5 types** | **Yes (SHA-256)** | HIPAA, PCI-DSS, GDPR, 152-FZ, EU AI Act | **$0.007** | **Yes (AGPL)** | Yes (DeepSeek/Ollama) |
+| **Vishap** | Code, config, spec, data, logs | **5 types** | **Yes (SHA-256)** | HIPAA, PCI-DSS, GDPR, 152-FZ, EU AI Act | **$0.007** | **Yes (AGPL)** | Yes (DeepSeek/Ollama) |
 
 ---
 
-## Где Conveyor сильнее
+## Где Vishap сильнее
 
 ### 1. Multi-material
 
 CodeRabbit, Qodo, Graphite, Semgrep, Bandit - анализируют **только код**.
 
-Conveyor анализирует:
+Vishap анализирует:
 - **code** - .py, .go, .js, .ts, .java, .rs
 - **config** - .yaml, .json, .toml
 - **spec** - .md (architecture, requirements)
@@ -35,7 +35,7 @@ Conveyor анализирует:
 
 У конкурентов audit trail = нет или partial.
 
-У Conveyor:
+У Vishap:
 - `material_hash` (SHA-256, 64 hex)
 - `material_hash_full` (оригинал до усечения)
 - `audit_id` (UTC timestamp)
@@ -48,7 +48,7 @@ Conveyor анализирует:
 
 - **CodeRabbit, Qodo, Graphite** - только SaaS.
 - **Snyk, Semgrep** - SaaS + Enterprise self-hosted (платно).
-- **Conveyor** - self-hosted free (AGPL-3.0).
+- **Vishap** - self-hosted free (AGPL-3.0).
 
 Приватный код **не уходит в облако** (mode=local, Ollama).
 
@@ -61,13 +61,13 @@ Conveyor анализирует:
 | Graphite | $40 000/год |
 | Snyk | $25 000/год |
 | Semgrep | $40 000/год |
-| **Conveyor** | **$7** (LLM only, self-hosted) |
+| **Vishap** | **$7** (LLM only, self-hosted) |
 
 **В 3400-5700 раз дешевле.**
 
 ### 5. Compliance flags
 
-Conveyor автоматически ставит:
+Vishap автоматически ставит:
 - HIPAA (patient, diagnosis, medical record)
 - PCI-DSS (payment, card, CVV)
 - GDPR (personal data, right to erasure)
@@ -79,41 +79,41 @@ Snyk - partial (PCI-DSS, GDPR). Остальные - нет.
 
 ---
 
-## Где Conveyor проигрывает
+## Где Vishap проигрывает
 
 ### 1. CI integration
 
 **CodeRabbit, Graphite** - готовые GitHub Apps, работают из коробки.
 
-**Conveyor** - нужен self-hosted deployment + webhook. См. `deploy/`.
+**Vishap** - нужен self-hosted deployment + webhook. См. `deploy/`.
 
 ### 2. SARIF output
 
 **Semgrep, Bandit, gosec** - выдают SARIF -> GitHub Code Scanning.
 
-**Conveyor** - **не выдаёт SARIF** (пока). Только Markdown.
+**Vishap** - **не выдаёт SARIF** (пока). Только Markdown.
 
 ### 3. IDE integration
 
 **Snyk, Semgrep, CodeRabbit** - VS Code, JetBrains plugins.
 
-**Conveyor** - только API + Streamlit UI.
+**Vishap** - только API + Streamlit UI.
 
 ### 4. Deterministic SAST
 
 **Semgrep, Bandit, gosec, CodeQL** - детерминированные (regex + AST).
 
-**Conveyor** - LLM-based. Может ошибаться (false positives).
+**Vishap** - LLM-based. Может ошибаться (false positives).
 
-**Рекомендация:** Conveyor + SAST = полное покрытие.
+**Рекомендация:** Vishap + SAST = полное покрытие.
 
 ### 5. Dependency CVE scanning
 
 **Snyk, Dependabot** - CVE база.
 
-**Conveyor** - не имеет CVE базы. Только анализ кода.
+**Vishap** - не имеет CVE базы. Только анализ кода.
 
-**Рекомендация:** Conveyor + `pip-audit` / `npm audit` = полное покрытие.
+**Рекомендация:** Vishap + `pip-audit` / `npm audit` = полное покрытие.
 
 ### 6. Зрелость
 
@@ -124,29 +124,29 @@ Snyk - partial (PCI-DSS, GDPR). Остальные - нет.
 | Graphite | 2020 | $52M |
 | Snyk | 2015 | $1.2B valuation |
 | Semgrep | 2017 | $104M |
-| **Conveyor** | **2026** | **Solo** |
+| **Vishap** | **2026** | **Solo** |
 
-**Conveyor - новый проект.** Меньше кейсов, меньше community.
+**Vishap - новый проект.** Меньше кейсов, меньше community.
 
 ---
 
-## Когда использовать Conveyor
+## Когда использовать Vishap
 
-**Использовать Conveyor когда:**
+**Использовать Vishap когда:**
 - Нужен **multi-material** анализ (не только code)
 - Нужен **audit trail** для compliance
 - Нужен **self-hosted** (приватный код)
 - Нужна **низкая стоимость** ($0.007 vs $40+)
 - Нужен **LLM-based** анализ (industry parallels, refactoring options)
 
-**НЕ использовать Conveyor когда:**
+**НЕ использовать Vishap когда:**
 - Нужна **готовая CI-интеграция** (берите CodeRabbit/Graphite)
 - Нужна **детерминированная SAST** (берите Semgrep/Bandit)
 - Нужна **CVE база** (берите Snyk/Dependabot)
 - Нужна **IDE integration** (берите Snyk/Semgrep)
 
-**Идеальный стек:** Conveyor + Semgrep + Snyk + тесты + code review.
+**Идеальный стек:** Vishap + Semgrep + Snyk + тесты + code review.
 
 ---
 
-*Last updated: 2026-10-12 | Conveyor V5.7.1*
+*Last updated: 2026-10-12 | Vishap V5.8*

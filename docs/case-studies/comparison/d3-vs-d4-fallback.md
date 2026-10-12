@@ -124,7 +124,7 @@ Both identified:
 **Why:** Overpromise. Not defensible.
 
 **Right:**
-> Conveyor is a **production-ready pipeline** for senior-level first-pass IT analysis.
+> Vishap is a **production-ready pipeline** for senior-level first-pass IT analysis.
 > It has two modes:
 > - **D3 (solution mode):** canonical patterns, valid metadata, systematic structure
 > - **D4 (fallback mode):** honest boundary acknowledgement, no fake solutions
@@ -144,7 +144,7 @@ Two modes show **maturity**:
 
 **In compliance** (PCI DSS, GDPR) — **metadata validity is critical**. You cannot audit a report with a fake `material_hash`.
 
-**Conveyor guarantees:**
+**Vishap guarantees:**
 - Real `sha256` — reproducibility
 - Real `audit_id` — traceability
 - Correct stage order — systematic process
@@ -158,6 +158,6 @@ Two modes show **maturity**:
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/100k_rps_gdpr_spec.txt
+    vishap analyze data/real_cases/multi/100k_rps_gdpr_spec.txt
 
 Raw prompt run: copy `conveyor/*.md` prompts into ChatGPT, paste same material, request fallback mode.

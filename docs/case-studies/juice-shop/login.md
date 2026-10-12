@@ -9,7 +9,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 ⛔ INTERRUPTED: EMERGENCY
 
@@ -30,4 +30,4 @@ critique_verdict: REQUIRES_REVIEW
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/juice-shop/login.ts
+    vishap analyze data/real_cases/juice-shop/login.ts

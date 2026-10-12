@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
-COPY conveyor/ ./conveyor/
+COPY vishap/ ./vishap/
 COPY pyproject.toml README.md ./
 COPY .env.example .env
 RUN mkdir -p /app/data

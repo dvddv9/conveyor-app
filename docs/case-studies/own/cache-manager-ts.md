@@ -16,7 +16,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # CacheManager — Code Review (D2)
 
@@ -110,4 +110,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/cache_manager.ts
+    vishap analyze data/real_cases/own/cache_manager.ts

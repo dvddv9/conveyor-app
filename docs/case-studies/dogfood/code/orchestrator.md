@@ -11,11 +11,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
-# Conveyor v5.7 — Code Review: `orchestrator.py`
+# Vishap V5.8 — Code Review: `orchestrator.py`
 
-[ECHO] Материал: Python-модуль `orchestrator.py` (Conveyor pipeline, v3 docstring vs v5.7 маркировка). Усечён на `print("[Stag`. task_type=review, level=D3, route: stage0→1→2→4→3→5. research_first=false, subst_count=0. session_id: sess-2025-01-01-a1b2c3.
+[ECHO] Материал: Python-модуль `orchestrator.py` (Conveyor pipeline, v3 docstring vs v5.7 маркировка). Усечён на `print("[Stag`. task_type=review, level=D3, route: stage0→1→2→4→3→5. research_first=false, subst_count=0. session_id: sess-2026-10-12-XXXXXX.
 
 [ROUTE] stage0 (orchestrator) → stage1 (scanner) → stage2 (analyst) → stage4 (synthesizer) → stage3 (researcher, skipped) → stage5 (transmitter). Sequential, no parallel.
 

@@ -16,7 +16,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Go UserRepo — Code Review (D2)
 
@@ -101,4 +101,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/user_repo.go
+    vishap analyze data/real_cases/own/user_repo.go

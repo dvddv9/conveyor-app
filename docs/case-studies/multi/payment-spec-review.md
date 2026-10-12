@@ -12,7 +12,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Payment Service — ТЗ v1.2: Анализ спецификации
 
@@ -100,4 +100,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/payment_spec.md
+    vishap analyze data/real_cases/multi/payment_spec.md

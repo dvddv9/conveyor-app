@@ -11,11 +11,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
-# Conveyor V5.7 — Отчёт по ревью `src/main.py`
+# Vishap V5.8 — Отчёт по ревью `src/main.py`
 
-[ECHO] FastAPI-сервер Conveyor V5.7 (~330 строк): HTTP-слой над 6-стадийным LLM-конвейером. Эндпоинты `/analyze`, `/analyze/batch`, `/history`, `/history/clear`, `/mode`, `/health`. Уровень D3, task_type=review, session `sess-2025-01-15-a7c3e1`.
+[ECHO] FastAPI-сервер Vishap V5.8 (~330 строк): HTTP-слой над 6-стадийным LLM-конвейером. Эндпоинты `/analyze`, `/analyze/batch`, `/history`, `/history/clear`, `/mode`, `/health`. Уровень D3, task_type=review, session `sess-2026-10-12-XXXXXX`.
 
 [ROUTE] stage0 → stage1 → stage2 → stage4 → stage3. research_first=false, parallel_stages=false, subst_count=0.
 

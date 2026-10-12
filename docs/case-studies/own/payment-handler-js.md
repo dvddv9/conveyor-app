@@ -16,7 +16,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # Payment Handler — Incident Triage (D2)
 
@@ -126,4 +126,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/payment_handler.js
+    vishap analyze data/real_cases/own/payment_handler.js

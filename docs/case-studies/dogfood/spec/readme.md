@@ -11,11 +11,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
-# D3 — Conveyor V5.7 README (проектная документация)
+# D3 — Vishap V5.8 README (проектная документация)
 
-[ECHO] README.md проекта Conveyor V5.7 — 6-stage LLM pipeline для анализа инженерных материалов. ~500 строк markdown: описание, архитектура, stack, quick start, usage, project structure, audit & compliance, example report, development, case studies. material_type=other, language=other, level=D3, session=sess-2026-10-08-a7f3c1.
+[ECHO] README.md проекта Vishap V5.8 — 6-stage LLM pipeline для анализа инженерных материалов. ~500 строк markdown: описание, архитектура, stack, quick start, usage, project structure, audit & compliance, example report, development, case studies. material_type=other, language=other, level=D3, session=sess-2026-10-08-a7f3c1.
 
 [ROUTE] stage0 → stage1 → stage2 → stage4 → stage5. Stage 3 (researcher) не запускался (research_first=false). Параллелизм не требуется. subst_count=0.
 

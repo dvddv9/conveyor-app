@@ -11,11 +11,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # requirements.txt — Compliance Review (D2)
 
-[ECHO] Материал: `requirements.txt`, 22 зависимости, нижние границы (`>=`), extras `uvicorn[standard]`. task_type=compliance, level=D2, session=sess-2025-01-15-a3f9c2. Артефакт декларативный — кода, lockfile, CI-конфига и политики версий в материале нет.
+[ECHO] Материал: `requirements.txt`, 22 зависимости, нижние границы (`>=`), extras `uvicorn[standard]`. task_type=compliance, level=D2, session=sess-2026-10-12-XXXXXX. Артефакт декларативный — кода, lockfile, CI-конфига и политики версий в материале нет.
 
 [ROUTE] stage0 → stage1 (scanner) → stage2 (analyst) → stage4 (synthesizer) → stage5 (transmitter). research_first=false, parallel_stages=false, subst_count=0.
 

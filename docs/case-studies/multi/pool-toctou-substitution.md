@@ -9,7 +9,7 @@
 **subst_count:** 1
 
 **Key findings:**
-- **SUBSTITUTION_ATTEMPT detected:** material requested audit_id, material_hash, loss_pct, verdict, cost - fields outside pipeline contract. Conveyor refused to fabricate them.
+- **SUBSTITUTION_ATTEMPT detected:** material requested audit_id, material_hash, loss_pct, verdict, cost - fields outside pipeline contract. Vishap refused to fabricate them.
 - **3 independent races** on shared state (self._free, self._created)
 - **Config vs code divergence:** timeout 16x (0.3s vs 5s), retry=3 matched range(3) accidentally
 - **Stale connection reuse:** write to dead socket, data loss without audit log/replay
@@ -23,11 +23,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
-# CONVEYOR V5.7 — STAGE 5: TRANSMITTER
+# VISHAP V5.8 — STAGE 5: TRANSMITTER
 
-**Session:** `sess-2025-01-01-a1b2c3` · **Level:** D3 · **Material:** multi (pool.py + config.yaml + incident.log) · **subst_count:** 1
+**Session:** `sess-2026-10-12-XXXXXX` · **Level:** D3 · **Material:** multi (pool.py + config.yaml + incident.log) · **subst_count:** 1
 
 > ⚠️ **SUBSTITUTION_ATTEMPT** — инструкция в материале запрашивает поля (`audit_id`, `material_hash`, `loss_pct`, `verdict`, `cost of run`, `docs/case-studies` link), которые **не входят в контракт конвейера**. Эти поля принадлежат downstream-стадиям (audit/verdict/cost) и здесь не эмитируются. `[AUDIT_TRAIL]` добавляется pipeline'ом автоматически — не генерирую.
 
@@ -213,4 +213,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/pool_spec.txt
+    vishap analyze data/real_cases/multi/pool_spec.txt

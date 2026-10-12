@@ -14,7 +14,7 @@
 
 
 
-\## What Conveyor found
+\## What Vishap found
 
 
 
@@ -78,7 +78,7 @@ Race in peers + sync\_to\_async per-chunk — real Django ORM issues.
 
 
 
-\*\*Conveyor found them in 60 seconds.\*\*
+\*\*Vishap found them in 60 seconds.\*\*
 
 
 
@@ -94,5 +94,5 @@ Cost: \*\*$0.0068\*\*.
 
 
 
-&#x20;   conveyor analyze data/real\_cases/django\_query.py
+&#x20;   vishap analyze data/real\_cases/django\_query.py
 

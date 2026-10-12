@@ -1,6 +1,6 @@
 # db-connection-java: FULL REPORT
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -23,11 +23,11 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
 # DbConnection — Code Review (D2, EMERGENCY)
 
-[ECHO] Java-класс `DbConnection` (~40 LOC, 4 метода): `getUser`, `bulkInsert`, `queryUnsafe`, `init`. Материал: JDBC-доступ к PostgreSQL без pool, без resource management, с hardcoded credentials. task_type=review, level=D2, session=sess-2025-01-01-a1b2c3.
+[ECHO] Java-класс `DbConnection` (~40 LOC, 4 метода): `getUser`, `bulkInsert`, `queryUnsafe`, `init`. Материал: JDBC-доступ к PostgreSQL без pool, без resource management, с hardcoded credentials. task_type=review, level=D2, session=sess-2026-10-12-XXXXXX.
 
 [ROUTE] stage0 → stage1 (scanner) → stage2 (analyst) → stage4 (synthesizer) → stage5 (transmitter). research_first=false, parallel_stages=false, subst_count=0. Flags: EMERGENCY_INTERRUPT.
 

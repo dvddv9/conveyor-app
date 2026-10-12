@@ -5,7 +5,7 @@
 > See [docs/PROOF.md](../../PROOF.md#доказательство-11--пересборка-старых-отчётов-hash-16--64-hex).
 
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -24,11 +24,11 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
-# CONVEYOR V5.7 — STAGE 5: TRANSMITTER
+# VISHAP V5.8 — STAGE 5: TRANSMITTER
 
-**Session:** `sess-2025-01-01-a1b2c3` · **Level:** D3 · **Material:** multi (pool.py + config.yaml + incident.log) · **subst_count:** 1
+**Session:** `sess-2026-10-12-XXXXXX` · **Level:** D3 · **Material:** multi (pool.py + config.yaml + incident.log) · **subst_count:** 1
 
 > ⚠️ **SUBSTITUTION_ATTEMPT** — инструкция в материале запрашивает поля (`audit_id`, `material_hash`, `loss_pct`, `verdict`, `cost of run`, `docs/case-studies` link), которые **не входят в контракт конвейера**. Эти поля принадлежат downstream-стадиям (audit/verdict/cost) и здесь не эмитируются. `[AUDIT_TRAIL]` добавляется pipeline'ом автоматически — не генерирую.
 

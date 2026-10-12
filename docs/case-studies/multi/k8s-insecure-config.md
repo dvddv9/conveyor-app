@@ -12,7 +12,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 ⛔ INTERRUPTED: EMERGENCY
 
@@ -33,4 +33,4 @@ critique_verdict: REQUIRES_REVIEW
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/k8s_insecure.yaml
+    vishap analyze data/real_cases/multi/k8s_insecure.yaml

@@ -9,7 +9,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # OWASP Juice Shop — server.ts: анализ bootstrap-файла
 
@@ -122,4 +122,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/juice-shop/server.ts
+    vishap analyze data/real_cases/juice-shop/server.ts

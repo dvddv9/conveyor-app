@@ -116,5 +116,5 @@ localhost, internal subnets).
 
 `npm audit` finds CVEs in dependencies. It does \*\*not\*\* find code logic flaws.
 
-Conveyor found SSRF + stored XSS + fallback SSRF in 50 lines of code.
+Vishap found SSRF + stored XSS + fallback SSRF in 50 lines of code.
 

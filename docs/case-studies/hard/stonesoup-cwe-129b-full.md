@@ -1,6 +1,6 @@
 # STONESOUP CWE-129B: FULL REPORT
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -23,11 +23,11 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
 # CWE-129B — STONESOUP Improper Validation of Array Index
 
-**Level:** D3 · **task_type:** review · **session_id:** sess-2025-01-01-a1b2c3 · **model:** conveyor-orchestrator-v5.7
+**Level:** D3 · **task_type:** review · **session_id:** sess-2026-10-12-XXXXXX · **model:** vishap-orchestrator-v5.8
 
 ---
 

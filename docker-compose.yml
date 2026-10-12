@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    container_name: conveyor-api
+    container_name: vishap-api
     ports:
       - "5001:5001"
     environment:
@@ -16,7 +16,7 @@ services:
 
   ui:
     build: .
-    container_name: conveyor-ui
+    container_name: vishap-ui
     command: python -m streamlit run src/ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
     ports:
       - "8501:8501"
@@ -28,7 +28,7 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    container_name: conveyor-ollama
+    container_name: vishap-ollama
     ports:
       - "11434:11434"
     volumes:

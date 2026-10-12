@@ -10,11 +10,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # JndiLookup.java — Log4Shell Surface Analysis
 
-**Level:** D3 | **Session:** sess-2025-01-15-a7c3f1 | **Model:** orchestrator-v5.7
+**Level:** D3 | **Session:** sess-2026-10-12-XXXXXX | **Model:** vishap-orchestrator-v5.8
 **Flags:** EMERGENCY_INTERRUPT | **Material:** `org.apache.logging.log4j.core.lookup.JndiLookup` (~90 lines, log4j-core)
 
 ---
@@ -239,4 +239,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/log4shell_JndiLookup.java
+    vishap analyze data/real_cases/hard/log4shell_JndiLookup.java

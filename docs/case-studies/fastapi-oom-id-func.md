@@ -9,7 +9,7 @@
 
 ---
 
-## What Conveyor found
+## What Vishap found
 
 ### 1. CRITICAL - OOM via id(func)
 
@@ -76,7 +76,7 @@ Comments claim copy of starlette.routing but code is modified. Three documented 
 
 A senior engineer with security focus would find id(func) OOM in 30 minutes.
 
-**Conveyor found it in 60 seconds.**
+**Vishap found it in 60 seconds.**
 
 Cost: **$0.0082**.
 
@@ -84,4 +84,4 @@ Cost: **$0.0082**.
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/fastapi_routing.py
+    vishap analyze data/real_cases/fastapi_routing.py

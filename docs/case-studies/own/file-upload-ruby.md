@@ -16,7 +16,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # [EMERGENCY] Sinatra File Upload Handler — RCE + Arbitrary File Read
 
@@ -208,4 +208,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/own/file_upload.rb
+    vishap analyze data/real_cases/own/file_upload.rb

@@ -1,6 +1,6 @@
 # payment-handler-js: FULL REPORT
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -23,7 +23,7 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
 # Payment Handler — Code Review (D2)
 

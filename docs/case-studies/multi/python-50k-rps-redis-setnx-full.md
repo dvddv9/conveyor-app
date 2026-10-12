@@ -5,7 +5,7 @@
 > See [docs/PROOF.md](../../PROOF.md#доказательство-11--пересборка-старых-отчётов-hash-16--64-hex).
 
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -24,7 +24,7 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
 # STAGE 5 — TRANSMITTER · D3 FINAL
 

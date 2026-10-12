@@ -27,7 +27,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # CRC32.C — CODE REVIEW (D3)
 
@@ -158,7 +158,7 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze examples/hard/crc32.c
+    vishap analyze examples/hard/crc32.c
 
 ## Notes
 

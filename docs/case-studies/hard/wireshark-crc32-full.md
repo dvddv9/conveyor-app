@@ -1,6 +1,6 @@
 # Wireshark crc32.c: FULL REPORT
 
-**Полный отчёт pipeline Conveyor V5.7.**
+**Полный отчёт pipeline Vishap V5.8.**
 
 ---
 
@@ -22,7 +22,7 @@
 
 ---
 
-## Full Conveyor Output (final_markdown)
+## Full Vishap Output (final_markdown)
 
 # CRC32.C — CODE REVIEW (D3)
 

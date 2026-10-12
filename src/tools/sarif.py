@@ -116,7 +116,7 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
             "tool": {
                 "driver": {
                     "name": "Vishap",
-                    "version": "5.7.1",
+                    "version": "5.8.0",
                     "informationUri": "https://github.com/dvddv9/vishap",
                     "rules": rules,
                 }
@@ -127,7 +127,7 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                 "startTimeUtc": datetime.now(timezone.utc).isoformat(),
             }],
             "properties": {
-                "conveyor": {
+                "vishap": {
                     "audit_id": audit.get("audit_id", ""),
                     "session_id": audit.get("session_id", ""),
                     "material_hash": audit.get("material_hash", ""),

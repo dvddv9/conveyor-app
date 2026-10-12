@@ -56,5 +56,5 @@
 
 `npm audit` found 19 vulnerabilities (12 low, 3 moderate, 4 high) — all CVEs in deps.
 
-Conveyor found 6 additional engineering issues that `npm audit` doesn't look for.
+Vishap found 6 additional engineering issues that `npm audit` doesn't look for.
 

@@ -1,4 +1,4 @@
-# Architecture — Conveyor V5.7.1
+# Architecture — Vishap V5.8
 
 **Схема pipeline, где LLM, где audit, где хранилище.**
 
@@ -44,38 +44,38 @@ material ──┐
             │
             ▼
     ┌───────────────┐
-    │ Stage 0       │  conveyor/00_orchestrator.md
+    │ Stage 0       │  vishap/00_orchestrator.md
     │ Orchestrator  │  → route, level, task_type
     │               │  → flags (EMERGENCY_INTERRUPT)
     └───────┬───────┘
             │
             ▼
     ┌───────────────┐
-    │ Stage 1       │  conveyor/01_scanner.md
+    │ Stage 1       │  vishap/01_scanner.md
     │ Scanner       │  → 4 layers, stack
     └───────┬───────┘
             │
             ▼
     ┌───────────────┐
-    │ Stage 2       │  conveyor/02_analyst.md
+    │ Stage 2       │  vishap/02_analyst.md
     │ Analyst       │  → risk nodes, STRIDE
     └───────┬───────┘
             │
             ▼
     ┌───────────────┐
-    │ Stage 3       │  conveyor/03_researcher.md
+    │ Stage 3       │  vishap/03_researcher.md
     │ Researcher    │  → industry parallels
     └───────┬───────┘
             │
             ▼
     ┌───────────────┐
-    │ Stage 4       │  conveyor/04_synthesizer.md
+    │ Stage 4       │  vishap/04_synthesizer.md
     │ Synthesizer   │  → options, refactoring, force_emergency
     └───────┬───────┘
             │
             ▼
     ┌───────────────┐
-    │ Stage 5       │  conveyor/05_transmitter.md
+    │ Stage 5       │  vishap/05_transmitter.md
     │ Transmitter   │  → Markdown
     └───────┬───────┘
             │
@@ -193,4 +193,4 @@ material ──┐
 
 ---
 
-*Last updated: 2026-10-12 | Conveyor V5.7.1*
+*Last updated: 2026-10-12 | Vishap V5.8*

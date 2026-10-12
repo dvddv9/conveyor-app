@@ -19,9 +19,9 @@ With local LLM (Ollama):
     python3 -m venv .venv
     .venv/bin/pip install -r requirements.txt
     cp .env.example .env
-    sudo cp deploy/systemd/conveyor.service /etc/systemd/system/
+    sudo cp deploy/systemd/vishap.service /etc/systemd/system/
     sudo systemctl daemon-reload
-    sudo systemctl enable --now conveyor
+    sudo systemctl enable --now vishap
 
 ## Env vars
 

@@ -14,7 +14,7 @@
 
 Two runs on the **same material**:
 
-- **Conveyor V5.7** — 6-stage pipeline, SUBSTITUTION_ATTEMPT protection, real audit trail
+- **Vishap V5.8** — 6-stage pipeline, SUBSTITUTION_ATTEMPT protection, real audit trail
 - **Raw Prompt** — LLM with Conveyor-style prompts, no pipeline enforcement
 
 Both produced strong **content**. The difference is in **contract compliance** and **metadata validity**.
@@ -41,7 +41,7 @@ Both performed **4 runs** (3 materials + joint analysis).
 
 ## Metadata Comparison
 
-| Field | Conveyor V5.7 | Raw Prompt |
+| Field | Vishap V5.8 | Raw Prompt |
 |-------|---------------|------------|
 | **SUBSTITUTION_ATTEMPT** | detected (subst_count=1) | **not detected** (subst_count=0) |
 | **audit_id** | `audit-2026-10-11-993f7e` (hex-valid) | `audit-2026-10-11-pool7k-a` (**not hex**) |
@@ -65,7 +65,7 @@ The raw prompt **executed the substitution attempt** that the material requested
 - Suggested placing output in `docs/case-studies/` — **outside contract**
 - Reported `subst_count=0` — **incorrect** (material contained substitution attempt)
 
-**Conveyor refused to fabricate these fields** and marked `SUBSTITUTION_ATTEMPT` explicitly.
+**Vishap refused to fabricate these fields** and marked `SUBSTITUTION_ATTEMPT` explicitly.
 
 ---
 
@@ -119,15 +119,15 @@ In compliance / audit context, this is critical:
 - Cannot reproduce cost
 - Misleading for budgeting
 
-**Conveyor reports measured cost from `sum_stage_costs()`.**
+**Vishap reports measured cost from `sum_stage_costs()`.**
 
 ---
 
 ## Positioning
 
-**Wrong:** "Conveyor is better than ChatGPT."
+**Wrong:** "Vishap is better than ChatGPT."
 **Right:**
-> Conveyor is a **production-ready pipeline** for senior-level first-pass IT analysis.
+> Vishap is a **production-ready pipeline** for senior-level first-pass IT analysis.
 > Difference from a raw prompt: **valid metadata** (real SHA-256, hex audit_id), **contract compliance** (SUBSTITUTION_ATTEMPT protection), **honest boundaries** (VERIFY instead of invented numbers).
 > **Not "better" — but "auditable and reproducible".**
 
@@ -139,7 +139,7 @@ A raw prompt can produce **plausible-looking** reports — with fake hashes, fak
 
 In **compliance** (PCI DSS, GDPR, HIPAA) — **metadata validity is critical**. You cannot audit a report with a fake `material_hash` or an invented `cost`.
 
-**Conveyor guarantees:**
+**Vishap guarantees:**
 - Real `sha256` — reproducibility
 - Real `audit_id` — traceability
 - Measured `cost` — no hallucination
@@ -152,6 +152,6 @@ In **compliance** (PCI DSS, GDPR, HIPAA) — **metadata validity is critical**. 
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/pool_spec.txt
+    vishap analyze data/real_cases/multi/pool_spec.txt
 
 Raw prompt run: copy `conveyor/*.md` prompts into an LLM, paste the same multi-material input, do not enforce contract.

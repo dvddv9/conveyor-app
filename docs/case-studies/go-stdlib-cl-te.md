@@ -14,7 +14,7 @@
 
 
 
-\## What Conveyor found
+\## What Vishap found
 
 
 
@@ -66,7 +66,7 @@ CL/TE smuggling — expert-level security finding.
 
 
 
-\*\*Conveyor found it in 60 seconds.\*\*
+\*\*Vishap found it in 60 seconds.\*\*
 
 
 
@@ -82,5 +82,5 @@ Cost: \*\*$0.0074\*\*.
 
 
 
-&#x20;   conveyor analyze data/real\_cases/go\_http\_server.go
+&#x20;   vishap analyze data/real\_cases/go\_http\_server.go
 

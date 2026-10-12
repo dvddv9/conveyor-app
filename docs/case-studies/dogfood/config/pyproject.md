@@ -11,11 +11,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # CONVEYOR 5.7.0 — COMPLIANCE REVIEW: pyproject.toml
 
-[ECHO] Материал: `pyproject.toml` (PEP 621/517/518 манифест, ~50 строк). task_type=compliance, level=D2, session=sess-2025-01-01-a1b2c3. Route: stage4→stage3. Substitutions: 0.
+[ECHO] Материал: `pyproject.toml` (PEP 621/517/518 манифест, ~50 строк). task_type=compliance, level=D2, session=sess-2026-10-12-XXXXXX. Route: stage4→stage3. Substitutions: 0.
 
 [ROUTE] stage0 (config/compliance) → stage1 (scanner) → stage2 (analyst, 11 RN + 5 SEC) → stage4 (synthesizer, 3 options) → stage5 (transmitter). Research_first=false, parallel=false.
 

@@ -28,11 +28,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # CWE-129B — STONESOUP Improper Validation of Array Index
 
-**Level:** D3 · **task_type:** review · **session_id:** sess-2025-01-01-a1b2c3 · **model:** conveyor-orchestrator-v5.7
+**Level:** D3 · **task_type:** review · **session_id:** sess-2026-10-12-XXXXXX · **model:** vishap-orchestrator-v5.8
 
 ---
 
@@ -311,4 +311,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze examples/hard/stonesoup-cwe-129b.c
+    vishap analyze examples/hard/stonesoup-cwe-129b.c

@@ -1,7 +1,7 @@
 # Hard Case Studies
 
-5 production-grade open-source files analyzed by Conveyor V5.7.
-All files are truncated to 12,000 chars by pipeline design — Conveyor
+5 production-grade open-source files analyzed by Vishap V5.8.
+All files are truncated to 12,000 chars by pipeline design — Vishap
 reports loss_pct honestly in [Completeness].
 
 ## Summary
@@ -29,14 +29,14 @@ reports loss_pct honestly in [Completeness].
 
 ## Notable
 
-- **CVE detection:** Conveyor identified CVE-2021-44228 (Log4Shell) and CVE-2023-5363 (OpenSSL) directly from code.
+- **CVE detection:** Vishap identified CVE-2021-44228 (Log4Shell) and CVE-2023-5363 (OpenSSL) directly from code.
 - **Truncate resilience:** Redis 250 KB -> 12 KB (95% loss) — Conveyor honestly reported `loss_pct=0.0%` for stage-visible slice, and PostgreSQL `loss_pct=16.7%, missing=5`.
 - **No false emergency stops:** after the `llm_emergency_downgraded` gate, security-sensitive code is analyzed, not skipped.
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/log4shell_JndiLookup.java
-    conveyor analyze data/real_cases/hard/openssl_evp_enc.c
-    conveyor analyze data/real_cases/hard/redis_networking.c
-    conveyor analyze data/real_cases/hard/k8s_scheduler.go
-    conveyor analyze data/real_cases/hard/postgres_execMain.c
+    vishap analyze data/real_cases/hard/log4shell_JndiLookup.java
+    vishap analyze data/real_cases/hard/openssl_evp_enc.c
+    vishap analyze data/real_cases/hard/redis_networking.c
+    vishap analyze data/real_cases/hard/k8s_scheduler.go
+    vishap analyze data/real_cases/hard/postgres_execMain.c

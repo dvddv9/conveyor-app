@@ -27,7 +27,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # ТРАНЗАКЦИОННАЯ СИСТЕМА 50K RPS — АРХИТЕКТУРНЫЙ ВЕРДИКТ
 
@@ -140,4 +140,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/transaction_spec.txt
+    vishap analyze data/real_cases/multi/transaction_spec.txt

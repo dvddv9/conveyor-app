@@ -1,6 +1,6 @@
-# Dogfooding — Conveyor on Conveyor
+# Dogfooding — Conveyor on Vishap
 
-**Применение Conveyor к самому Conveyor. Multi-material capability на себе.**
+**Применение Conveyor к самому Vishap. Multi-material capability на себе.**
 
 ---
 
@@ -69,4 +69,4 @@ docs/case-studies/dogfood/
 
 ---
 
-*Dogfooding. Conveyor V5.7 на Conveyor V5.7. См. PROOF.md для полной картины.*
+*Dogfooding. Vishap V5.8 на Vishap V5.8. См. PROOF.md для полной картины.*

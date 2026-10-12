@@ -1,6 +1,6 @@
 # Multi-Material Case Studies
 
-3 non-code materials analyzed by Conveyor V5.7 — proving multi-material capability.
+3 non-code materials analyzed by Vishap V5.8 — proving multi-material capability.
 
 ## Summary
 
@@ -25,12 +25,12 @@
 
 ## Positioning
 
-Conveyor is **not** a code reviewer. It is a **multi-material IT analyst**:
+Vishap is **not** a code reviewer. It is a **multi-material IT analyst**:
 code, config, logs, specs, incidents. This is the differentiation from
 CodeRabbit, Qodo, Graphite (code-only).
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/incident.log
-    conveyor analyze data/real_cases/multi/k8s_insecure.yaml
-    conveyor analyze data/real_cases/multi/payment_spec.md
+    vishap analyze data/real_cases/multi/incident.log
+    vishap analyze data/real_cases/multi/k8s_insecure.yaml
+    vishap analyze data/real_cases/multi/payment_spec.md

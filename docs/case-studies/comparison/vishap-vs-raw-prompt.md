@@ -14,7 +14,7 @@
 
 Two runs on the **same material**:
 
-- **Conveyor V5.7** — 6-stage pipeline with audit trail, cost tracker, retry, gate
+- **Vishap V5.8** — 6-stage pipeline with audit trail, cost tracker, retry, gate
 - **Raw Prompt** — ChatGPT with the Conveyor prompt (`conveyor/*.md`) but no pipeline
 
 Both produced similar **content**. The difference is in **metadata validity**.
@@ -23,7 +23,7 @@ Both produced similar **content**. The difference is in **metadata validity**.
 
 ## Comparison
 
-| Criterion | Conveyor V5.7 | Raw Prompt |
+| Criterion | Vishap V5.8 | Raw Prompt |
 |-----------|---------------|------------|
 | **material_hash** | `sha256:87dfedb11a3b4826...` (real, 64 hex chars) | `sha256:fintech50k...` (**fake**, not SHA-256) |
 | **audit_id** | `audit-2026-10-11-b6cd0a` (md5 of timestamp, hex-valid) | `audit-2026-10-11-f7k2m9` (`k2m9` not hex, **hallucinated**) |
@@ -106,7 +106,7 @@ Both identified:
 **Why:** Overpromise. Not defensible.
 
 **Right:**
-> Conveyor is a **production-ready pipeline** for senior-level first-pass IT analysis.
+> Vishap is a **production-ready pipeline** for senior-level first-pass IT analysis.
 > Difference from a raw prompt: **valid metadata** (real SHA-256, audit_id), **systematic structure** (stage order, D-level), **no hallucinated numbers**, plus **retry, cost tracking, emergency gate**.
 > **Not "better than ChatGPT" — but "auditable and reproducible".**
 
@@ -118,7 +118,7 @@ A raw prompt can produce **plausible-looking** reports — with fake hashes, fak
 
 In **compliance** (PCI DSS, GDPR, HIPAA) — **metadata validity is critical**. You cannot audit a report with a fake `material_hash`.
 
-**Conveyor guarantees:**
+**Vishap guarantees:**
 - Real `sha256` — reproducibility
 - Real `audit_id` — traceability
 - Correct stage order — systematic process
@@ -131,6 +131,6 @@ In **compliance** (PCI DSS, GDPR, HIPAA) — **metadata validity is critical**. 
 
 ## Reproduce
 
-    conveyor analyze examples/multi/python_50k_rps_spec.txt
+    vishap analyze examples/multi/python_50k_rps_spec.txt
 
 Raw prompt run: copy `conveyor/*.md` prompts into ChatGPT, paste same material.

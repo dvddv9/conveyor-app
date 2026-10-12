@@ -1,6 +1,6 @@
-# Limitations — Conveyor V5.7
+# Limitations — Vishap V5.8
 
-**Что Conveyor НЕ делает. Honest boundaries.**
+**Что Vishap НЕ делает. Honest boundaries.**
 
 ---
 
@@ -22,7 +22,7 @@
 ## 2. Truncation
 
 - Материал **усечён до 12 000 символов** (MAX_CHARS).
-- Если файл больше — Conveyor видит только первые 12 000.
+- Если файл больше — Vishap видит только первые 12 000.
 - `material_hash` — hash слайса (первые 12 000).
 - `material_hash_full` — hash оригинала (всё, что было).
 - `truncated: true` + `original_size: N` — в audit.
@@ -40,19 +40,19 @@
 
 ## 4. Не заменяет тесты, ревью, SAST
 
-- Conveyor — **вспомогательный** инструмент, не замена.
+- Vishap — **вспомогательный** инструмент, не замена.
 - **Не заменяет** unit-тесты.
 - **Не заменяет** code review.
 - **Не заменяет** детерминированные SAST (Bandit, Semgrep, CodeQL, gosec).
 - **Не заменяет** SCA (pip-audit, npm audit, govulncheck).
 
-Что делать: Conveyor + SAST + SCA + тесты + ревью = полное покрытие.
+Что делать: Vishap + SAST + SCA + тесты + ревью = полное покрытие.
 
 ## 5. Не имеет network access
 
-- Conveyor **не ходит по ссылкам**.
+- Vishap **не ходит по ссылкам**.
 - **Не fetch** SARD/URL — только то, что подано на вход.
-- Если материал — «прогони на SARD 501270» — Conveyor честно откажется (RN-1: no source code).
+- Если материал — «прогони на SARD 501270» — Vishap честно откажется (RN-1: no source code).
 
 Проверка: SARD 501270 case study (`docs/case-studies/hard/sard-501270-metadata-only.md`).
 
@@ -62,7 +62,7 @@
 - **Blast radius** — «кто пострадает?» — не проверяет.
 - **Exploit path** — пошагово «как атакующий дойдёт» — не проверяет.
 
-Что делать: после Conveyor — ручной analysis reachability.
+Что делать: после Vishap — ручной analysis reachability.
 
 ## 7. Не имеет SARIF / OWASP mapping / compliance controls
 
@@ -100,9 +100,9 @@
 
 ## Что это значит
 
-**Conveyor — не «замена security-инженера».** Conveyor — «усилитель»:
+**Vishap — не «замена security-инженера».** Vishap — «усилитель»:
 
-| Что | Conveyor | Ручной анализ |
+| Что | Vishap | Ручной анализ |
 |-----|----------|---------------|
 | Скорость | 40–90 сек | часы |
 | Стоимость | $0.007 | $800/день |
@@ -112,8 +112,8 @@
 | Замена тестов | нет | нет |
 | Замена ревью | нет | нет |
 
-**Conveyor + ручной анализ + SAST/SCA + тесты = полное покрытие.**
+**Vishap + ручной анализ + SAST/SCA + тесты = полное покрытие.**
 
 ---
 
-*Last updated: 2026-10-12 | Conveyor V5.7*
+*Last updated: 2026-10-12 | Vishap V5.8*

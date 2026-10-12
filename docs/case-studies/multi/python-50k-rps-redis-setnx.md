@@ -27,7 +27,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # STAGE 5 — TRANSMITTER · D3 FINAL
 
@@ -149,4 +149,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/python_50k_rps_spec.txt
+    vishap analyze data/real_cases/multi/python_50k_rps_spec.txt

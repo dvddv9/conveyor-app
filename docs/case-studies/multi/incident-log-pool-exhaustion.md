@@ -12,7 +12,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # INCIDENT REPORT — DB Pool Exhaustion Cascade
 **Session:** sess-2026-10-10-a7f3c2 · **Level:** D1 · **Material:** incident.log (15 lines, 24s window) · **Model:** default
@@ -91,4 +91,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/multi/incident.log
+    vishap analyze data/real_cases/multi/incident.log

@@ -10,11 +10,11 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # PostgreSQL `execMain.c` — D4 Analysis
 
-**Session:** sess-2026-01-15-a7c3e1 · **Model:** orchestrator-v5.7 · **Level:** D4 · **Material:** C source, PostgreSQL executor core (slice truncated mid-`standard_ExecutorRun`)
+**Session:** sess-2026-10-12-XXXXXX · **Model:** vishap-orchestrator-v5.8 · **Level:** D4 · **Material:** C source, PostgreSQL executor core (slice truncated mid-`standard_ExecutorRun`)
 
 ---
 
@@ -405,4 +405,4 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/postgres_execMain.c
+    vishap analyze data/real_cases/hard/postgres_execMain.c

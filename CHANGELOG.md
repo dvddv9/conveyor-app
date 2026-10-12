@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Conveyor. Format based on [Keep a Changelog](https://keepachangelog.com/).
+All notable changes to Vishap. Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
@@ -45,7 +45,7 @@ All notable changes to Conveyor. Format based on [Keep a Changelog](https://keep
 
 ### Security
 
-- API key from `CONVEYOR_API_KEY` env var
+- API key from `VISHAP_API_KEY` env var
 - CORS restricted to `localhost:8501`
 - Rate limit 10/min for /analyze
 - PII/secrets redacted before cloud LLM
@@ -80,4 +80,4 @@ All notable changes to Conveyor. Format based on [Keep a Changelog](https://keep
 [5.7.1]: https://github.com/dvddv9/vishap/compare/v5.7.0...v5.7.1
 [5.7.0]: https://github.com/dvddv9/vishap/releases/tag/v5.7.0
 
-*Conveyor V5.7.1 - production-ready.*
+*Vishap V5.8 - production-ready.*

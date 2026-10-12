@@ -24,7 +24,7 @@
 
 ---
 
-## Conveyor Output
+## Vishap Output
 
 # SARD 501270-v1.0.1 — Conveyor Report (D2)
 
@@ -119,7 +119,7 @@
 
 ---
 
-*Примечание: [AUDIT_TRAIL] не сгенерирован — добавляется pipeline'ом автоматически. session_id: sess-2025-01-01-a1b2c3 (из context).*
+*Примечание: [AUDIT_TRAIL] не сгенерирован — добавляется pipeline'ом автоматически. session_id: sess-2026-10-12-XXXXXX (из context).*
 
 [AUDIT_TRAIL]
 audit_id: audit-2026-10-12-d9380a
@@ -140,7 +140,7 @@ verdict: ACCEPTABLE
 
 ## Reproduce
 
-    conveyor analyze data/real_cases/hard/sard-501270-metadata.txt
+    vishap analyze data/real_cases/hard/sard-501270-metadata.txt
 
 ---
 
@@ -159,8 +159,8 @@ verdict: ACCEPTABLE
 
 1. Fetch файл вручную (curl / browser)
 2. Зафиксировать SHA-256 оригинала
-3. Подать файл в pipeline: `conveyor analyze sard-501270.c`
+3. Подать файл в pipeline: `vishap analyze sard-501270.c`
 
-**Это не баг Conveyor, а его security-модель.** Conveyor работает только с поданным материалом — не ходит по ссылкам, не парсит URLs.
+**Это не баг Vishap, а его security-модель.** Conveyor работает только с поданным материалом — не ходит по ссылкам, не парсит URLs.
 
 **Сравнение с чат-режимом:** LLM в чате мог бы «сымитировать» анализ SARD 501270 (галлюцинация). Conveyor в pipeline — отказался, потому что кода нет. **Это и есть разница инструмент vs симуляция.**

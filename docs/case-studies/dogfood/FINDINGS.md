@@ -1,6 +1,6 @@
-# Dogfood Findings — Conveyor on Conveyor
+# Dogfood Findings — Conveyor on Vishap
 
-**Результат применения Conveyor к самому Conveyor. Найдены реальные уязвимости в собственном продукте.**
+**Результат применения Conveyor к самому Vishap. Найдены реальные уязвимости в собственном продукте.**
 
 ---
 
