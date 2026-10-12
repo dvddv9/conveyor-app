@@ -477,6 +477,92 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                         file_name=f"report_{data.get('session_id', 'unknown')}.md",
                         mime="text/markdown",
                     )
+
+                    # === v5.8: SARIF download ===
+                    if st.button("📋 Скачать SARIF 2.1.0", key="sarif_btn"):
+                        try:
+                            sarif_resp = requests.post(
+                                f"{API_URL}/analyze/sarif",
+                                json={
+                                    "material": material,
+                                    "filename": filename,
+                                    "verbose": False,
+                                    "force": False,
+                                },
+                                timeout=300,
+                            )
+                            if sarif_resp.status_code == 200:
+                                st.download_button(
+                                    "💾 Скачать SARIF",
+                                    data=sarif_resp.text,
+                                    file_name=f"sarif_{data.get('session_id', 'unknown')}.json",
+                                    mime="application/json",
+                                    key="sarif_dl",
+                                )
+                            else:
+                                st.error(f"SARIF error: {sarif_resp.status_code}")
+                        except Exception as e:
+                            st.error(f"SARIF exception: {e}")
+
+                    # === v5.8: SAST/SCA ===
+                    audit = data.get("audit", {}) if isinstance(data.get("audit"), dict) else {}
+                    sast_findings = audit.get("sast_findings", 0)
+                    sast_high = audit.get("sast_high_priority", 0)
+                    sast_tools = audit.get("sast_tools", {})
+                    sca_vulns = audit.get("sca_vulnerabilities", 0)
+
+                    if sast_findings or sca_vulns or sast_tools:
+                        with st.expander(f"🔬 SAST/SCA — {sast_findings} findings ({sast_high} high), {sca_vulns} CVEs", expanded=False):
+                            c1, c2, c3 = st.columns(3)
+                            c1.metric("SAST findings", sast_findings)
+                            c2.metric("SAST high", sast_high)
+                            c3.metric("SCA vulnerabilities", sca_vulns)
+                            if sast_tools:
+                                st.markdown("**Tools summary:**")
+                                st.json(sast_tools)
+
+                    # === v5.8: OWASP + CWE ===
+                    cwe_ids = audit.get("cwe_ids", [])
+                    owasp_categories = audit.get("owasp_categories", [])
+                    if cwe_ids or owasp_categories:
+                        with st.expander(f"🛡️ OWASP — {len(owasp_categories)} categories, {len(cwe_ids)} CWEs", expanded=False):
+                            if cwe_ids:
+                                st.markdown(f"**CWE IDs:** `{', '.join(cwe_ids)}`")
+                            if owasp_categories:
+                                st.markdown("**OWASP Top 10 (2025):**")
+                                for cat in owasp_categories:
+                                    st.markdown(f"- {cat}")
+
+                    # === v5.8: Exploitability ===
+                    exploit = audit.get("exploitability", {})
+                    if exploit and exploit.get("reachable"):
+                        blast = exploit.get("blast_radius", "none")
+                        auth = "yes" if exploit.get("auth_required") else "NO"
+                        emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(blast, "⚪")
+                        with st.expander(f"{emoji} Exploitability — blast: {blast}, auth: {auth}", expanded=False):
+                            c1, c2 = st.columns(2)
+                            c1.metric("Reachable", "Yes" if exploit.get("reachable") else "No")
+                            c2.metric("Auth required", "Yes" if exploit.get("auth_required") else "No")
+                            st.caption(f"**Blast radius:** {blast}")
+                            st.caption(f"**Exploit path:** `{exploit.get('exploit_path', 'n/a')}`")
+                            if exploit.get("entry_points"):
+                                st.caption(f"**Entry points:** {exploit.get('entry_points')}")
+                            if exploit.get("blast_indicators"):
+                                st.caption(f"**Blast indicators:** {exploit.get('blast_indicators')}")
+
+                    # === v5.8: Provenance ===
+                    prov = audit.get("provenance", {})
+                    if prov:
+                        source = prov.get("source", "unknown")
+                        commit = prov.get("git_commit_short", "")
+                        branch = prov.get("git_branch", "")
+                        st.caption(f"📍 Provenance: `{source}` | commit: `{commit}` | branch: `{branch}`")
+
+                    # === v5.8: Redaction ===
+                    if audit.get("redaction_applied"):
+                        redaction_map = audit.get("redaction_map", {})
+                        if redaction_map:
+                            st.caption(f"🔒 Redacted before LLM: {redaction_map}")
             else:
                 result_placeholder.error(
                     f"Ошибка API: {response.status_code}"
