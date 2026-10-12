@@ -75,8 +75,22 @@ def detect_material_complete(material: str, final_markdown: str = "") -> bool:
             return False
     return True
 
-def compute_hash(material: str) -> str:
-    h = hashlib.sha256(material.encode("utf-8", errors="replace"))
+def compute_hash(material: str, context: str = "") -> str:
+    """Compute SHA-256 hash of material.
+    
+    Args:
+        material: input text
+        context: optional context (filename + timestamp) to disambiguate
+                 materials with identical content but different origins.
+    
+    Note (dogfood finding): without context, different materials with
+    identical content would produce the same hash — breaking audit trail
+    uniqueness invariant.
+    """
+    payload = material
+    if context:
+        payload = f"{context}\n---\n{material}"
+    h = hashlib.sha256(payload.encode("utf-8", errors="replace"))
     return f"sha256:{h.hexdigest()}"
 
 def strip_llm_audit_blocks(md: str) -> str:
@@ -139,7 +153,8 @@ def generate_audit_id() -> str:
 def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               truncated: bool = False, original_size: int = 0,
               material_hash_full: str = None,
-              force_emergency: bool = False) -> dict:
+              force_emergency: bool = False,
+              context: str = "") -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
@@ -150,8 +165,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "audit_id": generate_audit_id(),
         "session_id": session_id,
         "timestamp": datetime.now(UTC).isoformat(),
-        "material_hash": compute_hash(material),
-        "material_hash_full": material_hash_full or compute_hash(material),
+        "material_hash": compute_hash(material, context=context),
+        "material_hash_full": material_hash_full or compute_hash(material, context=context),
         "material_size": {
             "lines": len(material.splitlines()),
             "chars": len(material),
@@ -186,7 +201,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # Truncate if too large
     truncated = False
     original_size = len(material)
-    material_hash_full = compute_hash(material)  # hash BEFORE truncation
+    material_hash_full = compute_hash(material, context=f"{filename}:{session_id}")  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
         truncated = True
@@ -243,7 +258,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True)
+        audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}")
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -362,7 +377,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         print("[Audit] Сбор audit-записи...")
     force_emergency = bool(stage4.get('force_emergency', False))
 
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency)
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}")
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -462,7 +477,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     # Truncate if too large
     truncated = False
     original_size = len(material)
-    material_hash_full = compute_hash(material)  # hash BEFORE truncation
+    material_hash_full = compute_hash(material, context=f"{filename}:{session_id}")  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
         truncated = True
@@ -494,7 +509,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     final_markdown = strip_llm_audit_blocks(final_markdown)
     force_emergency = bool(stage4.get('force_emergency', False))
 
-    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency)
+    audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}")
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"audit_id: {audit['audit_id']}\n"
