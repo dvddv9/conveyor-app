@@ -76,6 +76,19 @@ def compute_hash(material: str) -> str:
     h = hashlib.sha256(material.encode("utf-8", errors="replace"))
     return f"sha256:{h.hexdigest()}"
 
+def strip_llm_audit_blocks(md: str) -> str:
+    """Remove [AUDIT_TRAIL] and [COMPLETENESS] from LLM output (pipeline adds its own)."""
+    md = re.sub(
+        r'\n*\[AUDIT_TRAIL\].*?(?=\n\[|\Z)',
+        '', md, flags=re.DOTALL
+    ).strip()
+    md = re.sub(
+        r'\n*\[COMPLETENESS\].*?(?=\n\[|\Z)',
+        '', md, flags=re.DOTALL
+    ).strip()
+    return md
+
+
 
 def detect_pii(text: str) -> dict:
     found = {}
@@ -334,6 +347,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     if stage3:
         context_5["stage3"] = stage3
     final_markdown = stage5_transmitter(material, context_5)
+    # Strip any [AUDIT_TRAIL]/[COMPLETENESS] from LLM output (pipeline adds its own)
+    final_markdown = strip_llm_audit_blocks(final_markdown)
 
     # === AUDIT ===
     if verbose:
@@ -465,6 +480,8 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     if stage3:
         context_5["stage3"] = stage3
     final_markdown = await async_stage5_transmitter(material, context_5)
+    # Strip any [AUDIT_TRAIL]/[COMPLETENESS] from LLM output (pipeline adds its own)
+    final_markdown = strip_llm_audit_blocks(final_markdown)
     audit = run_audit(material, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
