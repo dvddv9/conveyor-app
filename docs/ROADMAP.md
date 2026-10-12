@@ -122,7 +122,7 @@
 
 ## Как голосовать за features
 
-GitHub Issues — https://github.com/dvddv9/conveyor-app/issues
+GitHub Issues — https://github.com/dvddv9/vishap/issues
 
 Метки:
 - `roadmap/v5.8` — Q1 2027

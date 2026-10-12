@@ -117,7 +117,7 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                 "driver": {
                     "name": "Vishap",
                     "version": "5.7.1",
-                    "informationUri": "https://github.com/dvddv9/conveyor-app",
+                    "informationUri": "https://github.com/dvddv9/vishap",
                     "rules": rules,
                 }
             },

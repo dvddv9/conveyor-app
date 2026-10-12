@@ -77,7 +77,7 @@ All notable changes to Conveyor. Format based on [Keep a Changelog](https://keep
 
 ---
 
-[5.7.1]: https://github.com/dvddv9/conveyor-app/compare/v5.7.0...v5.7.1
-[5.7.0]: https://github.com/dvddv9/conveyor-app/releases/tag/v5.7.0
+[5.7.1]: https://github.com/dvddv9/vishap/compare/v5.7.0...v5.7.1
+[5.7.0]: https://github.com/dvddv9/vishap/releases/tag/v5.7.0
 
 *Conveyor V5.7.1 - production-ready.*
