@@ -60,6 +60,18 @@ COMPLIANCE_TRIGGERS = {
 }
 
 
+
+
+def detect_material_complete(material: str, final_markdown: str = "") -> bool:
+    """Heuristic: material is complete unless explicitly marked truncated."""
+    markers = ["truncated", "усечён", "усечен", "slice truncated", "слайс усеч"]
+    text = (material or "")[:2000] + " " + (final_markdown or "")[:2000]
+    low = text.lower()
+    for m in markers:
+        if m in low:
+            return False
+    return True
+
 def compute_hash(material: str) -> str:
     h = hashlib.sha256(material.encode("utf-8", errors="replace"))
     return f"sha256:{h.hexdigest()}"
@@ -159,7 +171,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         if verbose:
             print(f"[!] Материал {original_size} символов > {MAX_CHARS} — обрезан")
 
-    session_id = f"sess-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
+    session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
 
     if verbose:
         print(f"=== Conveyor Pipeline ===")
@@ -351,6 +363,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "missing": missing,
         "missing_count": len(missing),
         "loss_pct": loss_pct,
+            "material_complete": detect_material_complete(material, final_markdown),
         "threshold": LOSS_THRESHOLD,
         "verdict": "ACCEPTABLE" if loss_pct <= LOSS_THRESHOLD else "INCOMPLETE",
     }
@@ -426,7 +439,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         async_stage0_orchestrator, async_stage1_scanner, async_stage2_analyst,
         async_stage3_researcher, async_stage4_synthesizer, async_stage5_transmitter,
     )
-    session_id = f"sess-{datetime.now().strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
+    session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
     stage0 = await async_stage0_orchestrator(material, filename)
     route = stage0.get("route", [])
     level = stage0.get("level", "D3")
