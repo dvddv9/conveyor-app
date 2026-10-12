@@ -71,7 +71,7 @@ Proving Conveyor works beyond code.
 | Ruby | 5 | 10 | 0 |
 | TypeScript | 4 | 9 | 0 |
 | Java | 3 | 9 | 0 |
-| **Total:** 41 case studies (5 synthetic + 5 real + 5 hard + 8 multi + 10 Juice Shop + 5 vulnerable apps + 2 comparison + 1 other), ~$0.31.
+| **Total:** 43 case studies (5 synthetic + 5 real + 6 hard + 8 multi + 10 Juice Shop + 5 vulnerable apps + 2 comparison + 2 other), ~$0.32.
 
 **Recall: 100% (24/24 planted). Precision: 90% (9/10 sampled). FP: 0%.**
 
