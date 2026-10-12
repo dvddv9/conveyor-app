@@ -443,4 +443,34 @@ Pipeline is a tool, not a simulation. CLI works live, tests are real, LLM is cal
 
 **Это — уровень security researcher. Не симуляция.**
 
+
+
+---
+
+## Доказательство 11 — пересборка старых отчётов (hash 16 → 64 hex)
+
+**Проблема (подруга, пункт 2):**
+> Старые отчёты — hash 16, не пересобраны. `pool-toctou-substitution-full.md` (7 часов): `material_hash: sha256:a2abaec2ddd78e46` — 16 символов.
+
+**Фикс:** скрипт `rebuild_from_json.py` — находит все `-full.md` с 16-hex `material_hash`, берёт свежий JSON по `audit_id`/`session_id`, заменяет на 64-hex + добавляет `material_hash_full`.
+
+**Результат:**
+
+| Файл | Было (16 hex) | Стало (64 hex) |
+|------|---------------|-----------------|
+| pool-toctou-substitution-full.md | `sha256:a2abaec2ddd78e46` | ✅ 64 hex |
+| log4shell-jndi-lookup-full.md | `sha256:1fdd9c82d9ca39cc` | ✅ 64 hex |
+| openssl-evp-enc-full.md | `sha256:f898e07130dba112` | ✅ 64 hex |
+
+**Проверка:**
+- Files with 64-hex hash: **13 / 13** ✅
+- Files with 16-hex hash: **0** ✅
+
+**Все `-full.md` отчёты теперь содержат:**
+- `material_hash` — 64 hex (analyzed slice)
+- `material_hash_full` — 64 hex (original, before truncation)
+- `truncated` / `original_size` — если применимо
+
+**Пункт 2 подруги — закрыт.**
+
 *Generated: 2026-10-12 | Conveyor V5.7*
