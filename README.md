@@ -364,7 +364,7 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 conveyor_app/
 
-├── conveyor/                 # V5.7 prompts (660+ lines)
+├── conveyor/                 # V5.8 prompts (660+ lines)
 
 │   ├── 00_orchestrator.md
 
@@ -588,7 +588,7 @@ into logs without redaction.
 
 audit_id: audit-2026-10-08-938e54
 
-material_hash: sha256:4f87e43baa8f2253
+material_hash: sha256:5d73d2f6471c1eab2cafb1ee0619eee4774060ddf2865af3bde4ca4a8d2fb552
 
 pii_detected: true
 
@@ -646,7 +646,7 @@ git --no-pager log --oneline
 
 - **pandas is not used** — Windows Code Integrity Policy may block `pandas._libs.*.pyd`. Native `st.dataframe(list[dict])` is used instead.
 
-- **Tests** — 44 tests (`tests/`). Run: `python run_tests.py`.
+- **Tests** — Tests: 80 (`tests/`). Run: `python run_tests.py`.
   Coverage: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
 - **Stage 3/4 parallelism** — currently sequential.
@@ -658,6 +658,8 @@ git --no-pager log --oneline
 
 
 ### Roadmap
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for v5.8 / v6.0 plans and non-goals.
 
 ## Case Studies
 

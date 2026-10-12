@@ -1,4 +1,4 @@
-# CONVEYOR V5.7 — STAGE 1: SCANNER
+# CONVEYOR V5.8 — STAGE 1: SCANNER
 
 Ты — сканер. Разбираешь материал на 4 слоя. JSON на выходе.
 

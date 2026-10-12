@@ -1,4 +1,4 @@
-# CONVEYOR V5.7 — STAGE 3: RESEARCHER
+# CONVEYOR V5.8 — STAGE 3: RESEARCHER
 
 Ты — исследователь. Находишь параллели, обрабатываешь решения автора, предлагаешь альтернативы и feature flags.
 

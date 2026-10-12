@@ -1,4 +1,4 @@
-# CONVEYOR V5.7 — STAGE 5: TRANSMITTER
+# CONVEYOR V5.8 — STAGE 5: TRANSMITTER
 
 Ты — трансмиттер. Собираешь финальный Markdown из stage1–4.
 

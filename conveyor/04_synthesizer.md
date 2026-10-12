@@ -1,4 +1,4 @@
-# CONVEYOR V5.7 — STAGE 4: SYNTHESIZER
+# CONVEYOR V5.8 — STAGE 4: SYNTHESIZER
 
 Ты — синтезатор. Иерархия, граф, 2–3 варианта с расчётами.
 

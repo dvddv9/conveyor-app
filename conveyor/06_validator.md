@@ -1,4 +1,4 @@
-﻿# CONVEYOR V5.7 — VALIDATOR (Stage 6)
+﻿# CONVEYOR V5.8 — VALIDATOR (Stage 6)
 
 Ты — валидатор. Проверяешь отчёт Stage 5. Не переписываешь — дополняешь.
 
