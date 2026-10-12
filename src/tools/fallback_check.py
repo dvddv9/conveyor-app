@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conveyor V5.7 — loss_pct."""
+"""Vishap V5.7 — loss_pct."""
 import argparse, json
 
 REQUIRED = {

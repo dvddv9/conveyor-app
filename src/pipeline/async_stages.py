@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Асинхронные стадии pipeline Conveyor.
+Асинхронные стадии pipeline Vishap.
 
 Полная копия stages.py, но через async_chat().
 Логика (parse_json_response, retry, _meta) — идентична.

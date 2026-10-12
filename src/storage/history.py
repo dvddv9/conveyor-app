@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Хранилище историй анализов Conveyor.
+Хранилище историй анализов Vishap.
 """
 import json
 import threading
@@ -22,7 +22,7 @@ def load_history() -> list:
             data = json.load(f)
             return data if isinstance(data, list) else []
     except Exception as e:
-        print(f"[Conveyor] Ошибка чтения истории: {e}")
+        print(f"[Vishap] Ошибка чтения истории: {e}")
         return []
 
 
@@ -32,7 +32,7 @@ def save_history(history: list) -> None:
         with open(HISTORY_FILE, "w", encoding="utf-8") as f:
             json.dump(history, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"[Conveyor] Ошибка сохранения истории: {e}")
+        print(f"[Vishap] Ошибка сохранения истории: {e}")
 
 
 def add_entry(entry: dict) -> dict:

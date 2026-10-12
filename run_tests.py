@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Run Conveyor tests.
+"""Run Vishap tests.
 
 Usage:
     python run_tests.py          # unit + mock (fast, no LLM)

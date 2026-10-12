@@ -1,6 +1,6 @@
-# Conveyor V5.8
+# Vishap V5.8
 
-[![tests](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/conveyor-app/actions/workflows/tests.yml)
+[![tests](https://github.com/dvddv9/vishap-app/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/vishap-app/actions/workflows/tests.yml)
 
 
 🔬 6-stage LLM pipeline for analyzing engineering materials (code, spec, logs).
@@ -160,7 +160,7 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 ```powershell
 
-cd C:\\AI\\conveyor_app
+cd C:\\AI\\vishap_app
 
 ```
 
@@ -362,9 +362,9 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 ```
 
-conveyor_app/
+vishap_app/
 
-├── conveyor/                 # V5.8 prompts (660+ lines)
+├── vishap/                 # V5.8 prompts (660+ lines)
 
 │   ├── 00_orchestrator.md
 
@@ -663,7 +663,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for v5.8 / v6.0 plans and non-goals.
 
 ## Case Studies
 
-Conveyor V5.8 was validated on 5 real open-source projects. See [docs/case-studies](docs/case-studies/) for detailed findings:
+Vishap V5.8 was validated on 5 real open-source projects. See [docs/case-studies](docs/case-studies/) for detailed findings:
 
 | Project | Level | Cost | Key findings |
 |---------|-------|------|--------------|
@@ -694,7 +694,7 @@ See [docs/case-studies/hard/](docs/case-studies/hard/) for full reports.
 
 ### Multi-Material Analysis
 
-Conveyor analyzes **not only code**: logs, configs, specs, incidents.
+Vishap analyzes **not only code**: logs, configs, specs, incidents.
 
 | Material | Type | Level | Cost | Key findings |
 |----------|------|-------|------|--------------|
@@ -708,7 +708,7 @@ See [docs/case-studies/multi/](docs/case-studies/multi/) for full reports.
 ### Own Cases — False Positive Rate
 
 6 intentionally vulnerable files (6 languages, 24 bugs planted).
-Conveyor found **52** issues, **0** false positives.
+Vishap found **52** issues, **0** false positives.
 
 | Language | Bugs planted | Bugs found | FP |
 |----------|--------------|------------|----|
@@ -753,11 +753,11 @@ See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
 | Python 50k RPS (Redis SETNX) | architecture + Python | D3 | 0.0113 | [->](docs/case-studies/multi/python-50k-rps-redis-setnx.md) |
 | 100-200k RPS + GDPR vs PCI DSS | architecture + legal | D3 | 0.0109 | [->](docs/case-studies/multi/100k-rps-gdpr-pci-dss.md) |
 
-### Comparison - Conveyor vs Raw Prompt
+### Comparison - Vishap vs Raw Prompt
 
 | Case | Focus | Link |
 |------|-------|------|
-| Conveyor vs Raw Prompt | Metadata validity | [->](docs/case-studies/comparison/conveyor-vs-raw-prompt.md) |
+| Vishap vs Raw Prompt | Metadata validity | [->](docs/case-studies/comparison/vishap-vs-raw-prompt.md) |
 | D3 vs D4 Fallback | Solution vs boundary | [->](docs/case-studies/comparison/d3-vs-d4-fallback.md) |
 
 **Total:** 41+ case studies across 7 languages and 12+ technologies (incl. Wireshark crc32.c, SARD 501270 metadata-only).
@@ -791,9 +791,9 @@ See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
 
 **systemd (VPS):**
 
-    sudo cp deploy/systemd/conveyor.service /etc/systemd/system/
+    sudo cp deploy/systemd/vishap.service /etc/systemd/system/
     sudo systemctl daemon-reload
-    sudo systemctl enable --now conveyor
+    sudo systemctl enable --now vishap
 
 See [deploy/README.md](deploy/README.md) for details.
 

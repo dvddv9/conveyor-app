@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Conveyor — FastAPI сервер.
+Vishap — FastAPI сервер.
 """
 from contextlib import asynccontextmanager
 import json
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=f"{APP_NAME} API",
-    description="Conveyor V5.7 — 6-стадийный LLM-конвейер для анализа кода",
+    description="Vishap V5.8 — 6-стадийный LLM-конвейер для анализа кода",
     version="5.7.0",
     lifespan=lifespan,
 )
@@ -146,7 +146,7 @@ async def health():
 @app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
 async def analyze(req: AnalyzeRequest):
     """
-    Запускает полный pipeline Conveyor V5.7.
+    Запускает полный pipeline Vishap V5.8.
     
     Вход: код / spec / logs.
     Выход: финальный Markdown-отчёт + метаданные.

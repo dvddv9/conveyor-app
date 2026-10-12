@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Конфигурация Conveyor.
+Конфигурация Vishap.
 """
 import os
 from pathlib import Path
@@ -11,7 +11,7 @@ load_dotenv()
 # === Пути ===
 ROOT_DIR = Path(__file__).parent.parent
 DATA_DIR = ROOT_DIR / "data"
-PROMPTS_DIR = ROOT_DIR / "conveyor"
+PROMPTS_DIR = ROOT_DIR / "vishap"
 TOOLS_DIR = ROOT_DIR / "src" / "tools"
 
 # === DeepSeek API ===
@@ -33,7 +33,7 @@ MAX_TOKENS = 8000
 
 # === Сервер ===
 PORT = 5001
-APP_NAME = "Conveyor"
+APP_NAME = "Vishap"
 
 # === Данные ===
 DATA_DIR.mkdir(exist_ok=True)

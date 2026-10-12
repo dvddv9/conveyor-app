@@ -31,7 +31,7 @@ async def async_chat(system: str, user: str,
         result["mode"] = "cloud"
         return result
     except Exception as e:
-        print(f"[Conveyor] DeepSeek недоступен: {e}. Fallback → локально.")
+        print(f"[Vishap] DeepSeek недоступен: {e}. Fallback → локально.")
         try:
             result = await async_ollama_client.chat(system, user, temperature)
             result["mode"] = "local"

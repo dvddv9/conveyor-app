@@ -52,7 +52,7 @@ def test_detect_compliance_no_triggers():
 def test_compute_hash_format():
     h = compute_hash("abc")
     assert h.startswith("sha256:")
-    assert len(h) == len("sha256:") + 16
+    assert len(h) == len("sha256:") + 64
 
 
 def test_compute_hash_stable():

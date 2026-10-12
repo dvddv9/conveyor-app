@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conveyor V5.7 — [LINES: a-b]."""
+"""Vishap V5.7 — [LINES: a-b]."""
 import argparse, json, sys
 from pathlib import Path
 

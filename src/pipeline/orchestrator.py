@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Conveyor — главный pipeline.
+Vishap — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -234,7 +234,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
 
 def run_pipeline(material: str, filename: str, verbose: bool = True,
                  session_suffix: str = "") -> dict:
-    """Запускает полный pipeline Conveyor.
+    """Запускает полный pipeline Vishap.
 
     session_suffix: опциональный суффикс для session_id (batch mode).
     """
@@ -251,7 +251,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
 
     if verbose:
-        print(f"=== Conveyor Pipeline ===")
+        print(f"=== Vishap Pipeline ===")
         print(f"Session: {session_id}")
         print(f"File: {filename}")
         print(f"Material: {len(material)} символов")

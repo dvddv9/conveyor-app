@@ -24,7 +24,7 @@ def _severity_to_sarif_level(severity: str) -> str:
 
 def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
              source_file: str = "input") -> dict:
-    """Convert Conveyor audit + SAST/SCA results to SARIF 2.1.0.
+    """Convert Vishap audit + SAST/SCA results to SARIF 2.1.0.
 
     Args:
         audit: audit dict from run_audit
@@ -108,14 +108,14 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                     }],
                 })
 
-    # === Conveyor audit metadata as SARIF properties ===
+    # === Vishap audit metadata as SARIF properties ===
     sarif = {
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
         "version": "2.1.0",
         "runs": [{
             "tool": {
                 "driver": {
-                    "name": "Conveyor",
+                    "name": "Vishap",
                     "version": "5.7.1",
                     "informationUri": "https://github.com/dvddv9/conveyor-app",
                     "rules": rules,

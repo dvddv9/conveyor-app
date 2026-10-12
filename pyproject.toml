@@ -3,8 +3,8 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "conveyor"
-version = "5.7.0"
+name = "vishap"
+version = "5.8.0"
 description = "6-stage LLM pipeline for engineering code analysis"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -31,7 +31,7 @@ dependencies = [
 dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0", "black>=24.0.0"]
 
 [project.scripts]
-conveyor = "src.cli:main"
+vishap = "src.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

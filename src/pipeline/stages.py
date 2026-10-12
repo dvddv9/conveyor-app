@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Стадии pipeline Conveyor.
+Стадии pipeline Vishap.
 v2: улучшенный JSON-парсинг + max_tokens из config.
 """
 import json

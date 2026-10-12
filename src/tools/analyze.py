@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Conveyor V5.7 — статический анализ и расчёты.
+Vishap V5.7 — статический анализ и расчёты.
 """
 import argparse
 import ast

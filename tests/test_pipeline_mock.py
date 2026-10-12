@@ -149,4 +149,4 @@ def test_material_hash_in_result(s0, s1, s2, s4, s5):
     result = orchestrator.run_pipeline("def foo(): pass", "a.py", verbose=False)
     h = result["audit"]["material_hash"]
     assert h.startswith("sha256:")
-    assert len(h) == len("sha256:") + 16
+    assert len(h) == len("sha256:") + 64
