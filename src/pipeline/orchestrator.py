@@ -25,6 +25,7 @@ from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
 from src.pipeline.cost import sum_stage_costs
 from src.tools.redact import redact_pii  # dogfood P0: pre-LLM PII redaction
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
+from src.tools.patterns import CRITICAL_RISK_PATTERNS
 
 MAX_CHARS = 12000   # ~3000 токенов
 
@@ -235,13 +236,32 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             "google_api_key", "private_key", "hardcoded_password",
             "hardcoded_secret",
         )
-        _has_real_emergency = any(k in _pii for k in _secret_keys)
+        _has_secrets_or_pii = any(k in _pii for k in _secret_keys) or bool(_pii) or bool(_comp)
+
+        # Dogfood P0 fix: also check CRITICAL_RISK_PATTERNS (RCE, SQLi, path traversal).
+        # Before: GATE downgraded EMERGENCY if only SECRETS/PII were absent —
+        # which incorrectly silenced RCE, SQLi, path traversal.
+        _critical_hits = []
+        for _risk_name, _risk_pattern in CRITICAL_RISK_PATTERNS.items():
+            if _risk_pattern.search(material):
+                _critical_hits.append(_risk_name)
+
+        _has_real_emergency = _has_secrets_or_pii or bool(_critical_hits)
+
         if not _has_real_emergency:
             flags = [f for f in flags if f != "EMERGENCY_INTERRUPT"]
             flags.append("WARNING: llm_emergency_downgraded")
             if verbose:
-                print("[!] EMERGENCY от LLM понижен до WARNING (audit: SAFE)")
+                print("[!] EMERGENCY от LLM понижен до WARNING (audit: SAFE, no critical patterns)")
                 print(f"    flags: {flags}")
+        else:
+            if verbose:
+                reason = []
+                if _has_secrets_or_pii:
+                    reason.append("secrets/PII")
+                if _critical_hits:
+                    reason.append(f"critical patterns: {_critical_hits}")
+                print(f"[!] EMERGENCY подтверждён audit ({', '.join(reason)})")
 
     if "EMERGENCY_INTERRUPT" in flags:
         if verbose:

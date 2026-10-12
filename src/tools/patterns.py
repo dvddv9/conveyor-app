@@ -37,3 +37,21 @@ COMPLIANCE_TRIGGERS = {
     # keyword-triggers удалены: они ловили имена переменных, а не секреты.
     # "SECRETS": [...],
 }
+
+
+# Dogfood P0 fix: critical risk patterns that MUST NOT be downgraded
+# to WARNING even if audit doesn't find SECRETS/PII.
+# These are RCE, code injection, deserialization, path traversal, SQLi.
+CRITICAL_RISK_PATTERNS = {
+    "rce_shell": re.compile(r"\b(os\.system|subprocess\.(call|run|Popen|check_output|check_call)|os\.popen)\s*\("),
+    "rce_eval": re.compile(r"\b(eval|exec)\s*\("),
+    "rce_import": re.compile(r"__import__\s*\(|getattr\s*\([^,]+,\s*[a-z_]+\s*\)"),
+    "sqli_concat": re.compile(r"(SELECT|INSERT|UPDATE|DELETE|DROP)\s+.*['\"]\s*\+\s*", re.IGNORECASE),
+    "sqli_fstring": re.compile(r"execute\s*\(\s*f['\"]", re.IGNORECASE),
+    "path_traversal": re.compile(r"open\s*\([^)]*\.\.[/\\]|os\.path\.join\s*\([^,]+,\s*[a-z_]+\s*\)"),
+    "insecure_deser": re.compile(r"(pickle\.loads|yaml\.load\s*\([^,)]+\)|marshal\.loads)"),
+    "shell_true": re.compile(r"shell\s*=\s*True"),
+    "ssti": re.compile(r"render_template_string\s*\(|Template\s*\([^)]+\).*render"),
+    "ldap_injection": re.compile(r"search\s*\([^)]*\+\s*[a-z_]+"),
+    "xxe": re.compile(r"(etree\.parse|XMLParser|parseString)\s*\(.*resolve_entities"),
+}
