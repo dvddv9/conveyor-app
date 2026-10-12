@@ -445,7 +445,10 @@ For each analysis, `data/audit_<session>.json` is created:
 
 &#x20; "timestamp": "2026-10-08T13:43:46.157411+00:00",
 
-&#x20; "material_hash": "sha256:4f87e43baa8f2253",
+&#x20; "material_hash": "sha256:650be4dba319b9e641f65196c1d11f493fe5fed52622493c596c1f478e0f3204",
+  "material_hash_full": "sha256:1e7e02c478cdfd9ca4043d95c9de561ec3476efa49fcf0bf7b5e4d292b6d91a0",
+  "truncated": true,
+  "original_size": 28000,
 
 &#x20; "material_size": {"lines": 5, "chars": 105},
 
@@ -493,9 +496,24 @@ Regex-based detection for:
 
 
 
-### Verdict
+### Material hash — slice vs original
 
+For each analysis, two SHA-256 hashes are recorded:
 
+- **`material_hash`** — hash of the **analyzed slice** (first `MAX_CHARS = 12000` chars). Use this to verify what was actually analyzed.
+- **`material_hash_full`** — hash of the **original material** (before truncation). Use this to verify against the source file.
+
+Additional fields:
+
+- **`truncated`** — `true` if the material was sliced (> `MAX_CHARS`), `false` otherwise.
+- **`original_size`** — length of the original material in chars.
+
+Example: small file (1407 chars, not truncated) → both hashes equal.
+Example: large file (28000 chars, truncated to 12000) → `material_hash ≠ material_hash_full`.
+
+See `src/pipeline/orchestrator.py` — `compute_hash()`, `run_audit()`.
+
+## Verdict
 
 - `SAFE` — no PII or compliance triggers found
 
@@ -723,7 +741,7 @@ See [docs/case-studies/own/](docs/case-studies/own/) for full reports.
 | Conveyor vs Raw Prompt | Metadata validity | [->](docs/case-studies/comparison/conveyor-vs-raw-prompt.md) |
 | D3 vs D4 Fallback | Solution vs boundary | [->](docs/case-studies/comparison/d3-vs-d4-fallback.md) |
 
-**Total:** 39 case studies across 7 languages and 12+ technologies.
+**Total:** 41+ case studies across 7 languages and 12+ technologies (incl. Wireshark crc32.c, SARD 501270 metadata-only).
 
 ## Author
 
