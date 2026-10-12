@@ -25,6 +25,7 @@ from src.tools.fallback_check import REQUIRED as REQUIRED_BLOCKS, LOSS_THRESHOLD
 from src.pipeline.cost import sum_stage_costs
 from src.tools.redact import redact_pii  # dogfood P0: pre-LLM PII redaction
 from src.tools.sast import run_sast  # dogfood P1: deterministic SAST
+from src.tools.provenance import get_provenance  # dogfood P2: source tracking
 from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
@@ -183,6 +184,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
     risk_verdict = "EMERGENCY" if force_emergency else "SAFE"
     cwe_ids = detect_cwe(material)
     owasp_categories = map_cwe_to_owasp(cwe_ids, year="2025")
+    provenance = get_provenance()
 
     audit = {
         "audit_id": generate_audit_id(),
@@ -199,6 +201,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "risk_verdict": risk_verdict,
         "cwe_ids": cwe_ids,
         "owasp_categories": owasp_categories,
+        "provenance": provenance,
         "pii_detected": bool(pii),
         "pii_details": pii,
         "compliance_flags": compliance,
@@ -351,6 +354,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
         f"owasp_categories: {audit.get('owasp_categories', [])}\n"
+        f"provenance_source: {audit.get('provenance', {}).get('source', 'unknown')}\n"
+        f"provenance_commit: {audit.get('provenance', {}).get('git_commit_short', '')}\n"
         )
         emergency_md = emergency_md + audit_block
 
@@ -488,6 +493,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
         f"owasp_categories: {audit.get('owasp_categories', [])}\n"
+        f"provenance_source: {audit.get('provenance', {}).get('source', 'unknown')}\n"
+        f"provenance_commit: {audit.get('provenance', {}).get('git_commit_short', '')}\n"
     )
     final_markdown = final_markdown + audit_block
 
@@ -624,6 +631,8 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
         f"owasp_categories: {audit.get('owasp_categories', [])}\n"
+        f"provenance_source: {audit.get('provenance', {}).get('source', 'unknown')}\n"
+        f"provenance_commit: {audit.get('provenance', {}).get('git_commit_short', '')}\n"
     )
     required = REQUIRED_BLOCKS.get(level, [])
     missing = [b for b in required if b not in final_markdown]
