@@ -24,13 +24,15 @@ def get_client() -> OpenAI:
     return OpenAI(
         api_key=DEEPSEEK_API_KEY,
         base_url="https://api.deepseek.com/v1",
+        timeout=60.0,        # dogfood P0: HTTP timeout (was default 600s)
+        max_retries=0,       # retries handled by tenacity, not openai
     )
 
 
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=30),
-    retry=retry_if_exception_type((APIConnectionError, RateLimitError, APIStatusError)),
+    retry=retry_if_exception_type((APIConnectionError, RateLimitError, APIStatusError, TimeoutError)),
     before_sleep=before_sleep_log(logger, logging.WARNING),
     reraise=True,
 )
