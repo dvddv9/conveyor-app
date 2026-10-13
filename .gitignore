@@ -1,4 +1,4 @@
-﻿.venv/
+.venv/
 __pycache__/
 *.pyc
 .env
@@ -13,22 +13,27 @@ data/
 build/
 dist/
 !examples/multi/incident.log
-# Temporary scripts (do not commit)
-fix_*.py
-build_*.py
-make_*.py
-translate_*.py
-extract_*.py
-add_*.py
-show_*.py
-update_*.py
-precision_*.py
-check_*.py
-rc*.py
-# Test scripts (do not commit)
-test_*.py
+
+# Temporary scripts (do not commit) — only at repo root
+/fix_*.py
+/build_*.py
+/make_*.py
+/translate_*.py
+/extract_*.py
+/add_*.py
+/show_*.py
+/update_*.py
+/precision_*.py
+/check_*.py
+/rc*.py
+
+# Test scripts (do not commit) — only at repo root
+/test_*.py
 
 # backups / temp
 *.bak
-patch_*.py
-upload_log.txt
+/patch_*.py
+/upload_*.py
+
+# Vishap baseline files
+.vishap-baseline.json

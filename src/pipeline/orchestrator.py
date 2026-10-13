@@ -31,6 +31,25 @@ from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
 from src.tools.patterns import detect_exploitability
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
+from src.tools.baseline import apply_baseline
+
+def _safe_escalation_note(stage) -> str:
+    """Extract escalation note from stage4, tolerant to dict/list/None."""
+    if not stage or not isinstance(stage, dict):
+        return ""
+    collision = stage.get('collision')
+    if isinstance(collision, dict):
+        return str(collision.get('note', '') or '')
+    if isinstance(collision, list):
+        parts = []
+        for c in collision:
+            if isinstance(c, dict):
+                parts.append(str(c.get('note', '')))
+            else:
+                parts.append(str(c))
+        return '; '.join(x for x in parts if x)
+    return ""
+
 
 MAX_CHARS = 12000   # ~3000 токенов
 
@@ -261,7 +280,9 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
 # === Pipeline ===
 
 def run_pipeline(material: str, filename: str, verbose: bool = True,
-                 session_suffix: str = "") -> dict:
+                 session_suffix: str = "",
+                 baseline_path: str = None,
+                 save_baseline_path: str = None) -> dict:
     """Запускает полный pipeline Vishap.
 
     session_suffix: опциональный суффикс для session_id (batch mode).
@@ -364,7 +385,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {}, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=(stage4.get('collision', {}) or {}).get('note', '') if "stage4" in dir() else "")
+        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {}, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "")
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -518,9 +539,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # force_emergency — только из stage0 (реальная безопасность)
     # stage4.force_emergency — это escalation level (critical collisions)
     force_emergency = bool(stage0.get('force_emergency', False))
-    _escalation = (stage4.get('collision', {}) or {}).get('note', '') if stage4 else ''
+    _escalation = _safe_escalation_note(stage4)
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=(stage4.get('collision', {}) or {}).get('note', '') if "stage4" in dir() else "")
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "")
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -608,6 +629,28 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         "material_hash": audit["material_hash"],
     })
 
+    # === Baseline (P0-1) ===
+    apply_baseline(
+        result,
+        baseline_path=baseline_path,
+        save_baseline_path=save_baseline_path,
+        filename=filename,
+        verbose=verbose,
+    )
+
+    # === Baseline audit-trail (v5.9.0) ===
+    _bs = result.get("baseline_stats") or {}
+    if _bs.get("baseline_used") or _bs.get("baseline_saved"):
+        _baseline_lines = ["\n\n[BASELINE]"]
+        if _bs.get("baseline_saved"):
+            _baseline_lines.append(f"baseline_saved: {_bs.get('baseline_saved_count', 0)}")
+        if _bs.get("baseline_used"):
+            _baseline_lines.append("baseline_used: true")
+            _baseline_lines.append(f"baseline_new: {_bs.get('baseline_new', 0)}")
+            _baseline_lines.append(f"baseline_known: {_bs.get('baseline_known', 0)}")
+        final_markdown += "\n".join(_baseline_lines)
+        result["final_markdown"] = final_markdown
+
     result_file = DATA_DIR / f"result_{session_id}.json"
     result_file.write_text(
         json.dumps(result, ensure_ascii=False, indent=2),
@@ -623,7 +666,9 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
 
 async def run_pipeline_async(material: str, filename: str, verbose: bool = False,
-                              session_suffix: str = "") -> dict:
+                              session_suffix: str = "",
+                              baseline_path: str = None,
+                              save_baseline_path: str = None) -> dict:
     """Async pipeline."""
     # Truncate if too large
     truncated = False
@@ -676,9 +721,9 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     # force_emergency — только из stage0 (реальная безопасность)
     # stage4.force_emergency — это escalation level (critical collisions)
     force_emergency = bool(stage0.get('force_emergency', False))
-    _escalation = (stage4.get('collision', {}) or {}).get('note', '') if stage4 else ''
+    _escalation = _safe_escalation_note(stage4)
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=(stage4.get('collision', {}) or {}).get('note', '') if "stage4" in dir() else "")
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "")
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"generator: Vishap V5.8\n"
@@ -722,6 +767,28 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
                "route": route, "material_size": len(material),
                "verdict": audit["critique_verdict"], "pii_detected": audit["pii_detected"],
                "material_hash": audit["material_hash"]})
+    # === Baseline (P0-1) ===
+    apply_baseline(
+        result,
+        baseline_path=baseline_path,
+        save_baseline_path=save_baseline_path,
+        filename=filename,
+        verbose=verbose,
+    )
+
+    # === Baseline audit-trail (v5.9.0) ===
+    _bs = result.get("baseline_stats") or {}
+    if _bs.get("baseline_used") or _bs.get("baseline_saved"):
+        _baseline_lines = ["\n\n[BASELINE]"]
+        if _bs.get("baseline_saved"):
+            _baseline_lines.append(f"baseline_saved: {_bs.get('baseline_saved_count', 0)}")
+        if _bs.get("baseline_used"):
+            _baseline_lines.append("baseline_used: true")
+            _baseline_lines.append(f"baseline_new: {_bs.get('baseline_new', 0)}")
+            _baseline_lines.append(f"baseline_known: {_bs.get('baseline_known', 0)}")
+        final_markdown += "\n".join(_baseline_lines)
+        result["final_markdown"] = final_markdown
+
     result_file = DATA_DIR / f"result_{session_id}.json"
     result_file.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     return result
