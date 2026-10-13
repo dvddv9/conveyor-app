@@ -165,7 +165,7 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 ```powershell
 
-cd C:\\AI\\vishap_app
+cd C:\\AI\\conveyor_app
 
 ```
 
@@ -367,7 +367,7 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 ```
 
-vishap_app/
+conveyor_app/
 
 ├── vishap/                 # V5.8 prompts (660+ lines)
 
@@ -651,7 +651,7 @@ git --no-pager log --oneline
 
 - **pandas is not used** — Windows Code Integrity Policy may block `pandas._libs.*.pyd`. Native `st.dataframe(list[dict])` is used instead.
 
-- **Tests** — Tests: 80 (`tests/`). Run: `python run_tests.py`.
+- **Tests** — 41 (`tests/`). Run: `python run_tests.py`.
   Coverage: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
 - **Stage 3/4 parallelism** — currently sequential.
