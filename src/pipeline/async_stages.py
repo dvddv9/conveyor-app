@@ -15,11 +15,12 @@ async def async_run_stage(stage_name: str, prompt_name: str, material: str,
                           context: dict | None = None,
                           temperature: float = 0.0,
                           max_tokens: int | None = None,
-                          retry_on_json_fail: bool = True) -> dict:
+                          retry_on_json_fail: bool = True,
+                          web_search_results: list | None = None) -> dict:
     if max_tokens is None:
         max_tokens = MAX_TOKENS
 
-    system, user = build_prompt(prompt_name, material, context)
+    system, user = build_prompt(prompt_name, material, context, web_search_results)
 
     result = await async_chat(system, user, temperature=temperature, max_tokens=max_tokens)
     parsed = parse_json_response(result["text"])
@@ -71,14 +72,38 @@ async def async_stage1_scanner(material: str, context: dict) -> dict:
     )
 
 
-async def async_stage2_analyst(material: str, context: dict) -> dict:
-    return await async_run_stage(
+async def async_stage2_analyst(material: str, context: dict,
+                                search_queries: list | None = None) -> dict:
+    """Async Stage 2: Analyst с опциональным web search."""
+    from src.pipeline.stages import _generate_default_queries
+    from src.tools.web_search import search_many, is_enabled as web_search_enabled
+    from src.config import ENABLE_WEB_SEARCH
+
+    web_search_results = None
+    queries_used = []
+
+    if ENABLE_WEB_SEARCH and web_search_enabled():
+        queries_used = search_queries or _generate_default_queries(material)
+        if queries_used:
+            print(f"  [Web Search] {len(queries_used)} queries...")
+            web_search_results = search_many(queries_used)
+            print(f"  [Web Search] {len(web_search_results)} results")
+
+    result = await async_run_stage(
         stage_name="stage2_analyst",
         prompt_name="02_analyst",
         material=material,
         context=context,
         temperature=0.0,
+        web_search_results=web_search_results,
     )
+
+    result["_web_search"] = {
+        "used": bool(web_search_results),
+        "queries": queries_used,
+        "credits": len(queries_used),
+    }
+    return result
 
 
 async def async_stage3_researcher(material: str, context: dict) -> dict:
@@ -97,7 +122,8 @@ async def async_stage4_synthesizer(material: str, context: dict) -> dict:
         prompt_name="04_synthesizer",
         material=material,
         context=context,
-        temperature=0.0,
+        temperature=0.0, 
+        max_tokens=MAX_TOKENS_STAGE4,
     )
 
 

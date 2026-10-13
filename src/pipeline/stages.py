@@ -7,7 +7,8 @@ import json
 import re
 from src.llm.client import chat as llm_chat
 from src.pipeline.prompts import build_prompt
-from src.config import MAX_TOKENS
+from src.config import MAX_TOKENS, MAX_TOKENS_STAGE4, ENABLE_WEB_SEARCH
+from src.tools.web_search import search_many, is_enabled as web_search_enabled
 
 
 def _clean_json_string(text: str) -> str:
@@ -125,11 +126,12 @@ def run_stage(stage_name: str, prompt_name: str, material: str,
               context: dict | None = None,
               temperature: float = 0.0,
               max_tokens: int | None = None,
-              retry_on_json_fail: bool = True) -> dict:
+              retry_on_json_fail: bool = True,
+              web_search_results: list | None = None) -> dict:
     if max_tokens is None:
         max_tokens = MAX_TOKENS
 
-    system, user = build_prompt(prompt_name, material, context)
+    system, user = build_prompt(prompt_name, material, context, web_search_results)
 
     result = llm_chat(system, user, temperature=temperature, max_tokens=max_tokens)
     parsed = parse_json_response(result["text"])
@@ -187,14 +189,60 @@ def stage1_scanner(material: str, context: dict) -> dict:
     )
 
 
-def stage2_analyst(material: str, context: dict) -> dict:
-    return run_stage(
+def stage2_analyst(material: str, context: dict,
+                   search_queries: list | None = None) -> dict:
+    """Stage 2: Analyst с опциональным web search."""
+    web_search_results = None
+    queries_used = []
+
+    if ENABLE_WEB_SEARCH and web_search_enabled():
+        queries_used = search_queries or _generate_default_queries(material)
+        if queries_used:
+            print(f"  [Web Search] {len(queries_used)} queries...")
+            web_search_results = search_many(queries_used)
+            print(f"  [Web Search] {len(web_search_results)} results")
+
+    result = run_stage(
         stage_name="stage2_analyst",
         prompt_name="02_analyst",
         material=material,
         context=context,
         temperature=0.0,
+        web_search_results=web_search_results,
     )
+
+    result["_web_search"] = {
+        "used": bool(web_search_results),
+        "queries": queries_used,
+        "credits": len(queries_used),
+    }
+    return result
+
+
+def _generate_default_queries(material: str) -> list:
+    """Простая эвристика — 1-3 запроса из материала."""
+    queries = []
+    m = material.lower()
+
+    if "sql" in m or "cwe-89" in m:
+        queries.append("SQL injection prevention best practices 2026")
+    if "xss" in m or "cwe-79" in m:
+        queries.append("XSS prevention Content Security Policy best practices")
+    if "buffer overflow" in m or "cwe-122" in m:
+        queries.append("heap buffer overflow mitigation best practices")
+    if "kafka" in m:
+        queries.append("Kafka at-least-once deduplication best practices")
+    if "redis" in m:
+        queries.append("Redis idempotency anti-patterns")
+    if "gdpr" in m:
+        queries.append("GDPR Article 17 right to erasure implementation")
+    if "pci" in m:
+        queries.append("PCI DSS requirement 6.5 secure coding")
+
+    if not queries:
+        queries.append("recent CVEs and security best practices")
+
+    return queries[:3]
 
 
 def stage3_researcher(material: str, context: dict) -> dict:
@@ -214,6 +262,7 @@ def stage4_synthesizer(material: str, context: dict) -> dict:
         material=material,
         context=context,
         temperature=0.0,
+        max_tokens=MAX_TOKENS_STAGE4,
     )
 
 

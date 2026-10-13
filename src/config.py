@@ -36,6 +36,12 @@ DEEPSEEK_MODEL = "deepseek-chat"
 OLLAMA_MODEL = "qwen2.5:7b"
 OLLAMA_URL = "http://localhost:11434"
 
+# === Tavily Web Search ===
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+ENABLE_WEB_SEARCH = os.getenv("ENABLE_WEB_SEARCH", "false").lower() == "true"
+SEARCH_MAX_RESULTS = int(os.getenv("SEARCH_MAX_RESULTS", "5"))
+SEARCH_DEPTH = os.getenv("SEARCH_DEPTH", "basic")
+
 # === Режим LLM ===
 MODE = "auto"
 
@@ -43,6 +49,7 @@ MODE = "auto"
 TEMPERATURE = 0.0
 TEMPERATURE_CREATIVE = 0.3
 MAX_TOKENS = 8000
+MAX_TOKENS_STAGE4 = 16000
 
 # === Сервер ===
 PORT = 5001

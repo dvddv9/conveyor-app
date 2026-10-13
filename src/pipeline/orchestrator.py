@@ -11,7 +11,7 @@ import sys
 from datetime import datetime, UTC
 from pathlib import Path
 
-from src.config import DATA_DIR
+from src.config import DATA_DIR, ENABLE_WEB_SEARCH
 from src.pipeline.stages import (
     stage0_orchestrator,
     stage1_scanner,
@@ -193,7 +193,9 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               context: str = "",
               redaction_map: dict = None,
               sast_result: dict = None,
-              sca_result: dict = None) -> dict:
+              sca_result: dict = None,
+              web_search_queries: list = None,
+              escalation_level: str = "") -> dict:
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
@@ -240,6 +242,11 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "sca_vulnerabilities": ((sca_result or {}).get("pip_audit") or {}).get("summary", {}).get("total", 0),
         "truncated": truncated,
         "original_size": original_size,
+        # === Web Search (Tavily) ===
+        "web_search_used": ENABLE_WEB_SEARCH,
+        "web_search_queries": web_search_queries or [],
+        "web_search_credits": len(web_search_queries or []),
+        "escalation_level": escalation_level,
     }
 
     audit_file = DATA_DIR / f"audit_{session_id}.json"
@@ -357,7 +364,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         # Still run audit — compliance priority
         if verbose:
             print("[Audit] Сбор audit-записи (emergency)...")
-        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {}, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
+        audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=True, context=f"{filename}:{session_id}", redaction_map=redaction_map if "redaction_map" in dir() else {}, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=(stage4.get('collision', {}) or {}).get('note', '') if "stage4" in dir() else "")
         if verbose:
             print(f"  → audit_id: {audit['audit_id']}")
             print(f"  → material_hash: {audit['material_hash']}")
@@ -508,9 +515,12 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     # === AUDIT ===
     if verbose:
         print("[Audit] Сбор audit-записи...")
-    force_emergency = bool(stage4.get('force_emergency', False))
+    # force_emergency — только из stage0 (реальная безопасность)
+    # stage4.force_emergency — это escalation level (critical collisions)
+    force_emergency = bool(stage0.get('force_emergency', False))
+    _escalation = (stage4.get('collision', {}) or {}).get('note', '') if stage4 else ''
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=(stage4.get('collision', {}) or {}).get('note', '') if "stage4" in dir() else "")
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -663,9 +673,12 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     final_markdown = strip_llm_audit_blocks(final_markdown)
     # Dogfood fix: sanitize hallucinated session_id in markdown
     final_markdown = sanitize_session_id(final_markdown, session_id)
-    force_emergency = bool(stage4.get('force_emergency', False))
+    # force_emergency — только из stage0 (реальная безопасность)
+    # stage4.force_emergency — это escalation level (critical collisions)
+    force_emergency = bool(stage0.get('force_emergency', False))
+    _escalation = (stage4.get('collision', {}) or {}).get('note', '') if stage4 else ''
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None)
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=(stage4.get('collision', {}) or {}).get('note', '') if "stage4" in dir() else "")
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"generator: Vishap V5.8\n"
