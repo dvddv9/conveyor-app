@@ -1,4 +1,4 @@
-# Vishap V5.8
+# Vishap V5.9
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -24,7 +24,20 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.8
+## What's new in v5.9
+
+- **Baseline** (`--save-baseline` / `--baseline`) -- fingerprint-based suppression
+  of known findings in CI. Save once, report only new findings on subsequent runs.
+  See [Baseline](#baseline-v590) below.
+- **Fix:** `stage4.collision` as list no longer crashes audit trail
+  (`_safe_escalation_note` helper).
+- **Fix:** audit-trail `[BASELINE]` block placement in sync + async pipelines.
+- **Infra:** `.gitignore` root-only patterns for temporary scripts
+  (`/test_*.py`, `/fix_*.py`, `/patch_*.py`) -- prevents shadowing `tests/`.
+- **Infra:** `.gitignore` ignores `.vishap-baseline.json`.
+- **Tests:** 55 passing (was 41) -- +14 baseline tests.
+
+## What was new in v5.8
 
 - **SAST/SCA integration** -- Bandit + Semgrep + pip-audit before Stage 2.
 - **SARIF 2.1.0 output** -- POST /analyze/sarif for GitHub Code Scanning.
@@ -372,7 +385,7 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 vishap/
 
-├── vishap/                 # V5.8 prompts (660+ lines)
+├── vishap/                 # V5.9 prompts (660+ lines)
 
 │   ├── 00_orchestrator.md
 

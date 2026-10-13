@@ -31,8 +31,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=f"{APP_NAME} API",
-    description="Vishap V5.8 — 6-стадийный LLM-конвейер для анализа кода",
-    version="5.8.3",
+    description="Vishap V5.9 — 6-стадийный LLM-конвейер для анализа кода",
+    version="5.9.0",
     lifespan=lifespan,
 )
 
@@ -132,7 +132,7 @@ class ModeResponse(BaseModel):
 async def root():
     return {
         "app": APP_NAME,
-        "version": "5.8.3",
+        "version": "5.9.0",
         "docs": "/docs",
         "endpoints": ["/analyze", "/history", "/health"],
     }
@@ -146,7 +146,7 @@ async def health():
 @app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
 async def analyze(req: AnalyzeRequest):
     """
-    Запускает полный pipeline Vishap V5.8.
+    Запускает полный pipeline Vishap V5.9.
     
     Вход: код / spec / logs.
     Выход: финальный Markdown-отчёт + метаданные.
