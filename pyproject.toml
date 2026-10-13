@@ -3,14 +3,14 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "vishap"
+name = "vishap-analyzer"
 version = "5.8.0"
-description = "6-stage LLM pipeline for engineering code analysis"
+description = "Vishap - multi-material IT analyst (code, config, spec, logs, data). 6-stage LLM pipeline with SAST/SCA, SARIF 2.1.0, OWASP Top 10, audit trail (SHA-256), provenance, exploitability."
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "Private"}
+license = "AGPL-3.0-or-later"
 authors = [{name = "David", email = "hndavid9@yahoo.com"}]
-keywords = ["llm", "code-analysis", "audit", "compliance", "pii", "deepseek", "ollama"]
+keywords = ["vishap", "vishap-analyzer", "security", "sast", "sca", "sarif", "owasp", "llm", "multi-material", "code-review", "audit-trail", "compliance", "pii", "deepseek", "ollama"]
 
 dependencies = [
     "requests>=2.32.0",
