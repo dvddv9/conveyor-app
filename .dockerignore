@@ -5,11 +5,14 @@ __pycache__/
 .gitignore
 .pytest_cache/
 .env
+.env.*
+!.env.example
 data/
 docs/case-studies/dogfood/
 *.md
 !README.md
 !PROOF.md
+!vishap/*.md
 tests/
 fix_*.py
 build_*.py

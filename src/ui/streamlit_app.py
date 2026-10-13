@@ -9,6 +9,7 @@ from datetime import datetime
 ...
 import requests
 import streamlit as st
+from src.config import DATA_DIR
 
 
 API_URL = "http://localhost:5001"
@@ -323,7 +324,7 @@ with tab_history:
                 key="history_dl_session",
             )
             if dl_session:
-                _rp = Path(f"C:/AI/conveyor_app/data/result_{dl_session}.json")
+                _rp = DATA_DIR / f"result_{dl_session}.json"
                 if _rp.exists():
                     _d = json.loads(_rp.read_text(encoding="utf-8"))
                     _md = _d.get("final_markdown", "")

@@ -1,6 +1,7 @@
 services:
   api:
     build: .
+    image: dvddv9/vishap-analyzer:5.8.1
     container_name: vishap-api
     ports:
       - "5001:5001"
@@ -9,13 +10,20 @@ services:
       - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
       - CONVEYOR_API_KEY=${CONVEYOR_API_KEY:-}
       - PORT=5001
+      - VISHAP_DATA_DIR=/home/vishap/.vishap/data
     volumes:
-      - ./data:/app/data
-      - ./docs:/app/docs
+      - vishap_data:/home/vishap/.vishap/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   ui:
     build: .
+    image: dvddv9/vishap-analyzer:5.8.1
     container_name: vishap-ui
     command: python -m streamlit run src/ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
     ports:
@@ -23,7 +31,8 @@ services:
     environment:
       - API_URL=http://api:5001
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
 
   ollama:
@@ -37,4 +46,5 @@ services:
       - local-llm
 
 volumes:
+  vishap_data:
   ollama_data:

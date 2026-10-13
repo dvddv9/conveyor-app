@@ -27,3 +27,8 @@ check_*.py
 rc*.py
 # Test scripts (do not commit)
 test_*.py
+
+# backups / temp
+*.bak
+patch_*.py
+upload_log.txt

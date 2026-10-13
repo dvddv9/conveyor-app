@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from src.config import APP_NAME, PORT
+from src.config import APP_NAME, PORT, DATA_DIR
 from src.pipeline.orchestrator import run_pipeline
 from src.pipeline.batch import run_batch
 from src.storage.history import load_history, add_entry
@@ -163,7 +163,7 @@ async def analyze(req: AnalyzeRequest):
 
     if existing:
         cached_session = existing.get("session_id", "")
-        result_file = Path(f"C:/AI/conveyor_app/data/result_{cached_session}.json")
+        result_file = DATA_DIR / f"result_{cached_session}.json"
         if result_file.exists():
             cached = json.loads(result_file.read_text(encoding="utf-8"))
             stage0c = cached.get("stage0", {})

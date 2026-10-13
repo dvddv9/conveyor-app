@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Конфигурация Vishap.
 """
@@ -10,8 +10,21 @@ load_dotenv()
 
 # === Пути ===
 ROOT_DIR = Path(__file__).parent.parent
-DATA_DIR = ROOT_DIR / "data"
-PROMPTS_DIR = ROOT_DIR / "vishap"
+
+# DATA_DIR — вне site-packages (env > ~/.vishap/data)
+_env_data = os.getenv("VISHAP_DATA_DIR")
+if _env_data:
+    DATA_DIR = Path(_env_data)
+else:
+    DATA_DIR = Path.home() / ".vishap" / "data"
+
+# PROMPTS_DIR — внутри пакета vishap/ (installed) или ROOT/vishap (dev)
+try:
+    import vishap as _vishap_pkg
+    PROMPTS_DIR = Path(_vishap_pkg.__file__).parent
+except ImportError:
+    PROMPTS_DIR = ROOT_DIR / "vishap"
+
 TOOLS_DIR = ROOT_DIR / "src" / "tools"
 
 # === DeepSeek API ===
@@ -36,4 +49,4 @@ PORT = 5001
 APP_NAME = "Vishap"
 
 # === Данные ===
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR.mkdir(parents=True, exist_ok=True)
