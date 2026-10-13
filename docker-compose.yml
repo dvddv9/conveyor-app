@@ -1,7 +1,7 @@
 services:
   api:
     build: .
-    image: dvddv9/vishap-analyzer:5.8.1
+    image: dvddv9/vishap-analyzer:5.8.2
     container_name: vishap-api
     ports:
       - "5001:5001"
@@ -23,7 +23,7 @@ services:
 
   ui:
     build: .
-    image: dvddv9/vishap-analyzer:5.8.1
+    image: dvddv9/vishap-analyzer:5.8.2
     container_name: vishap-ui
     working_dir: /usr/local/lib/python3.12/site-packages
     command: python -m streamlit run src/ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
