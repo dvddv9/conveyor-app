@@ -1,5 +1,8 @@
 # Vishap V5.8
 
+<img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
+
+
 **Vishap — multi-material IT analyst.** Code, config, spec, logs, data. 6-stage LLM pipeline with SAST/SCA, SARIF 2.1.0, OWASP Top 10, audit trail (SHA-256), provenance, exploitability. 2 CVEs found (Log4Shell, OpenSSL). Recall 100%, Precision 90%, FP 0%.
 
 ---
