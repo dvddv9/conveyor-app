@@ -3,6 +3,7 @@
 Vishap V5.8 — Streamlit UI.
 Запуск: streamlit run src/ui/streamlit_app.py
 """
+import os
 import json
 from pathlib import Path
 from datetime import datetime
@@ -12,7 +13,7 @@ import streamlit as st
 from src.config import DATA_DIR
 
 
-API_URL = "http://localhost:5001"
+API_URL = os.getenv("API_URL", "http://localhost:5001")
 HISTORY_LIMIT = 20
 
 

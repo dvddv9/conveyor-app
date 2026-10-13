@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /install /usr/local
 
+USER root
+RUN ln -s /usr/local/lib/python3.12/site-packages/src /home/vishap/src
 USER vishap
 WORKDIR /home/vishap
 
