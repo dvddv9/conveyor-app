@@ -197,9 +197,14 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
     """Собирает audit-запись."""
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
-    critique = "REQUIRES_REVIEW" if (pii or compliance) else "SAFE"
-    risk_verdict = "EMERGENCY" if force_emergency else "SAFE"
     cwe_ids = detect_cwe(material)
+    critique = "REQUIRES_REVIEW" if (pii or compliance or cwe_ids) else "SAFE"
+    if force_emergency:
+        risk_verdict = "EMERGENCY"
+    elif cwe_ids or compliance or pii:
+        risk_verdict = "REQUIRES_REVIEW"
+    else:
+        risk_verdict = "SAFE"
     owasp_categories = map_cwe_to_owasp(cwe_ids, year="2025")
     exploitability = detect_exploitability(material)
     provenance = get_provenance()

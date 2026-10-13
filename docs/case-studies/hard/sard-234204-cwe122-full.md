@@ -15,10 +15,16 @@
 | **Level** | `D2` |
 | **task_type** | `review` |
 | **Language** | C |
-| **Verdict** | `SAFE` |
-| **Risk verdict** | `SAFE` |
+| **Verdict** | `REQUIRES_REVIEW` |
+| **Risk verdict** | `REQUIRES_REVIEW` |
+
+> ⚠️ **Note (v5.8.2):** This report was generated with Vishap 5.8.1, before the fixes.
+> Original: `Verdict: SAFE`, `owasp_categories: ['A03:2025 Injection']` — both incorrect.
+> Fixed in v5.8.2:
+> - `risk_verdict`: 3 levels (EMERGENCY/REQUIRES_REVIEW/SAFE), cwe_ids affects verdict
+> - `owasp_categories`: memory safety CWE (122/787/125/129) → 'Memory Safety' (not A03:Injection)
 | **cwe_ids** | `['CWE-122', 'CWE-787']` |
-| **owasp_categories** | `['A03:2025 Injection']` |
+| **owasp_categories** | `['Memory Safety']` |
 | **provenance_source** | `git/main` |
 | **provenance_commit** | `6f3afbf` |
 

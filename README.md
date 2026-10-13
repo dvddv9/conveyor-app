@@ -165,7 +165,7 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 ```powershell
 
-cd C:\\AI\\conveyor_app
+cd /path/to/vishap
 
 ```
 
@@ -367,7 +367,7 @@ python -m src.tools.slice_input --input big.py --slice "1-100,200-300"
 
 ```
 
-conveyor_app/
+vishap/
 
 ├── vishap/                 # V5.8 prompts (660+ lines)
 

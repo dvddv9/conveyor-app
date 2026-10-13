@@ -66,10 +66,13 @@ CWE_TO_OWASP = {
     "CWE-78":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "OS Command Injection"},
     "CWE-94":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Code Injection"},
     "CWE-77":   {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Command Injection"},
-    "CWE-129":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Array Index"},
-    "CWE-787":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "OOB Write"},
-    "CWE-125":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "OOB Read"},
     "CWE-917":  {"2021": "A03:2021 Injection", "2025": "A03:2025 Injection", "name": "Expression Language Injection"},
+
+    # Memory Safety — NOT OWASP Top 10 (CWE-only category)
+    "CWE-122":  {"2021": "Memory Safety", "2025": "Memory Safety", "name": "Heap Buffer Overflow"},
+    "CWE-787":  {"2021": "Memory Safety", "2025": "Memory Safety", "name": "OOB Write"},
+    "CWE-125":  {"2021": "Memory Safety", "2025": "Memory Safety", "name": "OOB Read"},
+    "CWE-129":  {"2021": "Memory Safety", "2025": "Memory Safety", "name": "Array Index"},
 
     # Broken Access Control
     "CWE-22":   {"2021": "A01:2021 Broken Access Control", "2025": "A01:2025 Broken Access Control", "name": "Path Traversal"},
