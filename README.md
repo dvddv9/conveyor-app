@@ -24,6 +24,20 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+## What's new in v5.10.0
+
+- **Formal Threat Model (P2-10)** -- completes the P2 plan. `SECURITY.md` now contains a full formal threat model (ENISA / NIST SP 800-154 methodology):
+  - **Scope** -- in scope / out of scope.
+  - **Assets** -- 6 assets with type, impact, owner.
+  - **Trust boundaries** -- TB-1 ... TB-5 with controls.
+  - **Abuse Cases (STRIDE)** -- 10 cases: `abuse case -> control -> test`.
+  - **Verification** -- each control maps to a test.
+  - **Compliance Readiness** -- SOC 2 / ISO 27001 / PCI-DSS / GDPR / HIPAA.
+  - **Known Limitations (formal)** -- L1 ... L5.
+- **`tests/test_security_md.py`** (new): 5 doc-guard tests -- prevent regressions (deleted sections, broken test references).
+- **P2 closed 4/4.** Reachability, Compliance, Runbook, Threat Model -- all shipped.
+- +5 tests. Total: 181 passing.
+
 ## What's new in v5.9.9
 
 - **Runbook Generation (P2-9)** -- incident response steps per CWE (`immediate` / `short_term` / `long_term` / `escalation`).
