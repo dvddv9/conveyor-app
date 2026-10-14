@@ -24,6 +24,18 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+## What's new in v5.9.8
+
+- **Compliance Mapping (P2-8)** -- CWE -> concrete standard controls. Extends `compliance_flags` (list[str]) with `compliance_controls` (dict) and `compliance_standards` (sorted list).
+  Audit trail now includes:
+  - `compliance_controls: {PCI-DSS: [Req 6.5.1], GDPR: [Art. 32], ...}`
+  - `compliance_standards: [ISO27001, PCI-DSS, SOC2]`
+  Backward compatible: `compliance_flags` preserved.
+- **`patterns.py`:** added `COMPLIANCE_MAP` -- CWE -> controls for 5 standards: PCI-DSS 3.2.1 (Req 6.5.x), GDPR (Art. 32), SOC 2 (CC6.x, CC7.x), ISO/IEC 27001 (A.10.x, A.14.x), HIPAA (164.312.x).
+- **`src/tools/compliance.py`** (new): `map_compliance()`, `enrich_compliance()`. Deterministic (dict-lookup), fail-open.
+- **Dogfood:** 3 cases -- SQLi (CWE-89 -> PCI Req 6.5.1 + SOC2 CC6.1 + ISO A.14.2.5), SQLi+XSS (multiple controls), full coverage (5 standards in one query).
+- +15 tests (`tests/test_compliance.py`). Total: 160 passing.
+
 ## What's new in v5.9.7
 
 - **Reachability (P2-7)** -- line-level taint path (entry_point -> source -> sink). Extends `detect_exploitability()` (boolean) with `path` and `source_count`.
@@ -898,6 +910,30 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## Compliance Mapping (v5.9.8)
+
+CWE -> concrete standard controls (PCI-DSS, GDPR, SOC 2, ISO 27001, HIPAA).
+
+In `[AUDIT_TRAIL]`:
+
+```
+compliance_flags: ['PCI-DSS']
+compliance_controls: {'PCI-DSS': ['Req 6.5.1'], 'SOC2': ['CC6.1'], 'ISO27001': ['A.14.2.5']}
+compliance_standards: ['ISO27001', 'PCI-DSS', 'SOC2']
+```
+
+**Mapping (sample):**
+
+| CWE | PCI-DSS | GDPR | SOC 2 | ISO 27001 | HIPAA |
+|---|---|---|---|---|---|
+| CWE-89 (SQLi) | Req 6.5.1 | -- | CC6.1 | A.14.2.5 | -- |
+| CWE-79 (XSS) | Req 6.5.7 | -- | CC6.1 | A.14.2.5 | -- |
+| CWE-78 (OS Cmd) | Req 6.5.1 | -- | -- | -- | -- |
+| CWE-311 (No Encrypt) | -- | Art. 32 | -- | A.10.1.1 | 164.312(a)(2)(iv) |
+| CWE-778 (No Logging) | -- | -- | CC7.2 | -- | -- |
+
+**Note:** Compliance mapping only triggers when CWE IDs are detected by the pipeline. If `cwe_ids` is empty, `compliance_controls` will be `{}`.
 
 ## Reachability (v5.9.7)
 

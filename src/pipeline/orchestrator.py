@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.9.7 — главный pipeline.
+Vishap V5.9.8 — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -28,6 +28,7 @@ from src.tools.sast import run_sast  # dogfood P1: deterministic SAST
 from src.tools.provenance import get_provenance  # dogfood P2: source tracking
 from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
+from src.tools.compliance import enrich_compliance  # P2-8
 from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
 from src.tools.patterns import detect_exploitability
 from src.tools.reachability import enrich_exploitability  # P2-7
@@ -252,7 +253,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "provenance": provenance,
         "pii_detected": bool(pii),
         "pii_details": pii,
-        "compliance_flags": compliance,
+        **enrich_compliance(cwe_ids, compliance),  # P2-8
         "redaction_applied": bool(redaction_map),
         "redaction_map": redaction_map or {},
         "sast_findings": (sast_result or {}).get("total_findings", 0),
@@ -407,13 +408,15 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         )
         audit_block = (
             "\n\n[AUDIT_TRAIL]\n"
-            f"generator: Vishap V5.9.7\n"
-            f"generator: Vishap V5.9.7\n"
+            f"generator: Vishap V5.9.8\n"
+            f"generator: Vishap V5.9.8\n"
         f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
             f"pii_detected: {str(audit['pii_detected']).lower()}\n"
             f"compliance_flags: {audit['compliance_flags']}\n"
+        f"compliance_controls: {audit.get('compliance_controls', {})}\n"
+        f"compliance_standards: {audit.get('compliance_standards', [])}\n"
             f"critique_verdict: {audit['critique_verdict']}\n"
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
@@ -573,12 +576,14 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     audit_block = (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.9.7\n"
+        f"generator: Vishap V5.9.8\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
         f"pii_detected: {str(audit['pii_detected']).lower()}\n"
         f"compliance_flags: {audit['compliance_flags']}\n"
+        f"compliance_controls: {audit.get('compliance_controls', {})}\n"
+        f"compliance_standards: {audit.get('compliance_standards', [])}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"
@@ -749,12 +754,14 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "")
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.9.7\n"
+        f"generator: Vishap V5.9.8\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
         f"pii_detected: {str(audit['pii_detected']).lower()}\n"
         f"compliance_flags: {audit['compliance_flags']}\n"
+        f"compliance_controls: {audit.get('compliance_controls', {})}\n"
+        f"compliance_standards: {audit.get('compliance_standards', [])}\n"
         f"critique_verdict: {audit['critique_verdict']}\n"
         f"risk_verdict: {audit.get('risk_verdict', 'SAFE')}\n"
         f"cwe_ids: {audit.get('cwe_ids', [])}\n"

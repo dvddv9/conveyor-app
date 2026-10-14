@@ -113,6 +113,47 @@ CWE_TO_OWASP = {
 }
 
 
+
+# P2-8: CWE -> concrete compliance controls per standard.
+COMPLIANCE_MAP = {
+    # PCI-DSS 3.2.1 (Req 6.5.x)
+    "PCI-DSS": {
+        "CWE-89":  ["Req 6.5.1"],
+        "CWE-79":  ["Req 6.5.7"],
+        "CWE-78":  ["Req 6.5.1"],
+        "CWE-352": ["Req 6.5.9"],
+        "CWE-22":  ["Req 6.5.8"],
+        "CWE-611": ["Req 6.5.1"],
+        "CWE-502": ["Req 6.5.1"],
+    },
+    # GDPR (Art. 32 -- security of processing)
+    "GDPR": {
+        "CWE-311": ["Art. 32"],
+        "CWE-200": ["Art. 32"],
+        "CWE-359": ["Art. 32"],
+        "CWE-522": ["Art. 32"],
+    },
+    # SOC 2 (Trust Services Criteria)
+    "SOC2": {
+        "CWE-89":  ["CC6.1"],
+        "CWE-79":  ["CC6.1"],
+        "CWE-287": ["CC6.1"],
+        "CWE-778": ["CC7.2"],
+    },
+    # ISO/IEC 27001:2013
+    "ISO27001": {
+        "CWE-89":  ["A.14.2.5"],
+        "CWE-79":  ["A.14.2.5"],
+        "CWE-311": ["A.10.1.1"],
+    },
+    # HIPAA Security Rule
+    "HIPAA": {
+        "CWE-311": ["164.312(a)(2)(iv)"],
+        "CWE-200": ["164.312(b)"],
+    },
+}
+
+
 def cwe_to_owasp(cwe_id: str, year: str = "2025") -> str:
     """Map CWE to OWASP Top 10 category.
 
