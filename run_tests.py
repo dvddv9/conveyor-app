@@ -30,6 +30,7 @@ def main():
     rc |= run("tests/test_quality_gate.py")
     rc |= run("tests/test_deps.py")
     rc |= run("tests/test_reachability.py")
+    rc |= run("tests/test_dataflow.py")
     rc |= run("tests/test_compliance.py")
     rc |= run("tests/test_runbook.py")
     rc |= run("tests/test_security_md.py")

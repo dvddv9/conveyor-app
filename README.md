@@ -1,4 +1,4 @@
-# Vishap V5.9
+# Vishap V5.10.2
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,25 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.10.2
+
+- **Data-flow Analysis (P2-7b)** -- AST-based taint tracking. Extends reachability (P2-7, regex + line-based) with real Python AST parsing.
+  Audit trail now includes:
+  - `dataflow_path: [{line, type, name, content}, ...]` -- full flow: source -> intermediate -> sink, with line numbers.
+  - `dataflow_source_count: N` -- number of sources (function args included).
+  - `dataflow.sink`, `dataflow.intermediate` -- structural view.
+  Backward compatible: `exploitability` (P2-7) preserved.
+- **What it adds over regex (P2-7):**
+  - **Sources via function arguments** (regex cannot see this).
+  - **Flow through intermediate variables** (a -> b -> sink).
+  - **Full path with line numbers** for every hop.
+- **`patterns.py`:** added `AST_TAINT_SOURCES` (4 groups: flask_request, builtin_input, env, file_read) and `AST_TAINT_SINKS` (3 groups: sql_execute, cmd_exec, file_write). Separate from regex-based `TAINT_SOURCES` / `TAINT_SINKS` (P2-7).
+- **`src/tools/dataflow.py`** (new): `analyze_dataflow()`, `enrich_dataflow()`. Deterministic (`ast` only, no LLM). Fail-open (parse error -> `{}`). Python-only for now (Go/JS via P2-7 regex).
+- **`orchestrator.py`:** 4 edits -- import, call, audit entry, and 3 audit-trail blocks. `dataflow_*` fields appear alongside `exploitability_*`.
+- **Dogfood:** `examples/own/auth_service.py` -- SQL injection via f-string. P2-7 `exploitability_path: []` (regex cannot see source), P2-7b `dataflow_path: [source(username, L7) -> intermediate(query, L12) -> sink(cursor.execute, L13)]`. **P2-7b proves its value.**
+- **Known limitation:** AST for Python only in v5.10.2. Go/JS covered by P2-7 regex. Non-Python returns `{}` (fail-open).
+- +16 tests (`tests/test_dataflow.py`). Total: 213 passing.
 
 ## What's new in v5.10.1
 

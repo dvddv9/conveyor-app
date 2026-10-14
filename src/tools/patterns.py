@@ -442,6 +442,24 @@ TAINT_SINKS = {
 }
 
 
+# P2-7b: AST-based taint markers (data-flow analysis).
+# Separate from TAINT_SOURCES/TAINT_SINKS (regex-based, P2-7).
+# Values are attribute/name paths matched against Python AST nodes.
+AST_TAINT_SOURCES = {
+    "flask_request": ["request.args", "request.form", "request.json", "request.data"],
+    "builtin_input": ["input"],
+    "env": ["os.environ", "os.getenv"],
+    "file_read": ["open"],
+}
+
+AST_TAINT_SINKS = {
+    "sql_execute": ["cursor.execute", "execute", "executemany"],
+    "cmd_exec": ["os.system", "subprocess.run", "subprocess.call",
+                 "subprocess.Popen", "eval", "exec"],
+    "file_write": ["open"],
+}
+
+
 def detect_exploitability(material: str) -> dict:
     """Detect exploitability: reachability, auth, blast radius.
 
