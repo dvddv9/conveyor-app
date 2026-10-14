@@ -204,13 +204,26 @@ def enrich_anomaly(material: str, method: str | None = None) -> dict:
     """Enrich audit with anomaly detection.
 
     Returns: {"anomaly": {...}} or {"anomaly": {}}.
+
+    # v5.10.6-density-guard: если текст не числовой (плотность чисел < 1%),
+    возвращаем {} -- иначе на коде (Java/C/Python) будет ложный анализ
+    номеров строк / hex-констант.
     """
     try:
         values = parse_numbers(material)
         if not values:
             return {"anomaly": {}}
+
+        # v5.10.6-density-guard
+        density = len(values) / max(len(material), 1)
+        if density < 0.01:
+            return {"anomaly": {}}
+
         m = method or ANOMALY_CONFIG["default_method"]
         result = detect_anomaly(values, method=m)
+        # v5.10.6-insufficient-guard: если данных мало -- не пишем шум в audit.
+        if result.get("verdict") == "INSUFFICIENT_DATA":
+            return {"anomaly": {}}
         return {"anomaly": result}
     except Exception:
         return {"anomaly": {}}

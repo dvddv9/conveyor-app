@@ -1,4 +1,4 @@
-# Vishap V5.10.5
+# Vishap V5.10.6
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,22 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.10.6
+
+- **Bugfix: risk_verdict ignored critical risk_nodes (dogfood find)** -- `run_audit()` computed `risk_verdict` only from `pii` / `compliance` / `cwe_ids`, ignoring `stage2.risk_nodes` from the LLM analyst. When the LLM found critical findings (`priority: критично`) but the code had no PII/CWE/compliance triggers, `risk_verdict` stayed `SAFE` -- UI showed green SAFE despite a report full of critical risks.
+  - Fix: `run_audit()` now accepts `stage2_result` and checks `risk_nodes` for `priority in (критично, critical)`. If found, `risk_verdict = REQUIRES_REVIEW` and `critique_verdict = REQUIRES_REVIEW`.
+  - All 3 call sites updated (sync, async, emergency).
+  - Regression tests: `tests/test_risk_verdict.py` (7 tests).
+  - Dogfood case: `docs/case-studies/dogfood/RequestFilter-java/` (Sakai RequestFilter.java, 3 critical nodes RN-1/RN-8/RN-11).
+
+- **Bugfix: anomaly detection on non-numeric text (dogfood find)** -- `enrich_anomaly()` ran on Java/C/Python source code, treating line numbers and hex constants as "numbers" (e.g. RequestFilter.java: samples=22, mean=645, std=794). Harmless but noisy.
+  - Fix: density guard -- if `len(numbers) / len(text) < 0.01`, return `{"anomaly": {}}`.
+  - Also: if `detect_anomaly` returns `INSUFFICIENT_DATA`, return `{"anomaly": {}}` (no noise in audit).
+  - Regression tests: `tests/test_anomaly_density.py` (5 tests).
+
+- **No API/behavior changes for numeric data.** Fully backward compatible.
+- +12 tests (`tests/test_risk_verdict.py`, `tests/test_anomaly_density.py`). Total: 252 passing.
 
 ## What's new in v5.10.5
 
@@ -1436,7 +1452,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**240 tests passing** across 18 files:
+**252 tests passing** across 20 files:
 
 | File | Tests | Coverage |
 |---|---|---|
@@ -1458,6 +1474,8 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_anomaly.py | 17 | z-score, IQR, EWMA detection |
 | tests/test_async_imports.py | 4 | Async pipeline imports config |
 | tests/test_ui_headers.py | 6 | Streamlit UI sends X-API-Key |
+| tests/test_risk_verdict.py | 7 | risk_verdict from critical nodes |
+| tests/test_anomaly_density.py | 5 | Density guard on non-numeric text |
 
 Run:
 
