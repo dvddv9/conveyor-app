@@ -24,6 +24,21 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+## What's new in v5.10.1
+
+- **Pluggable LLM providers** -- Vishap now works with **any OpenAI-compatible API**, not just DeepSeek:
+  - OpenAI (GPT-4, GPT-4o, GPT-4o-mini)
+  - Anthropic Claude (via OpenAI-compat shim)
+  - Groq, Together, Fireworks, OpenRouter
+  - Local: LM Studio, vLLM, llama.cpp server, Ollama
+  Configure via `VISHAP_LLM_PROVIDER` (auto | deepseek | openai | custom | ollama) + `CUSTOM_*` / `OPENAI_*` env vars.
+- **`src/llm/openai_compatible.py`** (new): universal client for any OpenAI-compatible endpoint. `chat()`, `get_client()`, `is_configured()`, `provider_name()`.
+- **`src/llm/async_openai_compatible.py`** (new): async mirror (`achat()`, `get_async_client()`).
+- **`src/llm/client.py`**: new provider factory with auto-detect (`custom -> openai -> deepseek -> ollama`). Legacy `mode` (local/cloud/auto) still works as an alias.
+- **`src/config.py`**: 7 new env vars (`VISHAP_LLM_PROVIDER`, `OPENAI_*`, `CUSTOM_*`).
+- **`.env.example`**: rewritten with 4 provider examples (Groq, LM Studio, vLLM, OpenRouter).
+- +16 tests (`tests/test_llm_providers.py`). Total: 197 passing.
+
 ## What's new in v5.10.0
 
 - **Formal Threat Model (P2-10)** -- completes the P2 plan. `SECURITY.md` now contains a full formal threat model (ENISA / NIST SP 800-154 methodology):
@@ -938,6 +953,73 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## LLM Providers (v5.10.1)
+
+Vishap works with **any OpenAI-compatible API** -- cloud, self-hosted, or local.
+
+### Configuration
+
+Set `VISHAP_LLM_PROVIDER` and provider-specific env vars.
+
+**Groq (fast, free tier):**
+
+```bash
+VISHAP_LLM_PROVIDER=custom
+CUSTOM_API_KEY=gsk_...
+CUSTOM_BASE_URL=https://api.groq.com/openai/v1
+CUSTOM_MODEL=llama-3.3-70b-versatile
+```
+
+**LM Studio (local GUI):**
+
+```bash
+VISHAP_LLM_PROVIDER=custom
+CUSTOM_API_KEY=not-needed
+CUSTOM_BASE_URL=http://localhost:1234/v1
+CUSTOM_MODEL=local-model
+```
+
+**vLLM (local server):**
+
+```bash
+VISHAP_LLM_PROVIDER=custom
+CUSTOM_API_KEY=not-needed
+CUSTOM_BASE_URL=http://localhost:8000/v1
+CUSTOM_MODEL=meta-llama/Llama-3.1-8B-Instruct
+```
+
+**OpenAI:**
+
+```bash
+VISHAP_LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+```
+
+**DeepSeek (existing, default):**
+
+```bash
+DEEPSEEK_API_KEY=sk-...
+# VISHAP_LLM_PROVIDER=auto (default)
+```
+
+### Auto-detection
+
+When `VISHAP_LLM_PROVIDER=auto` (default), Vishap picks the first available provider:
+
+```
+custom (CUSTOM_BASE_URL set) -> openai (OPENAI_API_KEY set) -> deepseek (DEEPSEEK_API_KEY set) -> ollama (default)
+```
+
+Legacy `mode=local/cloud/auto` still works as an alias (`cloud` -> deepseek, `local` -> ollama).
+
+### Diagnostics
+
+```python
+from src.llm.client import current_provider
+print(current_provider())
+```
 
 ## Runbook Generation (v5.9.9)
 

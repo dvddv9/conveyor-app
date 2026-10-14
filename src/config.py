@@ -36,6 +36,20 @@ DEEPSEEK_MODEL = "deepseek-chat"
 OLLAMA_MODEL = "qwen2.5:7b"
 OLLAMA_URL = "http://localhost:11434"
 
+# === LLM Provider selection (v5.10.1) ===
+# auto | deepseek | openai | custom | ollama
+VISHAP_LLM_PROVIDER = os.getenv("VISHAP_LLM_PROVIDER", "auto")
+
+# --- OpenAI (or any OpenAI-compatible endpoint) ---
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+
+# --- Custom OpenAI-compatible (Groq, Together, LM Studio, vLLM, OpenRouter, ...) ---
+CUSTOM_API_KEY = os.getenv("CUSTOM_API_KEY", "")
+CUSTOM_MODEL = os.getenv("CUSTOM_MODEL", "")
+CUSTOM_BASE_URL = os.getenv("CUSTOM_BASE_URL", "")
+
 # === Tavily Web Search ===
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 ENABLE_WEB_SEARCH = os.getenv("ENABLE_WEB_SEARCH", "false").lower() == "true"
