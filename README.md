@@ -24,7 +24,18 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.9.3
+## What's new in v5.9.4
+
+- **Quality Gates** (`--gate` / `--config PATH`) -- CI gate with exit codes:
+  0 = pass, 1 = fail (thresholds exceeded), 2 = error. Config in `.vishap.yml`
+  (thresholds, ignore rules/paths, fail_on_reachable). See
+  [Quality Gates](#quality-gates-v594) below.
+- **Fix:** Windows `UnicodeEncodeError` on cp1251 console -- stdout/stderr
+  reconfigured to UTF-8 with `errors=replace`.
+- **GitHub Action:** added quality gate step (`vishap analyze --gate`).
+- +15 tests (`tests/test_quality_gate.py`). Total: 108 passing.
+
+## What was new in v5.9.3
 
 - **SARIF 2.1.0 output** for GitHub Code Scanning (`analyze --sarif PATH`).
   Stage 2 risk nodes are now emitted as SARIF `vishap/risk/*` rules with
@@ -851,6 +862,51 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## Quality Gates (v5.9.4)
+
+Gate CI builds on critical findings only. Non-critical findings still appear
+in the report but do not fail the build.
+
+    vishap analyze src/file.py --gate
+    # exit 0 = pass, exit 1 = fail, exit 2 = error
+
+### Configuration
+
+Copy `.vishap.yml.example` to `.vishap.yml` in your project root:
+
+    quality_gate:
+      fail_on: [critical]
+      warn_on: [high, medium]
+      ignore: [low, info]
+      ignore_rules: [CWE-79]
+      ignore_paths: [tests/, examples/]
+      max_critical: 0
+      max_high: 10
+      fail_on_reachable: false
+
+### Severity mapping
+
+- критично / critical -> critical
+- важно / high -> high
+- опционально / medium -> medium
+- anything else -> low
+
+### Output
+
+    gate:          PASSED (critical=0, high=3, total=11, ignored=2)
+    # or
+    gate:          FAILED
+      - critical: 6 > max 0
+
+### Implementation
+
+- `src/tools/quality_gate.py` -- `load_quality_gate(path)`,
+  `evaluate_gate(findings, config, reachable=False)`, `normalize_priority(s)`.
+- CLI: `vishap analyze <file> --gate [--config PATH]`.
+- 15 tests (`tests/test_quality_gate.py`).
+
+---
 
 ## SARIF + GitHub Code Scanning (v5.9.3)
 

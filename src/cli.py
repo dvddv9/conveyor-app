@@ -17,6 +17,7 @@ from src.pipeline.orchestrator import run_pipeline
 from src.tools.diff import get_changed_files, get_uncommitted_files, is_changed
 from src.tools.sbom import generate_sbom, parse_sbom, is_cyclonedx_available
 from src.tools.sarif import to_sarif, write_sarif
+from src.tools.quality_gate import load_quality_gate, evaluate_gate
 
 
 def cmd_analyze(args):
@@ -91,6 +92,28 @@ def cmd_analyze(args):
         print(f"material_hash: {audit.get('material_hash')}")
         print(f"verdict:       {audit.get('critique_verdict')} / {audit.get('risk_verdict')}")
 
+    # === Quality Gate (P1-5) ===
+    if getattr(args, "gate", False):
+        _cfg = load_quality_gate(args.config)
+        _risk_nodes = (result.get("stage2") or {}).get("risk_nodes", []) or []
+        _reachable = bool(
+            ((result.get("audit") or {}).get("exploitability") or {})
+            .get("reachable", False)
+        )
+        _gate = evaluate_gate(
+            _risk_nodes, _cfg, reachable=_reachable,
+            verbose=not args.quiet,
+        )
+        if _gate["passed"]:
+            print(f"gate:          PASSED "
+                  f"(critical={_gate['critical']}, high={_gate['high']}, "
+                  f"total={_gate['total']}, ignored={_gate['ignored']})")
+        else:
+            print("gate:          FAILED", file=sys.stderr)
+            for _r in _gate["reasons"]:
+                print(f"  - {_r}", file=sys.stderr)
+            sys.exit(1)
+
     # Baseline summary (only if used)
     if stats.get("baseline_saved"):
         print(f"baseline_saved: {stats.get('baseline_saved_count', 0)} fingerprints "
@@ -125,7 +148,7 @@ def cmd_sbom(args):
 
 def cmd_info(args):
     """Show info."""
-    print(f"{APP_NAME} V5.9.3 - 6-stage LLM pipeline")
+    print(f"{APP_NAME} V5.9.4 - 6-stage LLM pipeline")
     print("Pipeline: Stage 0-5 (Orchestrator > Scanner > Analyst > Researcher > Synthesizer > Transmitter)")
     print("Features: audit trail, PII redaction, compliance flags, SAST/SCA, SARIF, retry, fallback, baseline")
     print()
@@ -144,8 +167,15 @@ def cmd_info(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.3")
-    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.3")
+    # Windows: ensure UTF-8 output (cp1251 breaks on arrows, em-dash, etc.)
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
+    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.4")
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.4")
 
     sub = ap.add_subparsers(dest="command")
 
@@ -176,6 +206,14 @@ def main():
     p_analyze.add_argument(
         "--sarif", metavar="PATH",
         help="Generate SARIF 2.1.0 output for GitHub Code Scanning (path)",
+    )
+    p_analyze.add_argument(
+        "--gate", action="store_true",
+        help="Enable quality gate; exit 1 if thresholds fail (CI)",
+    )
+    p_analyze.add_argument(
+        "--config", metavar="PATH", default=".vishap.yml",
+        help="Quality gate config path (default: .vishap.yml)",
     )
     p_analyze.set_defaults(func=cmd_analyze)
 

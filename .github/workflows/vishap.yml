@@ -45,6 +45,18 @@ jobs:
           done
         continue-on-error: true
 
+      - name: Vishap Quality Gate (P1-5)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="origin/${{ github.base_ref }}"
+          else
+            BASE_REF="HEAD~1"
+          fi
+          for f in $(git diff --name-only "$BASE_REF"...HEAD | grep -E '\.(py|go|js|ts|java|rs|txt|json)$' || true); do
+            echo "=== Quality gate: $f ==="
+            vishap analyze "$f" --gate --quiet || exit 1
+          done
+
       - name: Generate SBOM
         run: |
           vishap sbom --output vishap-out/sbom.json || true
