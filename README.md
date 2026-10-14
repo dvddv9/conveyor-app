@@ -1,4 +1,4 @@
-# Vishap V5.10.6
+# Vishap V5.10.7
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,20 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.10.7
+
+- **Bugfix: PII false positive on copyright headers (dogfood find)** -- `detect_pii` flagged emails in Wireshark copyright header (`packet-btl2cap.c`: `scholz@cs.uni-bonn.de`, `gerald@wireshark.org`) as PII -> false positive GDPR/152-FZ.
+  - Fix: `_filter_copyright_emails()` -- skip emails in lines with `copyright`, `(c)`, `license`, `author`, or common OSS domains (`@wireshark.org`, `@gnu.org`, `@apache.org`, etc.).
+  - Regression tests: `tests/test_pii_copyright.py` (6 tests).
+  - Dogfood case: `docs/case-studies/dogfood/packet-btl2cap-c/`.
+
+- **Bugfix: anomaly detection on source code (dogfood find)** -- `enrich_anomaly` ran on C code (`packet-btl2cap.c`), finding revision numbers and hex constants as "numbers" (samples=310, mean=141, std=1684, ratio=11.9). v5.10.6 density guard was insufficient (density 0.026 > 0.01).
+  - Fix: std-ratio guard v2 -- skip if `std > 10 * mean` OR (`mean > 1000` AND `std > 1000`).
+  - Regression tests: `tests/test_anomaly_code.py` (5 tests).
+
+- **No API/behavior changes for real metrics.** Fully backward compatible.
+- +11 tests (`tests/test_pii_copyright.py`, `tests/test_anomaly_code.py`). Total: 263 passing.
 
 ## What's new in v5.10.6
 
@@ -1452,7 +1466,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**252 tests passing** across 20 files:
+**263 tests passing** across 22 files:
 
 | File | Tests | Coverage |
 |---|---|---|
@@ -1476,6 +1490,8 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_ui_headers.py | 6 | Streamlit UI sends X-API-Key |
 | tests/test_risk_verdict.py | 7 | risk_verdict from critical nodes |
 | tests/test_anomaly_density.py | 5 | Density guard on non-numeric text |
+| tests/test_pii_copyright.py | 6 | PII ignores copyright emails |
+| tests/test_anomaly_code.py | 5 | Anomaly skips source code |
 
 Run:
 

@@ -219,6 +219,23 @@ def enrich_anomaly(material: str, method: str | None = None) -> dict:
         if density < 0.01:
             return {"anomaly": {}}
 
+        # v5.10.7-std-ratio-guard-v2: код vs метрики.
+        # Dogfood find (packet-btl2cap.c): 310 чисел в C-коде (ревизия 28412, hex,
+        # размеры) -> mean=141, std=1684 (ratio 11.9).
+        # Реальные метрики (latency, RPS, errors) имеют std < 2x mean
+        # и малые абсолютные значения.
+        #
+        # Критерий A: std > 10x mean (packet-btl2cap.c: 11.9x).
+        # Критерий B: mean > 1000 AND std > 1000 (большие разбросанные числа).
+        if len(values) >= 2:
+            _mean = sum(values) / len(values)
+            _var = sum((x - _mean) ** 2 for x in values) / (len(values) - 1)
+            _std = _var ** 0.5
+            _crit_a = _mean > 0 and _std > 10 * _mean
+            _crit_b = _mean > 1000 and _std > 1000
+            if _crit_a or _crit_b:
+                return {"anomaly": {}}
+
         m = method or ANOMALY_CONFIG["default_method"]
         result = detect_anomaly(values, method=m)
         # v5.10.6-insufficient-guard: если данных мало -- не пишем шум в audit.

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.10.6 — главный pipeline.
+Vishap V5.10.7 — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -155,12 +155,44 @@ def strip_llm_audit_blocks(md: str) -> str:
 
 
 
+def _filter_copyright_emails(text: str, pattern) -> list:
+    """Return emails NOT in copyright/license/author headers.
+
+    # v5.10.7-pii-copyright-filter: dogfood find (packet-btl2cap.c) --
+    emails in Wireshark copyright header were flagged as PII ->
+    false positive GDPR/152-FZ.
+    """
+    _MARKERS = (
+        "copyright", "(c)", "\u00a9", "author", "maintainer",
+        "license", "licence", "written by", "by ",
+        "@wireshark.org", "@gnu.org", "@fsf.org", "@apache.org",
+        "@python.org", "@gnome.org", "@kernel.org",
+    )
+    cleaned = []
+    for m in pattern.finditer(text):
+        email = m.group()
+        line_start = text.rfind("\n", 0, m.start()) + 1
+        line_end = text.find("\n", m.end())
+        if line_end == -1:
+            line_end = len(text)
+        line = text[line_start:line_end].lower()
+        if not any(marker in line for marker in _MARKERS):
+            cleaned.append(email)
+    return cleaned
+
+
 def detect_pii(text: str) -> dict:
     found = {}
     for name, pattern in PII_PATTERNS.items():
         matches = pattern.findall(text)
-        if matches:
-            found[name] = len(matches)
+        if not matches:
+            continue
+        # v5.10.7-pii-copyright-filter
+        if name == "email":
+            matches = _filter_copyright_emails(text, pattern)
+            if not matches:
+                continue
+        found[name] = len(matches)
     return found
 
 
@@ -477,7 +509,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         )
         audit_block = (
             "\n\n[AUDIT_TRAIL]\n"
-            f"generator: Vishap V5.10.6\n"
+            f"generator: Vishap V5.10.7\n"
         f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -650,7 +682,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     audit_block = (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.10.6\n"
+        f"generator: Vishap V5.10.7\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -835,7 +867,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "", stage2_result=stage2 if "stage2" in dir() else None)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.10.6\n"
+        f"generator: Vishap V5.10.7\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
