@@ -24,6 +24,20 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+## What's new in v5.9.9
+
+- **Runbook Generation (P2-9)** -- incident response steps per CWE (`immediate` / `short_term` / `long_term` / `escalation`).
+  Audit trail now includes:
+  - `runbook: {CWE-89: {...}, ...}`
+  - `runbook_cwes: [CWE-22, CWE-89, ...]`
+  - `runbook_steps_count: N`
+  A `[RUNBOOK]` section is added to the Markdown report (after `[COMPLETENESS]`). Omitted when no CWE is detected (fail-quiet).
+- **`patterns.py`:** added `RUNBOOKS` -- 10 CWEs covered: CWE-89 (SQLi), CWE-79 (XSS), CWE-78 (OS Cmd), CWE-352 (CSRF), CWE-22 (Path Traversal), CWE-502 (Deserialization), CWE-611 (XXE), CWE-287 (Auth), CWE-778 (Logging), CWE-311 (Encryption).
+- **`src/tools/runbook.py`** (new): `generate_runbook()`, `enrich_runbook()`. Deterministic (dict-lookup), fail-open.
+- **`orchestrator.py`:** added `format_runbook_md()` helper + 2 insertion points (sync + async). Also fixed a duplicate `generator:` line in `[AUDIT_TRAIL]` (P2-9b bugfix).
+- **Dogfood:** 4 cases -- single CWE (9 steps), multiple CWEs (21 steps), full `[RUNBOOK]` render, empty (no section).
+- +16 tests (`tests/test_runbook.py`). Total: 176 passing.
+
 ## What's new in v5.9.8
 
 - **Compliance Mapping (P2-8)** -- CWE -> concrete standard controls. Extends `compliance_flags` (list[str]) with `compliance_controls` (dict) and `compliance_standards` (sorted list).
@@ -910,6 +924,44 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## Runbook Generation (v5.9.9)
+
+Incident response steps per CWE (actionable).
+
+In `[AUDIT_TRAIL]`:
+
+```
+runbook_cwes: [CWE-22, CWE-89, CWE-352]
+runbook_steps_count: 21
+```
+
+In the Markdown report (after `[COMPLETENESS]`):
+
+```
+[RUNBOOK]
+
+## CWE-89 — SQL Injection (critical)
+
+**IMMEDIATE (0-1h):**
+  1. Block the endpoint (feature flag / WAF rule).
+  2. Check DB logs for anomalous queries (last 24h).
+  3. Notify on-call security engineer.
+
+**SHORT-TERM (1-3 days):**
+  1. Replace string concatenation with parameterized queries.
+  ...
+
+**LONG-TERM (1-4 weeks):**
+  1. Migrate to ORM (SQLAlchemy / Django ORM).
+  ...
+
+**ESCALATION:** Security team + DBA
+```
+
+**Coverage (10 CWEs):** SQLi, XSS, OS Command Injection, CSRF, Path Traversal, Insecure Deserialization, XXE, Improper Auth, Insufficient Logging, Missing Encryption.
+
+**Note:** `[RUNBOOK]` section is omitted when no CWE is detected (fail-quiet).
 
 ## Compliance Mapping (v5.9.8)
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.9.8 — главный pipeline.
+Vishap V5.9.9 — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -29,12 +29,54 @@ from src.tools.provenance import get_provenance  # dogfood P2: source tracking
 from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 from src.tools.compliance import enrich_compliance  # P2-8
+from src.tools.runbook import enrich_runbook  # P2-9
 from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
 from src.tools.patterns import detect_exploitability
 from src.tools.reachability import enrich_exploitability  # P2-7
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
 from src.tools.baseline import apply_baseline
 from src.tools.deps import build_import_graph, collect_context_files
+
+
+def format_runbook_md(audit: dict) -> str:
+    """P2-9: render [RUNBOOK] section for Markdown report.
+
+    Returns empty string if runbook is empty (fail-quiet).
+    """
+    rb = (audit or {}).get("runbook", {}) or {}
+    if not rb:
+        return ""
+
+    lines = ["\n\n[RUNBOOK]\n"]
+    for cwe in sorted(rb.keys()):
+        entry = rb[cwe]
+        title = entry.get("title", "")
+        sev = entry.get("severity", "")
+        lines.append(f"\n## {cwe} — {title} ({sev})\n")
+
+        immediate = entry.get("immediate", [])
+        if immediate:
+            lines.append("\n**IMMEDIATE (0-1h):**\n")
+            for i, step in enumerate(immediate, 1):
+                lines.append(f"  {i}. {step}\n")
+
+        short_term = entry.get("short_term", [])
+        if short_term:
+            lines.append("\n**SHORT-TERM (1-3 days):**\n")
+            for i, step in enumerate(short_term, 1):
+                lines.append(f"  {i}. {step}\n")
+
+        long_term = entry.get("long_term", [])
+        if long_term:
+            lines.append("\n**LONG-TERM (1-4 weeks):**\n")
+            for i, step in enumerate(long_term, 1):
+                lines.append(f"  {i}. {step}\n")
+
+        escalation = entry.get("escalation", "")
+        if escalation:
+            lines.append(f"\n**ESCALATION:** {escalation}\n")
+
+    return "".join(lines)
 
 def _safe_escalation_note(stage) -> str:
     """Extract escalation note from stage4, tolerant to dict/list/None."""
@@ -254,6 +296,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         "pii_detected": bool(pii),
         "pii_details": pii,
         **enrich_compliance(cwe_ids, compliance),  # P2-8
+        **enrich_runbook(cwe_ids),                 # P2-9
         "redaction_applied": bool(redaction_map),
         "redaction_map": redaction_map or {},
         "sast_findings": (sast_result or {}).get("total_findings", 0),
@@ -408,8 +451,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         )
         audit_block = (
             "\n\n[AUDIT_TRAIL]\n"
-            f"generator: Vishap V5.9.8\n"
-            f"generator: Vishap V5.9.8\n"
+            f"generator: Vishap V5.9.9\n"
         f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -576,7 +618,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     audit_block = (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.9.8\n"
+        f"generator: Vishap V5.9.9\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -628,6 +670,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         f"verdict: {completeness['verdict']}\n"
     )
     final_markdown = final_markdown + completeness_block
+    final_markdown = final_markdown + format_runbook_md(audit)  # P2-9
 
     result = {
         "session_id": session_id,
@@ -754,7 +797,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "")
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.9.8\n"
+        f"generator: Vishap V5.9.9\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -789,6 +832,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
         f"material_complete: {completeness.get('material_complete', not truncated)}\n"
         f"verdict: {completeness['verdict']}\n"
     )
+    final_markdown += format_runbook_md(audit)  # P2-9
     result = {"session_id": session_id, "timestamp": datetime.now(UTC).isoformat(),
               "filename": filename, "material_size": len(material), "stage0": stage0,
               "stage1": stage1, "stage2": stage2, "stage3": stage3, "stage4": stage4,

@@ -31,6 +31,7 @@ def main():
     rc |= run("tests/test_deps.py")
     rc |= run("tests/test_reachability.py")
     rc |= run("tests/test_compliance.py")
+    rc |= run("tests/test_runbook.py")
 
     if "--all" in sys.argv:
         print("\n[--all] E2E tests (real LLM, slow, uses API):")

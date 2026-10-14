@@ -154,6 +154,189 @@ COMPLIANCE_MAP = {
 }
 
 
+# P2-9: Incident response runbooks per CWE (immediate / short_term / long_term / escalation).
+RUNBOOKS = {
+    "CWE-89": {
+        "title": "SQL Injection",
+        "severity": "critical",
+        "immediate": [
+            "Block the endpoint (feature flag / WAF rule).",
+            "Check DB logs for anomalous queries (last 24h).",
+            "Notify on-call security engineer.",
+        ],
+        "short_term": [
+            "Replace string concatenation with parameterized queries.",
+            "Run SQL linter + ASan on test corpus.",
+            "Deploy fix to canary (1% traffic).",
+        ],
+        "long_term": [
+            "Migrate to ORM (SQLAlchemy / Django ORM).",
+            "Enable SAST in CI (Semgrep / Bandit).",
+            "Train developers on SQLi (OWASP A03).",
+        ],
+        "escalation": "Security team + DBA",
+    },
+    "CWE-79": {
+        "title": "Cross-Site Scripting (XSS)",
+        "severity": "high",
+        "immediate": [
+            "Enable Content-Security-Policy (strict, report-only first).",
+            "Check access logs for injection patterns.",
+        ],
+        "short_term": [
+            "HTML-escape on output (context-aware).",
+            "Use templating engine (Jinja2 auto-escape).",
+        ],
+        "long_term": [
+            "Add DOMPurify for user HTML.",
+            "Regular pen-test (XSS-focused).",
+        ],
+        "escalation": "Frontend team",
+    },
+    "CWE-78": {
+        "title": "OS Command Injection",
+        "severity": "critical",
+        "immediate": [
+            "Isolate the affected process (cgroup / container).",
+            "Check shell history + process tree for anomalous commands.",
+            "Notify on-call security engineer.",
+        ],
+        "short_term": [
+            "Replace shell calls with subprocess (list args, no shell=True).",
+            "Validate + whitelist all user-controllable inputs.",
+            "Deploy fix to canary.",
+        ],
+        "long_term": [
+            "Avoid os.system / subprocess(shell=True) entirely.",
+            "Add command allowlist validation layer.",
+            "Enable SAST in CI.",
+        ],
+        "escalation": "Security team + SRE",
+    },
+    "CWE-352": {
+        "title": "Cross-Site Request Forgery (CSRF)",
+        "severity": "high",
+        "immediate": [
+            "Enable CSRF tokens on all state-changing endpoints.",
+            "Set SameSite=Strict on session cookies.",
+        ],
+        "short_term": [
+            "Verify Origin/Referer headers on POST/PUT/DELETE.",
+            "Rotate session tokens.",
+        ],
+        "long_term": [
+            "Framework CSRF middleware (Django / Flask-WTF).",
+            "Automated pen-test for CSRF.",
+        ],
+        "escalation": "Backend team",
+    },
+    "CWE-22": {
+        "title": "Path Traversal",
+        "severity": "high",
+        "immediate": [
+            "Restrict file access to allowlisted directories.",
+            "Check file access logs for ../ patterns.",
+        ],
+        "short_term": [
+            "Normalize paths (os.path.realpath) + verify prefix.",
+            "Reject symlinks in user-supplied paths.",
+        ],
+        "long_term": [
+            "Use pathlib + resolve() strictly.",
+            "Run chroot / container-based isolation.",
+        ],
+        "escalation": "Backend team + SRE",
+    },
+    "CWE-502": {
+        "title": "Insecure Deserialization",
+        "severity": "critical",
+        "immediate": [
+            "Block untrusted deserialization endpoints.",
+            "Check logs for anomalous object graphs.",
+            "Notify on-call security engineer.",
+        ],
+        "short_term": [
+            "Replace pickle / yaml.load with safe alternatives (yaml.safe_load, JSON).",
+            "Sign + verify serialized payloads.",
+        ],
+        "long_term": [
+            "Migrate to schema-based formats (Protobuf, Avro).",
+            "Add deserialization allowlists.",
+        ],
+        "escalation": "Security team + Backend team",
+    },
+    "CWE-611": {
+        "title": "XML External Entity (XXE)",
+        "severity": "high",
+        "immediate": [
+            "Disable external entity processing in XML parsers.",
+            "Check egress traffic for unexpected DNS/HTTP.",
+        ],
+        "short_term": [
+            "Use defusedxml (Python) / secure parser config.",
+            "Add XML size + depth limits.",
+        ],
+        "long_term": [
+            "Prefer JSON over XML where possible.",
+            "Enable SAST rules for XXE.",
+        ],
+        "escalation": "Backend team",
+    },
+    "CWE-287": {
+        "title": "Improper Authentication",
+        "severity": "critical",
+        "immediate": [
+            "Force logout all sessions (rotate signing keys).",
+            "Audit auth logs for anomalous successful logins.",
+            "Notify security team + on-call.",
+        ],
+        "short_term": [
+            "Enforce MFA on affected accounts.",
+            "Patch auth logic (constant-time compare, rate limit).",
+        ],
+        "long_term": [
+            "Adopt industry-standard auth (OAuth2 / OIDC).",
+            "Regular auth-focused pen-tests.",
+        ],
+        "escalation": "Security team + IAM owner",
+    },
+    "CWE-778": {
+        "title": "Insufficient Logging",
+        "severity": "medium",
+        "immediate": [
+            "Enable logging for the affected code path.",
+            "Verify logs reach SIEM / central collector.",
+        ],
+        "short_term": [
+            "Add structured logs (JSON) for security events.",
+            "Set up alerts on auth failures / 5xx spikes.",
+        ],
+        "long_term": [
+            "Define log retention + rotation policy.",
+            "Map logs to MITRE ATT&CK detections.",
+        ],
+        "escalation": "SRE + Security team",
+    },
+    "CWE-311": {
+        "title": "Missing Encryption of Sensitive Data",
+        "severity": "high",
+        "immediate": [
+            "Identify all paths where sensitive data is written unencrypted.",
+            "Block writes to unencrypted targets (temp ban).",
+        ],
+        "short_term": [
+            "Enable TLS in transit (enforce, not optional).",
+            "Enable AES-256 at rest for affected stores.",
+        ],
+        "long_term": [
+            "Centralize secrets / crypto (KMS, Vault).",
+            "Rotate all potentially exposed keys.",
+        ],
+        "escalation": "Security team + Platform",
+    },
+}
+
+
 def cwe_to_owasp(cwe_id: str, year: str = "2025") -> str:
     """Map CWE to OWASP Top 10 category.
 
