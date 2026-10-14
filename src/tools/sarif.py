@@ -8,6 +8,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from src.tools.baseline import compute_fingerprint
+
 
 def _severity_to_sarif_level(severity: str) -> str:
     """Map tool severity to SARIF level."""
@@ -23,7 +25,7 @@ def _severity_to_sarif_level(severity: str) -> str:
 
 
 def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
-             source_file: str = "input") -> dict:
+             source_file: str = "input", risk_nodes: list = None) -> dict:
     """Convert Vishap audit + SAST/SCA results to SARIF 2.1.0.
 
     Args:
@@ -63,6 +65,12 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                     },
                 })
 
+                _fp_input = {
+                    "name": str(rule_id),
+                    "priority": str(f.get("severity", "")),
+                    "note": str(f.get("msg", ""))[:100],
+                }
+                _fp = compute_fingerprint(_fp_input, source_file)
                 results.append({
                     "ruleId": rule_id_full,
                     "level": _severity_to_sarif_level(f.get("severity", "")),
@@ -73,6 +81,9 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                             "region": {"startLine": f.get("line", 1) or 1},
                         }
                     }],
+                    "partialFingerprints": {
+                        "vishapFingerprint/v1": _fp,
+                    },
                 })
 
     # === SCA vulnerabilities (pip-audit) ===
@@ -95,6 +106,12 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                         "fix_versions": v.get("fix_versions", []),
                     },
                 })
+                _fp_input = {
+                    "name": str(v.get("name", "")),
+                    "priority": "high",
+                    "note": str(v.get("id", ""))[:100],
+                }
+                _fp = compute_fingerprint(_fp_input, "requirements.txt")
                 results.append({
                     "ruleId": rule_id,
                     "level": "error",
@@ -106,7 +123,47 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
                             "artifactLocation": {"uri": "requirements.txt"},
                         }
                     }],
+                    "partialFingerprints": {
+                        "vishapFingerprint/v1": _fp,
+                    },
                 })
+
+    # === Risk nodes (Stage 2 LLM analysis) ===
+    if risk_nodes and isinstance(risk_nodes, list):
+        for rn in risk_nodes:
+            if not isinstance(rn, dict):
+                continue
+            rn_name = str(rn.get("name", "risk"))
+            rn_priority = str(rn.get("priority", "warning"))
+            rn_note = str(rn.get("note", ""))
+            slug = "".join(c if c.isalnum() else "_" for c in rn_name.lower())[:40]
+            rule_id = f"vishap/risk/{slug}"
+            level = _severity_to_sarif_level(rn_priority)
+            fp = compute_fingerprint(rn, source_file)
+            rules.append({
+                "id": rule_id,
+                "name": rn_name[:80],
+                "shortDescription": {"text": rn_name[:200]},
+                "fullDescription": {"text": rn_note[:500]},
+                "defaultConfiguration": {"level": level},
+                "properties": {
+                    "source": "vishap/stage2",
+                    "priority": rn_priority,
+                },
+            })
+            results.append({
+                "ruleId": rule_id,
+                "level": level,
+                "message": {"text": rn_note[:500] or rn_name},
+                "locations": [{
+                    "physicalLocation": {
+                        "artifactLocation": {"uri": source_file},
+                    }
+                }],
+                "partialFingerprints": {
+                    "vishapFingerprint/v1": fp,
+                },
+            })
 
     # === Vishap audit metadata as SARIF properties ===
     sarif = {
@@ -116,7 +173,7 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
             "tool": {
                 "driver": {
                     "name": "Vishap",
-                    "version": "5.9.2",
+                    "version": "5.9.3",
                     "informationUri": "https://github.com/dvddv9/vishap",
                     "rules": rules,
                 }

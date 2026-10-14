@@ -16,6 +16,7 @@ from src.config import APP_NAME
 from src.pipeline.orchestrator import run_pipeline
 from src.tools.diff import get_changed_files, get_uncommitted_files, is_changed
 from src.tools.sbom import generate_sbom, parse_sbom, is_cyclonedx_available
+from src.tools.sarif import to_sarif, write_sarif
 
 
 def cmd_analyze(args):
@@ -53,6 +54,20 @@ def cmd_analyze(args):
     md = result.get("final_markdown", "")
     audit = result.get("audit", {})
     stats = result.get("baseline_stats") or {}
+
+    # === SARIF (P1-4) ===
+    if getattr(args, "sarif", None):
+        risk_nodes = (result.get("stage2") or {}).get("risk_nodes", []) or []
+        sarif_data = to_sarif(
+            audit=audit,
+            sast_result=None,
+            sca_result=None,
+            source_file=path.name,
+            risk_nodes=risk_nodes,
+        )
+        write_sarif(sarif_data, args.sarif)
+        _n_results = len(sarif_data["runs"][0]["results"])
+        print(f"sarif:         {args.sarif} ({_n_results} results)")
 
     # === SBOM (P0-3) ===
     if getattr(args, "sbom", None):
@@ -110,7 +125,7 @@ def cmd_sbom(args):
 
 def cmd_info(args):
     """Show info."""
-    print(f"{APP_NAME} V5.9.2 - 6-stage LLM pipeline")
+    print(f"{APP_NAME} V5.9.3 - 6-stage LLM pipeline")
     print("Pipeline: Stage 0-5 (Orchestrator > Scanner > Analyst > Researcher > Synthesizer > Transmitter)")
     print("Features: audit trail, PII redaction, compliance flags, SAST/SCA, SARIF, retry, fallback, baseline")
     print()
@@ -129,8 +144,8 @@ def cmd_info(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.2")
-    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.2")
+    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.3")
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.3")
 
     sub = ap.add_subparsers(dest="command")
 
@@ -157,6 +172,10 @@ def main():
     p_analyze.add_argument(
         "--sbom", metavar="PATH",
         help="Generate CycloneDX SBOM alongside analysis (path)",
+    )
+    p_analyze.add_argument(
+        "--sarif", metavar="PATH",
+        help="Generate SARIF 2.1.0 output for GitHub Code Scanning (path)",
     )
     p_analyze.set_defaults(func=cmd_analyze)
 

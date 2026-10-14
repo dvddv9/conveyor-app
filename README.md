@@ -24,7 +24,16 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.9.2
+## What's new in v5.9.3
+
+- **SARIF 2.1.0 output** for GitHub Code Scanning (`analyze --sarif PATH`).
+  Stage 2 risk nodes are now emitted as SARIF `vishap/risk/*` rules with
+  `partialFingerprints` (GitHub tracks same finding moved across lines).
+- **GitHub Action** (`.github/workflows/vishap.yml`) -- diff-aware scan on
+  PR/push with `upload-sarif@v3` + SBOM artifact.
+- +9 tests (`tests/test_sarif.py`). Total: 93 passing.
+
+## What was new in v5.9.2
 
 - **SBOM generation** (`vishap sbom` / `analyze --sbom PATH`) -- CycloneDX 1.6
   Software Bill of Materials. Full dependency graph from venv, compatible
@@ -842,6 +851,42 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## SARIF + GitHub Code Scanning (v5.9.3)
+
+Vishap emits SARIF 2.1.0 findings compatible with GitHub Code Scanning,
+Azure DevOps, and IDE SARIF viewers.
+
+    vishap analyze src/file.py --sarif out.sarif
+
+Each Stage 2 risk node is emitted as a SARIF rule (`vishap/risk/<slug>`) with:
+
+- `partialFingerprints.vishapFingerprint/v1` -- stable 16-char fingerprint,
+  shared with `--baseline` (GitHub tracks same finding across line shifts).
+- Severity mapped: критично/high -> error, важно/medium -> warning,
+  опционально/low -> note.
+- Audit metadata (audit_id, material_hash, risk_verdict) in `runs[].properties.vishap`.
+
+### GitHub Action
+
+`.github/workflows/vishap.yml` runs on every PR/push:
+
+1. checkout (fetch-depth: 0)
+2. setup Python 3.12
+3. pip install vishap-analyzer cyclonedx-bom
+4. **diff-aware scan** -- only changed files are analyzed
+5. `upload-sarif@v3` with `category: vishap`
+6. SBOM uploaded as artifact
+
+Findings appear inline in the PR (Code Scanning annotations).
+
+Implementation:
+
+- `src/tools/sarif.py` -- `to_sarif(audit, sast_result, sca_result, source_file, risk_nodes)`.
+- CLI: `vishap analyze <file> --sarif PATH`.
+- 9 tests (`tests/test_sarif.py`).
+
+---
 
 ## SBOM (v5.9.2)
 
