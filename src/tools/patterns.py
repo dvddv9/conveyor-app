@@ -175,6 +175,46 @@ EXPLOIT_PATTERNS = {
     ),
     "blast_eval": re.compile(r"\b(eval|exec|__import__)\s*\(", re.IGNORECASE),
     "blast_heap": re.compile(r"\b(malloc|calloc|realloc)\s*\([^)]*sizeof\s*\(\s*\w+\s*\)[^)]*\)"),
+
+    # P2-7: additional entry points (go, js)
+    "entrypoint_go_main": re.compile(r"\bfunc\s+main\s*\(", re.IGNORECASE),
+    "entrypoint_go_http": re.compile(r"\bhttp\.(HandleFunc|Handle)\s*\(", re.IGNORECASE),
+    "entrypoint_js_route": re.compile(
+        r"\b(app|router)\.(get|post|put|delete|patch)\s*\(",
+        re.IGNORECASE,
+    ),
+}
+
+
+# P2-7: Taint sources (user input) вЂ” entry points for data flow
+TAINT_SOURCES = {
+    "source_flask": re.compile(
+        r"\brequest\.(args|form|json|body|GET|POST|data)\b",
+        re.IGNORECASE,
+    ),
+    "source_generic": re.compile(
+        r"\b(req\.(query|body|params)|input\s*\(|sys\.argv|"
+        r"os\.(environ|getenv)|getenv\s*\()",
+        re.IGNORECASE,
+    ),
+}
+
+# P2-7: Taint sinks (where tainted data flows out)
+TAINT_SINKS = {
+    "sink_sql": re.compile(
+        r"\b(db\.execute|cursor\.execute|session\.execute|conn\.execute|"
+        r"\.query\s*\(|\.raw\s*\(|\.filter\s*\()",
+        re.IGNORECASE,
+    ),
+    "sink_cmd": re.compile(
+        r"\b(os\.system|os\.popen|subprocess\.(call|run|Popen|check_output|check_call)|"
+        r"eval\s*\(|exec\s*\()",
+        re.IGNORECASE,
+    ),
+    "sink_fs": re.compile(
+        r"\b(open\s*\(|shutil\.(copy|move|rmtree)|os\.(remove|unlink|rmdir))",
+        re.IGNORECASE,
+    ),
 }
 
 

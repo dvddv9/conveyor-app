@@ -24,6 +24,19 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+## What's new in v5.9.7
+
+- **Reachability (P2-7)** -- line-level taint path (entry_point -> source -> sink). Extends `detect_exploitability()` (boolean) with `path` and `source_count`.
+  Audit trail now includes:
+  - `exploitability_source_count: N`
+  - `exploitability_path: [{"line": L, "type": "...", "content": "..."}, ...]`
+  Backward compatible: all old fields preserved.
+- **`patterns.py`:** added Go (`func main`, `http.HandleFunc`) and JS (`app.get`, `router.post`) entry points. Added `TAINT_SOURCES` and `TAINT_SINKS` regex dicts.
+- **`src/tools/reachability.py`** (new): `find_entry_points()`, `find_taint_sources()`, `find_taint_sinks()`, `trace_taint()`, `enrich_exploitability()`. Deterministic (regex + line-based), fail-open.
+- **Dogfood:** Flask demo (`@app.route` + `request.args` + `cursor.execute`) produced a full path with line numbers: `[{line: 9, entry_point}, {line: 11, source}, {line: 14, sink}]`.
+- **Known limitations:** detects **explicit** taint sources (`request.args`, `input(`) and entry points (`@app.route`, `if __name__`). Does **not** detect implicit sources (function arguments) or flow through intermediate variables/files -- planned for P2-7b.
+- +20 tests (`tests/test_patterns.py`, `tests/test_reachability.py`). Total: 145 passing.
+
 ## What's new in v5.9.6
 
 - **Fix:** diff-aware skip-path (`--diff` / `--changed-only`) no longer
@@ -885,6 +898,31 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## Reachability (v5.9.7)
+
+Line-level taint path from entry point to sink.
+
+```bash
+vishap analyze src/api.py --context-root src/
+```
+
+In `[AUDIT_TRAIL]`:
+
+```
+exploitability_reachable: True
+exploitability_auth_required: False
+exploitability_blast_radius: medium
+exploitability_source_count: 1
+exploitability_path: [{"line": 9, "type": "entry_point", "content": "@app.route('/user')"},
+                      {"line": 11, "type": "source", "content": "email = request.args.get('email')"},
+                      {"line": 14, "type": "sink", "content": "cursor.execute(...)"}]
+```
+
+**Scope:** explicit sources (`request.args`, `request.form`, `input(`,
+`sys.argv`, `os.environ`) and entry points (`@app.route`, `if __name__`,
+`func main`, `http.HandleFunc`, `app.get`). **Not** in scope: implicit
+sources (function arguments), flow through intermediate variables/files.
 
 ## Inter-file analysis (v5.9.5)
 
