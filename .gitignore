@@ -37,3 +37,6 @@ dist/
 
 # Vishap baseline files
 .vishap-baseline.json
+
+# SBOM output
+sbom.json

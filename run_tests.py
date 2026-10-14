@@ -24,6 +24,7 @@ def main():
     rc |= run("tests/test_pipeline_mock.py")
     rc |= run("tests/test_baseline.py")
     rc |= run("tests/test_diff.py")
+    rc |= run("tests/test_sbom.py")
 
     if "--all" in sys.argv:
         print("\n[--all] E2E tests (real LLM, slow, uses API):")

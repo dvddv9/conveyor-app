@@ -15,6 +15,7 @@ from pathlib import Path
 from src.config import APP_NAME
 from src.pipeline.orchestrator import run_pipeline
 from src.tools.diff import get_changed_files, get_uncommitted_files, is_changed
+from src.tools.sbom import generate_sbom, parse_sbom, is_cyclonedx_available
 
 
 def cmd_analyze(args):
@@ -53,6 +54,18 @@ def cmd_analyze(args):
     audit = result.get("audit", {})
     stats = result.get("baseline_stats") or {}
 
+    # === SBOM (P0-3) ===
+    if getattr(args, "sbom", None):
+        if is_cyclonedx_available():
+            sbom = generate_sbom(output_path=args.sbom)
+            sbom_info = parse_sbom(sbom)
+            if sbom:
+                print(f"sbom:          {args.sbom} ({sbom_info['count']} components)")
+            else:
+                print(f"sbom:          generation failed")
+        else:
+            print(f"sbom:          cyclonedx-py not available")
+
     if args.output:
         Path(args.output).write_text(md, encoding="utf-8")
         print(f"Written: {args.output}")
@@ -73,9 +86,31 @@ def cmd_analyze(args):
               f"total={stats.get('baseline_total', 0)}")
 
 
+def cmd_sbom(args):
+    """Generate CycloneDX SBOM."""
+    if not is_cyclonedx_available():
+        print("Error: cyclonedx-py not found. Install: pip install cyclonedx-bom", file=sys.stderr)
+        sys.exit(2)
+
+    output = args.output or "sbom.json"
+    source = args.source or "environment"
+    sbom = generate_sbom(output_path=output, source=source)
+
+    if not sbom:
+        print("Error: SBOM generation failed (empty result)", file=sys.stderr)
+        sys.exit(2)
+
+    info = parse_sbom(sbom)
+    print(f"SBOM written: {output}")
+    print(f"  format:       {info['bom_format']}")
+    print(f"  spec version: {info['spec_version']}")
+    print(f"  components:   {info['count']}")
+    print(f"  serial:       {info['serial_number']}")
+
+
 def cmd_info(args):
     """Show info."""
-    print(f"{APP_NAME} V5.9.1 - 6-stage LLM pipeline")
+    print(f"{APP_NAME} V5.9.2 - 6-stage LLM pipeline")
     print("Pipeline: Stage 0-5 (Orchestrator > Scanner > Analyst > Researcher > Synthesizer > Transmitter)")
     print("Features: audit trail, PII redaction, compliance flags, SAST/SCA, SARIF, retry, fallback, baseline")
     print()
@@ -94,8 +129,8 @@ def cmd_info(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.1")
-    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.1")
+    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.2")
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.2")
 
     sub = ap.add_subparsers(dest="command")
 
@@ -119,7 +154,17 @@ def main():
         "--changed-only", action="store_true",
         help="Analyze only if input has uncommitted changes",
     )
+    p_analyze.add_argument(
+        "--sbom", metavar="PATH",
+        help="Generate CycloneDX SBOM alongside analysis (path)",
+    )
     p_analyze.set_defaults(func=cmd_analyze)
+
+    p_sbom = sub.add_parser("sbom", help="Generate CycloneDX SBOM")
+    p_sbom.add_argument("--output", "-o", default="sbom.json", help="Output SBOM path (default: sbom.json)")
+    p_sbom.add_argument("--source", default="environment",
+                        help="cyclonedx-py source: environment | requirements | pipenv | poetry")
+    p_sbom.set_defaults(func=cmd_sbom)
 
     p_info = sub.add_parser("info", help="Show info")
     p_info.set_defaults(func=cmd_info)

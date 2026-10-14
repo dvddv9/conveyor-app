@@ -24,7 +24,17 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.9.1
+## What's new in v5.9.2
+
+- **SBOM generation** (`vishap sbom` / `analyze --sbom PATH`) -- CycloneDX 1.6
+  Software Bill of Materials. Full dependency graph from venv, compatible
+  with Dependency-Track, GitHub Dependency Graph, Snyk. See [SBOM](#sbom-v592)
+  below.
+- **CLI:** `vishap sbom --output sbom.json --source environment`
+- **CLI:** `vishap analyze <file> --sbom sbom.json` -- SBOM alongside analysis.
+- +14 tests (`tests/test_sbom.py`). Total: 84 passing.
+
+## What was new in v5.9.1
 
 - **Diff-aware scan** (`--diff REF` / `--changed-only`) -- analyze only files
   changed since a git ref (or uncommitted). CI-friendly: skips unchanged files.
@@ -832,6 +842,42 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## SBOM (v5.9.2)
+
+Generate a CycloneDX Software Bill of Materials (CycloneDX 1.6 JSON).
+Full dependency graph from the current Python environment -- compatible with
+Dependency-Track, GitHub Dependency Graph, Snyk, and any CycloneDX-aware tool.
+
+    # Standalone command (default source: environment)
+    vishap sbom --output sbom.json
+
+    # Alternative sources
+    vishap sbom --source requirements --output sbom.json
+    vishap sbom --source poetry --output sbom.json
+
+    # Alongside analysis
+    vishap analyze src/file.py --sbom sbom.json
+
+Output example:
+
+    SBOM written: sbom.json
+      format:       CycloneDX
+      spec version: 1.6
+      components:   168
+      serial:       urn:uuid:f225c8d8-f98b-4b33-b429-715eee79170a
+
+Implementation:
+
+- `src/tools/sbom.py` -- `generate_sbom(output_path, source)`, `parse_sbom(sbom)`,
+  `is_cyclonedx_available()`.
+  Wraps `cyclonedx-py` CLI. Tolerant to missing tool / errors -- never raises.
+- CLI: `vishap sbom` subcommand + `--sbom PATH` flag for `analyze`.
+- 14 tests (`tests/test_sbom.py`).
+
+Requires: `cyclonedx-bom>=7.0.0` (installed automatically as a dependency).
+
+---
 
 ## Diff-aware scan (v5.9.1)
 
