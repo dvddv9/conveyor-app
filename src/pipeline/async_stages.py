@@ -8,7 +8,7 @@
 from src.llm.async_client import async_chat
 from src.pipeline.prompts import build_prompt
 from src.pipeline.stages import parse_json_response
-from src.config import MAX_TOKENS
+from src.config import MAX_TOKENS, MAX_TOKENS_STAGE4
 
 
 async def async_run_stage(stage_name: str, prompt_name: str, material: str,

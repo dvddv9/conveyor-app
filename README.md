@@ -1,4 +1,4 @@
-# Vishap V5.10.3
+# Vishap V5.10.5
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,17 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.10.5
+
+- **Bugfix: async pipeline imports (dogfood find)** -- `src/pipeline/async_stages.py` used `MAX_TOKENS_STAGE4` without importing it. Any `/analyze` request via API (async branch) failed with `NameError: name 'MAX_TOKENS_STAGE4' is not defined`. The async branch was broken since v5.8; sync CLI worked because `stages.py` imported it correctly.
+  - Fix: `from src.config import MAX_TOKENS, MAX_TOKENS_STAGE4` in `async_stages.py`.
+  - Regression tests: `tests/test_async_imports.py` (4 tests) -- AST-based check that async and sync pipelines import every config constant they use.
+- **Bugfix: Streamlit UI missing X-API-Key (dogfood find)** -- `src/ui/streamlit_app.py` called `requests.get/post` without the `X-API-Key` header. Every protected endpoint (`/analyze`, `/analyze/batch`, `/history`, `/mode`) returned `401 X-API-Key required`. UI was non-functional via FastAPI since v5.8.
+  - Fix: read `CONVEYOR_API_KEY` from env, build `HEADERS = {"X-API-Key": API_KEY}`, pass `headers=HEADERS` in all 8 requests.
+  - Regression tests: `tests/test_ui_headers.py` (6 tests) -- AST-based check that every `requests.*` referencing `API_URL` passes headers, no double commas.
+- **No API/behavior changes.** Fully backward compatible.
+- +10 tests (`tests/test_async_imports.py`, `tests/test_ui_headers.py`). Total: 240 passing.
 
 ## What's new in v5.10.4
 
@@ -1425,7 +1436,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**230 tests passing** across 16 files:
+**240 tests passing** across 18 files:
 
 | File | Tests | Coverage |
 |---|---|---|
@@ -1445,6 +1456,8 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_llm_providers.py | 16 | Provider factory, auto-detect, custom |
 | tests/test_dataflow.py | 16 | AST taint: sources, sinks, path |
 | tests/test_anomaly.py | 17 | z-score, IQR, EWMA detection |
+| tests/test_async_imports.py | 4 | Async pipeline imports config |
+| tests/test_ui_headers.py | 6 | Streamlit UI sends X-API-Key |
 
 Run:
 

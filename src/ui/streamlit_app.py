@@ -14,6 +14,8 @@ from src.config import DATA_DIR
 
 
 API_URL = os.getenv("API_URL", "http://localhost:5001")
+API_KEY = os.getenv("CONVEYOR_API_KEY", "")
+HEADERS = {"X-API-Key": API_KEY} if API_KEY else {}
 HISTORY_LIMIT = 20
 
 
@@ -27,7 +29,7 @@ st.title("🔬 Vishap V5.8")
 st.caption("6-стадийный LLM-конвейер для анализа кода")
 
 try:
-    health = requests.get(f"{API_URL}/health", timeout=5).json()
+    health = requests.get(f"{API_URL}/health", timeout=5, headers=HEADERS).json()
     st.success(f"✅ API работает · {health.get('status', 'unknown')}")
 except Exception as e:
     st.error(f"❌ API не отвечает: {e}")
@@ -176,7 +178,7 @@ with tab_analyze:
                             resp = requests.post(
                                 f"{API_URL}/analyze/batch",
                                 json={"items": items, "max_concurrent": max_conc},
-                                timeout=900,
+                                timeout=900, headers=HEADERS
                             )
 
                             if resp.status_code != 200:
@@ -255,7 +257,7 @@ with tab_history:
     with col_clear:
         if st.button("🗑️ Очистить", type="secondary"):
             try:
-                requests.post(f"{API_URL}/history/clear", timeout=5)
+                requests.post(f"{API_URL}/history/clear", timeout=5, headers=HEADERS)
                 st.success("История очищена")
                 st.rerun()
             except Exception as e:
@@ -265,7 +267,7 @@ with tab_history:
         history = requests.get(
             f"{API_URL}/history",
             params={"limit": HISTORY_LIMIT},
-            timeout=10,
+            timeout=10, headers=HEADERS
         ).json()
 
         if not history:
@@ -354,7 +356,7 @@ with tab_about:
 
     current_mode = "auto"
     try:
-        r = requests.get(f"{API_URL}/mode", timeout=5)
+        r = requests.get(f"{API_URL}/mode", timeout=5, headers=HEADERS)
         if r.status_code == 200:
             current_mode = r.json().get("mode", "auto")
     except Exception:
@@ -379,7 +381,7 @@ with tab_about:
     if selected != current_mode:
         if st.button("✅ Применить", type="primary"):
             try:
-                r = requests.post(f"{API_URL}/mode", json={"mode": selected}, timeout=5)
+                r = requests.post(f"{API_URL}/mode", json={"mode": selected}, timeout=5, headers=HEADERS)
                 if r.status_code == 200:
                     st.success(f"Режим изменён на: {selected}")
                     st.rerun()
@@ -450,7 +452,7 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                     "verbose": False,
                     "force": force_flag,
                 },
-                timeout=300,
+                timeout=300, headers=HEADERS
             )
             progress.progress(100)
             status.success("✅ Анализ завершён!")
@@ -491,7 +493,7 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                                     "verbose": False,
                                     "force": False,
                                 },
-                                timeout=300,
+                                timeout=300, headers=HEADERS
                             )
                             if sarif_resp.status_code == 200:
                                 st.download_button(
