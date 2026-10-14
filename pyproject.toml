@@ -9,7 +9,7 @@ description = "Vishap - multi-material IT analyst (code, config, spec, logs, dat
 readme = "README.md"
 requires-python = ">=3.11"
 license = "AGPL-3.0-or-later"
-authors = [{name = "David", email = "hndavid9@yahoo.com"}]
+authors = [{name = "David (dvddv9)", email = "hndav9@yahoo.com"}]
 keywords = ["vishap", "vishap-analyzer", "security", "sast", "sca", "sarif", "owasp", "llm", "multi-material", "code-review", "audit-trail", "compliance", "pii", "deepseek", "ollama"]
 
 dependencies = [
