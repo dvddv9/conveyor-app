@@ -43,3 +43,6 @@ sbom.json
 
 # SARIF output
 *.sarif
+
+# Working dogfood inputs (не коммитим -- копии в docs/case-studies)
+/examples/dogfood/
