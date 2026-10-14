@@ -173,7 +173,7 @@ def to_sarif(audit: dict, sast_result: dict = None, sca_result: dict = None,
             "tool": {
                 "driver": {
                     "name": "Vishap",
-                    "version": "5.10.3",
+                    "version": "5.10.4",
                     "informationUri": "https://github.com/dvddv9/vishap",
                     "rules": rules,
                 }

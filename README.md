@@ -24,6 +24,25 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+## What's new in v5.10.4
+
+- **Anomaly Detection (P2-12)** -- statistical outlier detection in numeric series (logs, metrics, CSV).
+  Audit trail now includes:
+  - `anomaly_verdict: ANOMALIES_FOUND | NORMAL | INSUFFICIENT_DATA`
+  - `anomaly_count: N`
+  - `anomaly_method: zscore | iqr | ewma`
+  - `anomaly_top: [{index, value, score, reason}, ...]` (top-3 in audit)
+- **3 methods** (deterministic, no LLM):
+  - **z-score** -- |x - mean| / std > threshold (default 3.0).
+  - **IQR** -- outside [Q1 - 1.5*IQR, Q3 + 1.5*IQR].
+  - **EWMA** -- |x_t - EWMA_{t-1}| > 3*std (trend detection).
+- **`src/tools/anomaly.py`** (new): `parse_numbers()`, `detect_anomaly()`, `enrich_anomaly()`. Stdlib only (`statistics`, `re`). Fail-open.
+- **`patterns.py`:** added `ANOMALY_CONFIG` (min_samples=10, max_anomalies=20, top_in_audit=3).
+- **`orchestrator.py`:** 4 edits -- import, call, audit entry, 3 audit-trail blocks.
+- **Dogfood:** 3 cases -- latency (5000ms vs ~50ms), error rate (87 vs ~12), memory trend (500 vs ~200). All detected.
+- **Known limitation:** `parse_numbers()` is heuristic (regex + timestamp filter). One numeric series per material. Multi-variate anomalies -- future.
+- +17 tests (`tests/test_anomaly.py`). Total: 230 passing.
+
 ## What's new in v5.10.2
 
 - **Data-flow Analysis (P2-7b)** -- AST-based taint tracking. Extends reachability (P2-7, regex + line-based) with real Python AST parsing.
@@ -973,6 +992,56 @@ See [deploy/README.md](deploy/README.md) for details.
 David — 2026
 
 
+## Anomaly Detection (v5.10.4)
+
+Statistical outlier detection in numeric series. Complements the LLM pipeline with deterministic math -- finds anomalies that LLM cannot quantify ("5000ms is 100x the baseline").
+
+### 3 Methods
+
+**z-score** (default):
+
+    z = (x - mean) / std
+    Anomaly if |z| > 3.0
+
+**IQR** (robust to outliers):
+
+    Q1, Q3 = 25th, 75th percentile
+    IQR = Q3 - Q1
+    Anomaly if x < Q1 - 1.5*IQR or x > Q3 + 1.5*IQR
+
+**EWMA** (catches trends):
+
+    EWMA_t = alpha * x_t + (1-alpha) * EWMA_{t-1}
+    Anomaly if |x_t - EWMA_{t-1}| > 3*std
+
+### In `[AUDIT_TRAIL]`
+
+    anomaly_verdict: ANOMALIES_FOUND
+    anomaly_count: 1
+    anomaly_method: zscore
+    anomaly_top: [{"index": 20, "value": 5000.0, "score": 4.364, "reason": "z-score 4.36 > 3.0"}]
+
+### Scope
+
+**In scope:**
+- Numeric series in material: logs (`latency=50ms`), metrics (`error_rate: 0.5`), CSV.
+- Timestamps filtered out (`2026-10-14`, `14:32:00`).
+- Three methods with configurable thresholds.
+- Fail-open: insufficient data (< 10 samples) returns `INSUFFICIENT_DATA`.
+
+**Not in scope (v5.10.4):**
+- Multi-variate anomalies (correlation between metrics).
+- Streaming / online detection.
+- Domain-specific thresholds (auto-tuning).
+- Non-numeric anomaly detection (text, logs semantic).
+
+### Implementation
+
+- `src/tools/anomaly.py` -- `parse_numbers()`, `detect_anomaly()`, `enrich_anomaly()`. Deterministic (stdlib `statistics`, `re`). Fail-open.
+- `patterns.py` -- `ANOMALY_CONFIG` (min_samples=10, max_anomalies=20, top_in_audit=3, methods config).
+- `orchestrator.py` -- `anomaly_*` fields in audit trail, alongside `dataflow_*`, `exploitability_*`.
+- 17 tests (`tests/test_anomaly.py`).
+
 ## LLM Providers (v5.10.1)
 
 Vishap works with **any OpenAI-compatible API** -- cloud, self-hosted, or local.
@@ -1356,7 +1425,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**213 tests passing** across 15 files:
+**230 tests passing** across 16 files:
 
 | File | Tests | Coverage |
 |---|---|---|
@@ -1375,6 +1444,7 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_security_md.py | 5 | Doc-guard: SECURITY.md structure |
 | tests/test_llm_providers.py | 16 | Provider factory, auto-detect, custom |
 | tests/test_dataflow.py | 16 | AST taint: sources, sinks, path |
+| tests/test_anomaly.py | 17 | z-score, IQR, EWMA detection |
 
 Run:
 

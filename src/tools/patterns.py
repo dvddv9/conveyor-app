@@ -115,6 +115,20 @@ CWE_TO_OWASP = {
 
 
 # P2-8: CWE -> concrete compliance controls per standard.
+# P2-12: Anomaly Detection config
+ANOMALY_CONFIG = {
+    "min_samples": 10,
+    "default_method": "zscore",
+    "methods": {
+        "zscore": {"threshold": 3.0},
+        "iqr":    {"multiplier": 1.5},
+        "ewma":   {"alpha": 0.3},
+    },
+    "max_anomalies": 20,
+    "top_in_audit": 3,
+}
+
+
 COMPLIANCE_MAP = {
     # PCI-DSS 3.2.1 (Req 6.5.x)
     "PCI-DSS": {
