@@ -24,7 +24,17 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.9.4
+## What's new in v5.9.5
+
+- **Inter-file analysis** (`--context-root DIR`) -- Stage 2 now receives
+  imported modules as context. LLM can trace data flow across files
+  (taint analysis), reducing false positives. See
+  [Inter-file analysis](#inter-file-analysis-v595) below.
+- **Dogfood:** on `src/cli.py --context-root src/`, LLM detected cross-file
+  risks (RN-8, T-8: skip-path ignores --gate -> false PASS in CI).
+- +17 tests (`tests/test_deps.py`). Total: 125 passing.
+
+## What was new in v5.9.4
 
 - **Quality Gates** (`--gate` / `--config PATH`) -- CI gate with exit codes:
   0 = pass, 1 = fail (thresholds exceeded), 2 = error. Config in `.vishap.yml`
@@ -862,6 +872,46 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## Inter-file analysis (v5.9.5)
+
+Analyze a target file together with its imported modules. Stage 2 receives
+related files as context -- LLM can trace data flow across files (taint
+analysis from entry point to sink) and detect cross-file risks.
+
+    vishap analyze src/api.py --context-root src/
+
+The pipeline builds an import graph (AST), resolves dependencies up to
+depth 2, and passes the relevant files to Stage 2 as context.
+
+### How it works
+
+1. `src/tools/deps.py` scans `--context-root` via AST.
+2. Builds `{file: [imports]}` graph, filtering stdlib.
+3. BFS-resolves dependencies up to depth 2 (default).
+4. Collects contents, capped at 10 files and 10 KB each.
+5. Stage 2 receives them in a dedicated `## Related files (import context)`
+   prompt section.
+
+### Security caps
+
+- `max_files=10` -- prevent prompt bloat.
+- `max_file_bytes=10000` -- truncate each file.
+- Stdlib imports (`os`, `sys`, ...) filtered out.
+- Circular imports handled (visited set).
+
+### Output
+
+    [Inter-file] 6 related files
+
+### Implementation
+
+- `src/tools/deps.py` -- `find_imports()`, `build_import_graph()`,
+  `resolve_dependencies()`, `collect_context_files()`.
+- CLI: `vishap analyze <file> --context-root DIR`.
+- 17 tests (`tests/test_deps.py`).
+
+---
 
 ## Quality Gates (v5.9.4)
 

@@ -38,9 +38,29 @@ def build_prompt(
     parts = [f"## MATERIAL\n\n{material}"]
 
     if context:
-        parts.append(
-            f"## CONTEXT\n\n```json\n{json.dumps(context, ensure_ascii=False, indent=2)}\n```"
-        )
+        # Extract context_files for a dedicated readable section
+        _ctx_files = None
+        if isinstance(context, dict):
+            _ctx_files = context.get("context_files")
+        _ctx_filtered = {k: v for k, v in (context or {}).items()
+                         if k != "context_files"} if isinstance(context, dict) else context
+        if _ctx_filtered:
+            parts.append(
+                f"## CONTEXT\n\n```json\n{json.dumps(_ctx_filtered, ensure_ascii=False, indent=2, default=str)}\n```"
+            )
+        if _ctx_files and isinstance(_ctx_files, dict):
+            _related = ["## Related files (import context)",
+                        "",
+                        "The following files are imported by the target file. Use them for",
+                        "taint analysis -- trace data flow from entry points to sinks.",
+                        ""]
+            for _fname, _content in _ctx_files.items():
+                _related.append(f"### File: {_fname}")
+                _related.append("```python")
+                _related.append(str(_content))
+                _related.append("```")
+                _related.append("")
+            parts.append("\n".join(_related))
 
     if web_search_results:
         search_block = _format_search_results(web_search_results)

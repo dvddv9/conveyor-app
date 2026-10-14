@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.9.4 — главный pipeline.
+Vishap V5.9.5 — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -32,6 +32,7 @@ from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
 from src.tools.patterns import detect_exploitability
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
 from src.tools.baseline import apply_baseline
+from src.tools.deps import build_import_graph, collect_context_files
 
 def _safe_escalation_note(stage) -> str:
     """Extract escalation note from stage4, tolerant to dict/list/None."""
@@ -282,7 +283,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
 def run_pipeline(material: str, filename: str, verbose: bool = True,
                  session_suffix: str = "",
                  baseline_path: str = None,
-                 save_baseline_path: str = None) -> dict:
+                 save_baseline_path: str = None,
+                 context_root: str = None) -> dict:
     """Запускает полный pipeline Vishap.
 
     session_suffix: опциональный суффикс для session_id (batch mode).
@@ -403,8 +405,8 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         )
         audit_block = (
             "\n\n[AUDIT_TRAIL]\n"
-            f"generator: Vishap V5.9.4\n"
-            f"generator: Vishap V5.9.4\n"
+            f"generator: Vishap V5.9.5\n"
+            f"generator: Vishap V5.9.5\n"
         f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -494,7 +496,22 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     if verbose:
         print("[Stage 2] Analyst...")
-    stage2 = stage2_analyst(material, {"stage0": stage0, "stage1": stage1})
+    _ctx_files = None
+    if context_root:
+        try:
+            _graph = build_import_graph(context_root)
+            _ctx_files = collect_context_files(
+                context_root, filename, depth=2, graph=_graph,
+            )
+            if verbose and _ctx_files:
+                print(f"  [Inter-file] {len(_ctx_files)} related files")
+        except Exception as _e:
+            if verbose:
+                print(f"  [Inter-file] error: {_e}")
+    _stage2_ctx = {"stage0": stage0, "stage1": stage1}
+    if _ctx_files:
+        _stage2_ctx["context_files"] = _ctx_files
+    stage2 = stage2_analyst(material, _stage2_ctx)
     risk_nodes = stage2.get("risk_nodes", [])
     if verbose:
         print(f"  → risk nodes: {len(risk_nodes)}")
@@ -552,7 +569,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     audit_block = (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.9.4\n"
+        f"generator: Vishap V5.9.5\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -726,7 +743,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "")
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.9.4\n"
+        f"generator: Vishap V5.9.5\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"

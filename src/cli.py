@@ -50,6 +50,7 @@ def cmd_analyze(args):
         verbose=not args.quiet,
         baseline_path=args.baseline,
         save_baseline_path=args.save_baseline,
+        context_root=getattr(args, "context_root", None),
     )
 
     md = result.get("final_markdown", "")
@@ -148,7 +149,7 @@ def cmd_sbom(args):
 
 def cmd_info(args):
     """Show info."""
-    print(f"{APP_NAME} V5.9.4 - 6-stage LLM pipeline")
+    print(f"{APP_NAME} V5.9.5 - 6-stage LLM pipeline")
     print("Pipeline: Stage 0-5 (Orchestrator > Scanner > Analyst > Researcher > Synthesizer > Transmitter)")
     print("Features: audit trail, PII redaction, compliance flags, SAST/SCA, SARIF, retry, fallback, baseline")
     print()
@@ -174,8 +175,8 @@ def main():
             sys.stderr.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, OSError):
             pass
-    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.4")
-    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.4")
+    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.5")
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.5")
 
     sub = ap.add_subparsers(dest="command")
 
@@ -214,6 +215,10 @@ def main():
     p_analyze.add_argument(
         "--config", metavar="PATH", default=".vishap.yml",
         help="Quality gate config path (default: .vishap.yml)",
+    )
+    p_analyze.add_argument(
+        "--context-root", metavar="DIR",
+        help="Enable inter-file analysis: collect imports under DIR",
     )
     p_analyze.set_defaults(func=cmd_analyze)
 
