@@ -54,7 +54,14 @@ jobs:
           fi
           for f in $(git diff --name-only "$BASE_REF"...HEAD | grep -E '\.(py|go|js|ts|java|rs|txt|json)$' || true); do
             echo "=== Quality gate: $f ==="
-            vishap analyze "$f" --gate --quiet || exit 1
+            vishap analyze "$f" --gate --quiet
+            rc=$?
+            if [ $rc -eq 3 ]; then
+              echo "[gate] file unchanged -- skip (exit 3)"
+            elif [ $rc -ne 0 ]; then
+              echo "[gate] FAILED (exit $rc)"
+              exit $rc
+            fi
           done
 
       - name: Generate SBOM

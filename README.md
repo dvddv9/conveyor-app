@@ -24,7 +24,20 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.9.5
+## What's new in v5.9.6
+
+- **Fix:** diff-aware skip-path (`--diff` / `--changed-only`) no longer
+  produces a false PASS in CI when `--gate` is active. Skip now returns
+  exit code **3** (SKIPPED) instead of 0 -- CI can decide fail-closed
+  or ignore. Bug found via inter-file dogfood (RN-8/T-8).
+- **Exit codes (final):**
+  - `0` -- gate passed / analyze ok
+  - `1` -- gate failed
+  - `2` -- internal error
+  - `3` -- skipped (file unchanged + `--gate`)
+- **GitHub Action:** gate step now treats exit 3 as `[gate] skip`.
+
+## What was new in v5.9.5
 
 - **Inter-file analysis** (`--context-root DIR`) -- Stage 2 now receives
   imported modules as context. LLM can trace data flow across files
@@ -919,7 +932,7 @@ Gate CI builds on critical findings only. Non-critical findings still appear
 in the report but do not fail the build.
 
     vishap analyze src/file.py --gate
-    # exit 0 = pass, exit 1 = fail, exit 2 = error
+    # exit 0 = pass, exit 1 = fail, exit 2 = error, exit 3 = skipped
 
 ### Configuration
 

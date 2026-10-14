@@ -32,6 +32,9 @@ def cmd_analyze(args):
         changed = get_changed_files(args.diff)
         if not is_changed(args.input, changed):
             print(f"[Diff] {args.input} not changed since {args.diff} -- skip")
+            if getattr(args, "gate", False):
+                print("gate:          SKIPPED (file unchanged)", file=sys.stderr)
+                sys.exit(3)
             sys.exit(0)
         if not args.quiet:
             print(f"[Diff] {args.input} changed since {args.diff} ({len(changed)} files)")
@@ -40,6 +43,9 @@ def cmd_analyze(args):
         changed = get_uncommitted_files()
         if not is_changed(args.input, changed):
             print(f"[Diff] {args.input} has no uncommitted changes -- skip")
+            if getattr(args, "gate", False):
+                print("gate:          SKIPPED (file unchanged)", file=sys.stderr)
+                sys.exit(3)
             sys.exit(0)
         if not args.quiet:
             print(f"[Diff] {args.input} uncommitted ({len(changed)} files)")
@@ -149,7 +155,7 @@ def cmd_sbom(args):
 
 def cmd_info(args):
     """Show info."""
-    print(f"{APP_NAME} V5.9.5 - 6-stage LLM pipeline")
+    print(f"{APP_NAME} V5.9.6 - 6-stage LLM pipeline")
     print("Pipeline: Stage 0-5 (Orchestrator > Scanner > Analyst > Researcher > Synthesizer > Transmitter)")
     print("Features: audit trail, PII redaction, compliance flags, SAST/SCA, SARIF, retry, fallback, baseline")
     print()
@@ -175,8 +181,8 @@ def main():
             sys.stderr.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, OSError):
             pass
-    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.5")
-    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.5")
+    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.6")
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.6")
 
     sub = ap.add_subparsers(dest="command")
 
