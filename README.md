@@ -1,4 +1,4 @@
-# Vishap V5.10.2
+# Vishap V5.10.3
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -1356,7 +1356,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**160 tests passing** across 11 files:
+**213 tests passing** across 15 files:
 
 | File | Tests | Coverage |
 |---|---|---|
@@ -1371,6 +1371,10 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_deps.py | 17 | Import graph, resolve, collect |
 | tests/test_reachability.py | 11 | Entry points, taint, path tracing |
 | tests/test_compliance.py | 15 | CWE to compliance controls |
+| tests/test_runbook.py | 16 | Runbook generation, per CWE |
+| tests/test_security_md.py | 5 | Doc-guard: SECURITY.md structure |
+| tests/test_llm_providers.py | 16 | Provider factory, auto-detect, custom |
+| tests/test_dataflow.py | 16 | AST taint: sources, sinks, path |
 
 Run:
 
