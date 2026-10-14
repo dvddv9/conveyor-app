@@ -24,7 +24,14 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v5.9
+## What's new in v5.9.1
+
+- **Diff-aware scan** (`--diff REF` / `--changed-only`) -- analyze only files
+  changed since a git ref (or uncommitted). CI-friendly: skips unchanged files.
+  See [Diff-aware scan](#diff-aware-scan-v591) below.
+  +15 tests (`tests/test_diff.py`). Total: 70 passing.
+
+## What was new in v5.9
 
 - **Baseline** (`--save-baseline` / `--baseline`) -- fingerprint-based suppression
   of known findings in CI. Save once, report only new findings on subsequent runs.
@@ -825,6 +832,32 @@ See [deploy/README.md](deploy/README.md) for details.
 
 David — 2026
 
+
+## Diff-aware scan (v5.9.1)
+
+Analyze only files changed since a git ref (or uncommitted). Ideal for CI --
+skips unchanged files, so a 1000-file repo with 1 change runs in seconds.
+
+    # Files changed since origin/main
+    vishap analyze path/to/file.py --diff origin/main
+
+    # Files with uncommitted changes
+    vishap analyze path/to/file.py --changed-only
+
+If the input file is unchanged, the pipeline exits with code 0 and prints:
+
+    [Diff] path/to/file.py not changed since origin/main -- skip
+
+This is intentional: in CI, unchanged files must not fail the build.
+
+Implementation:
+
+- `src/tools/diff.py` -- `get_changed_files(ref)`, `get_uncommitted_files()`,
+  `get_changed_files_pr()`, `is_changed()`.
+- CLI flags: `--diff REF`, `--changed-only`.
+- 15 tests (`tests/test_diff.py`).
+
+---
 
 ## Baseline (v5.9.0)
 

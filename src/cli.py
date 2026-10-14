@@ -14,6 +14,7 @@ from pathlib import Path
 
 from src.config import APP_NAME
 from src.pipeline.orchestrator import run_pipeline
+from src.tools.diff import get_changed_files, get_uncommitted_files, is_changed
 
 
 def cmd_analyze(args):
@@ -22,6 +23,23 @@ def cmd_analyze(args):
     if not path.exists():
         print(f"Error: {path} not found", file=sys.stderr)
         sys.exit(1)
+
+    # === Diff-aware (P0-2) ===
+    if args.diff:
+        changed = get_changed_files(args.diff)
+        if not is_changed(args.input, changed):
+            print(f"[Diff] {args.input} not changed since {args.diff} -- skip")
+            sys.exit(0)
+        if not args.quiet:
+            print(f"[Diff] {args.input} changed since {args.diff} ({len(changed)} files)")
+
+    if args.changed_only:
+        changed = get_uncommitted_files()
+        if not is_changed(args.input, changed):
+            print(f"[Diff] {args.input} has no uncommitted changes -- skip")
+            sys.exit(0)
+        if not args.quiet:
+            print(f"[Diff] {args.input} uncommitted ({len(changed)} files)")
 
     material = path.read_text(encoding="utf-8", errors="replace")
     result = run_pipeline(
@@ -57,7 +75,7 @@ def cmd_analyze(args):
 
 def cmd_info(args):
     """Show info."""
-    print(f"{APP_NAME} V5.9 - 6-stage LLM pipeline")
+    print(f"{APP_NAME} V5.9.1 - 6-stage LLM pipeline")
     print("Pipeline: Stage 0-5 (Orchestrator > Scanner > Analyst > Researcher > Synthesizer > Transmitter)")
     print("Features: audit trail, PII redaction, compliance flags, SAST/SCA, SARIF, retry, fallback, baseline")
     print()
@@ -76,8 +94,8 @@ def cmd_info(args):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9")
-    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9")
+    ap = argparse.ArgumentParser(prog="vishap", description=f"{APP_NAME} V5.9.1")
+    ap.add_argument("--version", action="version", version=f"{APP_NAME} V5.9.1")
 
     sub = ap.add_subparsers(dest="command")
 
@@ -92,6 +110,14 @@ def main():
     p_analyze.add_argument(
         "--baseline", metavar="PATH",
         help="Compare against baseline; report only new findings",
+    )
+    p_analyze.add_argument(
+        "--diff", metavar="REF",
+        help="Analyze only if input changed since REF (e.g. origin/main)",
+    )
+    p_analyze.add_argument(
+        "--changed-only", action="store_true",
+        help="Analyze only if input has uncommitted changes",
     )
     p_analyze.set_defaults(func=cmd_analyze)
 

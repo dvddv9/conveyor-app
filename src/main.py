@@ -31,8 +31,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=f"{APP_NAME} API",
-    description="Vishap V5.9 — 6-стадийный LLM-конвейер для анализа кода",
-    version="5.9.0",
+    description="Vishap V5.9.1 — 6-стадийный LLM-конвейер для анализа кода",
+    version="5.9.1",
     lifespan=lifespan,
 )
 
@@ -132,7 +132,7 @@ class ModeResponse(BaseModel):
 async def root():
     return {
         "app": APP_NAME,
-        "version": "5.9.0",
+        "version": "5.9.1",
         "docs": "/docs",
         "endpoints": ["/analyze", "/history", "/health"],
     }
