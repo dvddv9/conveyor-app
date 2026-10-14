@@ -1185,3 +1185,32 @@ This project is licensed under the **GNU Affero General Public License v3.0** (A
 - ❌ Cannot be taken closed-source
 
 See [LICENSE](LICENSE) for full text.
+
+
+## Test Suite
+
+**160 tests passing** across 11 files:
+
+| File | Tests | Coverage |
+|---|---|---|
+| tests/test_tools.py | 33 | PII, compliance, hash, JSON, fallback |
+| tests/test_patterns.py | 9 | Go/JS entry points, TAINT_SOURCES/SINKS |
+| tests/test_pipeline_mock.py | 8 | Pipeline mock (no LLM) |
+| tests/test_baseline.py | 14 | Fingerprint, save/load/filter/apply |
+| tests/test_diff.py | 15 | git diff, uncommitted, is_changed |
+| tests/test_sbom.py | 14 | CycloneDX, parse, errors |
+| tests/test_sarif.py | 9 | SARIF 2.1.0, partialFingerprints |
+| tests/test_quality_gate.py | 15 | Gate config, evaluate, normalize |
+| tests/test_deps.py | 17 | Import graph, resolve, collect |
+| tests/test_reachability.py | 11 | Entry points, taint, path tracing |
+| tests/test_compliance.py | 15 | CWE to compliance controls |
+
+Run:
+
+```bash
+python run_tests.py
+```
+
+## Contributors
+
+- **dvddv9** — creator, maintainer ([@dvddv9](https://github.com/dvddv9))
