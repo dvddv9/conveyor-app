@@ -49,9 +49,21 @@ Refactor: consolidate risk verdict into verdict.py.
 - orchestrator.py: -45 lines, calls compute_risk_verdict()
 - 297 passing (was 271)
 
-### v5.11.3 -- TODO
-UI api_client.py -- объединить headers в src/ui/api_client.py (сейчас 8 дублей в streamlit_app.py).
-Оценка: 0.5-1 день.
+### v5.11.3 -- DONE (2026-10-15)
+UI api_client.py -- centralized HTTP client.
+- src/ui/api_client.py (new): get()/post()/_url()
+- src/config.py: +API_URL, CONVEYOR_API_KEY, API_TIMEOUT_*
+- src/ui/streamlit_app.py: 8 calls refactored, removed requests/os
+- tests/test_api_client.py (new): 16 tests
+- tests/test_ui_headers.py: rewritten (13 tests)
+- 320 passing (was 297)
+
+### v5.11.4 -- TODO
+anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
+Оценка: 0.5 дня.
+
+### v5.11.5 -- TODO
+Java/C patterns для P2-7 (regex). Оценка: 2-3 дня.
 
 ### v5.11.4 -- TODO
 anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
