@@ -72,12 +72,24 @@ P2-7 Java taint patterns.
 - Dogfood: ServletSqli.java path = doGet -> getParameter -> createStatement
 - Known limitation: DbConnection.java (source via method arg) -> path empty
 
-### v5.11.6 -- TODO
-C patterns для P2-7 (regex). Оценка: 1-1.5 дня.
-- sources: scanf/fgets/gets/argv/getenv/recv
-- sinks: system/popen/exec*/strcpy/strcat/sprintf/memcpy/fopen
-- entry points: int main(, JNIEXPORT
-- mini-C case: examples/own/c_cmd_injection.c (реальных приложений в репо нет)
+### v5.11.6 -- DONE (2026-10-15)
+P2-7 C taint patterns.
+- patterns.py: TAINT_SOURCES["source_c"], TAINT_SINKS["sink_c_*"]
+- patterns.py: EXPLOIT_PATTERNS["entrypoint_c_main|jni"], blast_c_*
+- patterns.py: detect_exploitability -- extended blast for c_cmd/c_buffer/c_file
+- reachability.py: _LANG_ENTRYPOINTS["c"], trace_taint + "c"
+- tests/test_patterns_c.py (new): 35 tests
+- 396 passing (was 361)
+- Dogfood: c_cmd_injection.c path = main -> argv[1] -> strcpy -> system
+- Known limitation: cwe122 (heap logic bug, not taint flow) -- correctly skipped
+
+### v5.11.7 -- TODO
+Java AST (P2-7b) -- JavaParser. Оценка: 2-3 дня.
+Проблема: DbConnection.java (source via method arg) -> path empty.
+Решение: Java AST -- аналог Python AST (dataflow.py).
+
+### v6.0 -- TODO
+Async API + in-memory job store. Оценка: 1 неделя.
 
 ### v5.11.4 -- TODO
 anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
