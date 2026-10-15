@@ -62,8 +62,22 @@ UI api_client.py -- centralized HTTP client.
 anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
 Оценка: 0.5 дня.
 
-### v5.11.5 -- TODO
-Java/C patterns для P2-7 (regex). Оценка: 2-3 дня.
+### v5.11.5 -- DONE (2026-10-15)
+P2-7 Java taint patterns.
+- patterns.py: TAINT_SOURCES["source_java"], TAINT_SINKS["sink_java_*"]
+- patterns.py: EXPLOIT_PATTERNS["entrypoint_java_*"]
+- reachability.py: _LANG_ENTRYPOINTS["java"], _is_comment_line()
+- tests/test_patterns_java.py (new): 41 tests
+- 361 passing (was 320)
+- Dogfood: ServletSqli.java path = doGet -> getParameter -> createStatement
+- Known limitation: DbConnection.java (source via method arg) -> path empty
+
+### v5.11.6 -- TODO
+C patterns для P2-7 (regex). Оценка: 1-1.5 дня.
+- sources: scanf/fgets/gets/argv/getenv/recv
+- sinks: system/popen/exec*/strcpy/strcat/sprintf/memcpy/fopen
+- entry points: int main(, JNIEXPORT
+- mini-C case: examples/own/c_cmd_injection.c (реальных приложений в репо нет)
 
 ### v5.11.4 -- TODO
 anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
