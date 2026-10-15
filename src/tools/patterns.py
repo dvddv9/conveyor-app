@@ -421,6 +421,20 @@ EXPLOIT_PATTERNS = {
         r"\b(app|router)\.(get|post|put|delete|patch)\s*\(",
         re.IGNORECASE,
     ),
+    # P2-7 v5.11.5: Java entry points (main, Spring, Servlet).
+    "entrypoint_java_main": re.compile(
+        r"\bpublic\s+static\s+void\s+main\s*\(",
+        re.IGNORECASE,
+    ),
+    "entrypoint_java_spring": re.compile(
+        r"@(RestController|Controller|RequestMapping|GetMapping|PostMapping|"
+        r"PutMapping|DeleteMapping|PatchMapping)\b",
+        re.IGNORECASE,
+    ),
+    "entrypoint_java_servlet": re.compile(
+        r"\b(doGet|doPost|doPut|doDelete|service)\s*\(\s*HttpServletRequest",
+        re.IGNORECASE,
+    ),
 }
 
 
@@ -433,6 +447,17 @@ TAINT_SOURCES = {
     "source_generic": re.compile(
         r"\b(req\.(query|body|params)|input\s*\(|sys\.argv|"
         r"os\.(environ|getenv)|getenv\s*\()",
+        re.IGNORECASE,
+    ),
+    # P2-7 v5.11.5: Java taint sources (Servlet, System, IO, Spring).
+    # v5.11.5-fix1: @RequestParam has no word boundary before '@'.
+    # v5.11.5-fix2-req: accept both request. and req. prefixes.
+    "source_java": re.compile(
+        r"(\b((request|req)\.(getParameter|getHeader|getCookies|getQueryString|"
+        r"getInputStream|getReader)|"
+        r"System\.(in|getenv|getProperty)|"
+        r"Scanner\s*\(|BufferedReader\s*\(|readLine\s*\()|"
+        r"@(RequestParam|PathVariable|RequestBody|RequestHeader))",
         re.IGNORECASE,
     ),
 }
@@ -451,6 +476,35 @@ TAINT_SINKS = {
     ),
     "sink_fs": re.compile(
         r"\b(open\s*\(|shutil\.(copy|move|rmtree)|os\.(remove|unlink|rmdir))",
+        re.IGNORECASE,
+    ),
+    # P2-7 v5.11.5: Java taint sinks.
+    "sink_java_sql": re.compile(
+        r"\.(executeQuery|executeUpdate|executeBatch|execute|createStatement|nativeSQL)\s*\(",
+        re.IGNORECASE,
+    ),
+    "sink_java_cmd": re.compile(
+        r"\b(Runtime\.getRuntime\s*\(\s*\)\.exec|Runtime\.exec|"
+        r"ProcessBuilder|Process\.start)",
+        re.IGNORECASE,
+    ),
+    "sink_java_file": re.compile(
+        r"\b(new\s+File|FileInputStream|FileOutputStream|FileReader|FileWriter|"
+        r"Files\.(read|write|delete|copy|move)|Paths\.get)\s*\(",
+        re.IGNORECASE,
+    ),
+    "sink_java_reflect": re.compile(
+        r"\b(Class\.forName|Method\.invoke|Class\.getMethod|Class\.getDeclaredMethod)\s*\(",
+        re.IGNORECASE,
+    ),
+    "sink_java_deser": re.compile(
+        r"\b(ObjectInputStream|readObject|XMLDecoder|readValue|Yaml\.load|XStream\.fromXML)\b",
+        re.IGNORECASE,
+    ),
+    # v5.11.5-fix1:  before group blocks .lookup (no word boundary after ')')
+    "sink_java_jndi": re.compile(
+        r"(JndiManager\.lookup|InitialContext\.lookup|Context\.lookup|"
+        r"\.lookup\s*\(|JndiLookup|JndiTemplate|JndiObjectFactoryBean)",
         re.IGNORECASE,
     ),
 }

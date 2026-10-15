@@ -25,9 +25,18 @@ _LANG_ENTRYPOINTS: dict[str, list[str]] = {
     "go": ["entrypoint_go_main", "entrypoint_go_http"],
     "js": ["entrypoint_js_route"],
     "javascript": ["entrypoint_js_route"],
+    # v5.11.5-java-entrypoints
+    "java": ["entrypoint_java_main", "entrypoint_java_spring", "entrypoint_java_servlet"],
 }
 
 
+def _is_comment_line(line: str) -> bool:
+    """Check if a stripped line is a comment (// # * /*)."""
+    s = line.strip()
+    return s.startswith(("//", "#", "*", "/*"))
+
+
+# v5.11.5-strip-comments: helper added
 def _lines(material: str) -> list[str]:
     """Split material into lines (handle \\r\\n and \\n)."""
     return material.replace("\r\n", "\n").replace("\r", "\n").split("\n")
@@ -54,6 +63,9 @@ def find_entry_points(material: str, language: str = "python") -> list[dict]:
     result: list[dict] = []
 
     for i, line in enumerate(_lines(material), 1):
+        # v5.11.5-strip-comments
+        if _is_comment_line(line):
+            continue
         for pat in patterns:
             if pat.search(line):
                 result.append({
@@ -79,6 +91,9 @@ def find_taint_sources(material: str) -> list[dict]:
     result: list[dict] = []
 
     for i, line in enumerate(_lines(material), 1):
+        # v5.11.5-strip-comments
+        if _is_comment_line(line):
+            continue
         for pat in patterns:
             if pat.search(line):
                 result.append({
@@ -104,6 +119,9 @@ def find_taint_sinks(material: str) -> list[dict]:
     result: list[dict] = []
 
     for i, line in enumerate(_lines(material), 1):
+        # v5.11.5-strip-comments
+        if _is_comment_line(line):
+            continue
         for pat in patterns:
             if pat.search(line):
                 result.append({
@@ -143,7 +161,8 @@ def trace_taint(material: str, finding: dict | None = None) -> dict:
         # entry_points: detect language by trying python first (most common),
         # then go, then js — first non-empty wins
         entries: list[dict] = []
-        for lang in ("python", "go", "js"):
+        # v5.11.5-java-entrypoints: added "java"
+        for lang in ("python", "go", "js", "java"):
             entries = find_entry_points(material, language=lang)
             if entries:
                 break

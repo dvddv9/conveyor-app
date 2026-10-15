@@ -1,4 +1,4 @@
-# Vishap V5.11.3
+# Vishap V5.11.5
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,18 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.11.5
+
+- **P2-7: Java taint patterns (regex-based data flow)** -- P2-7 was blind on Java. Now detects Servlet/Spring taint sources, SQL/cmd/file/reflection/deserialization sinks, and entry points.
+  - `patterns.py`: `TAINT_SOURCES["source_java"]` -- request.getParameter/getHeader/getCookies, System.in/getenv/getProperty, Scanner, BufferedReader, @RequestParam/@PathVariable/@RequestBody.
+  - `patterns.py`: `TAINT_SINKS["sink_java_sql|cmd|file|reflect|deser|jndi"]` -- executeQuery/executeUpdate/createStatement, Runtime.exec/ProcessBuilder, new File/FileInputStream/Paths.get, Class.forName/Method.invoke, ObjectInputStream/readObject, JndiManager/InitialContext/Context.lookup (Log4Shell).
+  - `patterns.py`: `EXPLOIT_PATTERNS["entrypoint_java_main|spring|servlet"]` -- public static void main, @RestController/@GetMapping, doGet/doPost.
+  - `reachability.py`: `_LANG_ENTRYPOINTS["java"]`, `trace_taint` auto-detects Java, comment lines (// # * /*) are skipped.
+  - Dogfood: `ServletSqli.java` path = `doGet -> request.getParameter("id") -> Statement.createStatement`.
+  - Tests: `tests/test_patterns_java.py` (new, 41 tests).
+
+- **+41 tests** (320 -> 361).
 
 ## What's new in v5.11.3
 

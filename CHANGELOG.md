@@ -4,6 +4,27 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [5.11.5] - 2026-10-15
+
+### Added
+
+- **P2-7: Java taint patterns (regex-based data flow).**
+  - `TAINT_SOURCES["source_java"]` -- Servlet/Spring/System/IO sources.
+  - `TAINT_SINKS["sink_java_sql|cmd|file|reflect|deser|jndi"]` -- SQL, cmd, file, reflection, deserialization, JNDI (Log4Shell).
+  - `EXPLOIT_PATTERNS["entrypoint_java_main|spring|servlet"]` -- main, Spring annotations, Servlet doGet/doPost.
+  - `_LANG_ENTRYPOINTS["java"]` -- entry points mapping.
+  - `trace_taint` auto-detects Java; comment lines skipped.
+
+### Tests
+
+- `tests/test_patterns_java.py` (new) -- 41 tests.
+- 361 passing (was 320).
+
+### Dogfood
+
+- `examples/own/ServletSqli.java` (new) -- path `doGet -> getParameter -> createStatement`.
+- Known limitation: `DbConnection.java` path is empty (source via method argument, no AST for Java).
+
 ## [5.11.3] - 2026-10-15
 
 ### Changed
