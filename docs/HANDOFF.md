@@ -38,9 +38,12 @@ P2-7 regex не работает на Java/C. Добавить:
 - Runtime.exec, ProcessBuilder
 - new File, FileInputStream
 
-### v5.11 -- risk_verdict + security section
-v5.10.6 fix смотрит risk_nodes, но SEC-1/SEC-4 в stage2.security. Расширить.
+### v5.11.1 -- DONE (2026-10-15)
+risk_verdict + security section -- реализовано.
+- orchestrator.py: scan both risk_nodes AND security.findings
 
+### v5.11.2 -- TODO
+Java/C patterns для P2-7. Оценка: 2-3 дня.
 ### v6.0 -- React UI + Multi-tenant
 Streamlit заменить на React. 1-2 недели.
 
