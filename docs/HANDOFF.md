@@ -88,8 +88,31 @@ Java AST (P2-7b) -- JavaParser. Оценка: 2-3 дня.
 Проблема: DbConnection.java (source via method arg) -> path empty.
 Решение: Java AST -- аналог Python AST (dataflow.py).
 
-### v6.0 -- TODO
-Async API + in-memory job store. Оценка: 1 неделя.
+### v6.0.0 -- DONE (2026-10-15)
+Async API -- job-based analysis.
+- src/api/jobs.py (new): in-memory job store, thread-safe
+- src/main.py: POST /analyze/async, GET /status/{job_id}, GET /report/{job_id}
+- BackgroundTasks -- pipeline runs in background
+- tests/test_async_api.py (new): 20 tests
+- 416 passing (was 396)
+- Dogfood: full end-to-end (POST -> poll 42s -> report)
+
+### v6.1 -- TODO
+PostgreSQL + Observability + Security. Оценка: 1 неделя.
+- Replace in-memory job store with PostgreSQL
+- Multi-tenant schema (tenant_id)
+- Structured logging + token counters
+- /metrics endpoint (Prometheus)
+- Secret encryption
+
+### v6.2 -- TODO
+UI (Next.js) + Auth (Clerk) + Docs (Docusaurus). Оценка: 1.5 недели.
+
+### v6.3 -- TODO
+GitHub App + Billing (Stripe). Оценка: 1 неделя.
+
+### v5.11.7 -- TODO (deferred)
+Java AST (P2-7b) via javalang. Оценка: 2-3 дня.
 
 ### v5.11.4 -- TODO
 anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
