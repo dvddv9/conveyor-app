@@ -1,4 +1,4 @@
-# Vishap V6.0.1
+# Vishap V6.0.3
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,30 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v6.0.3
+
+JobStore abstraction -- foundation for v6.1 (PostgreSQL).
+
+- src/api/job_store.py (new) -- JobStore Protocol, Job frozen dataclass, JobStatus enum.
+- src/api/job_store_memory.py (new) -- InMemoryJobStore (thread-safe via RLock).
+- src/api/jobs.py -- backward-compat shim; legacy API delegates to JobStore singleton
+  (JOB_STORE=memory|postgres env; postgres -> v6.1).
+- tests/test_job_store.py (new) -- 15 tests (Protocol-based).
+- tests/test_jobs_shim_iso.py (new) -- 4 tests (regression for ISO conversion).
+- Fixed: update_job now converts ISO-string started_at/finished_at to datetime
+  (production bug: /status/{job_id} would crash on .isoformat()).
+- 461 tests passing, 0 failed.
+
+## What's new in v6.0.2
+
+Bugfix: test isolation + version test drift.
+
+- tests/test_ui_async.py::test_ui_has_v6_version now reads version from pyproject.toml.
+- tests/conftest.py (new) -- pytest_configure sets VISHAP_DATA_DIR to tmp
+  (fixes PermissionError on Windows: tests wrote audit files to ~/.vishap/data).
+- tests/test_conftest_data_dir.py (new) -- 4 tests.
+- 456 tests passing at v6.0.2 (was 435 in handoff).
 
 ## What's new in v6.0.1
 
@@ -959,7 +983,7 @@ git --no-pager log --oneline
 
 - **pandas is not used** — Windows Code Integrity Policy may block `pandas._libs.*.pyd`. Native `st.dataframe(list[dict])` is used instead.
 
-- **Tests** — 41 (`tests/`). Run: `python run_tests.py`.
+- **Tests** — 461 (`tests/`). Run: `python run_tests.py`.
   Coverage: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
 - **Stage 3/4 parallelism** — currently sequential.
@@ -1551,32 +1575,43 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**263 tests passing** across 22 files:
+**461 tests passing** across 33 files:
 
-| File | Tests | Coverage |
-|---|---|---|
-| tests/test_tools.py | 33 | PII, compliance, hash, JSON, fallback |
-| tests/test_patterns.py | 9 | Go/JS entry points, TAINT_SOURCES/SINKS |
-| tests/test_pipeline_mock.py | 8 | Pipeline mock (no LLM) |
-| tests/test_baseline.py | 14 | Fingerprint, save/load/filter/apply |
-| tests/test_diff.py | 15 | git diff, uncommitted, is_changed |
-| tests/test_sbom.py | 14 | CycloneDX, parse, errors |
-| tests/test_sarif.py | 9 | SARIF 2.1.0, partialFingerprints |
-| tests/test_quality_gate.py | 15 | Gate config, evaluate, normalize |
-| tests/test_deps.py | 17 | Import graph, resolve, collect |
-| tests/test_reachability.py | 11 | Entry points, taint, path tracing |
-| tests/test_compliance.py | 15 | CWE to compliance controls |
-| tests/test_runbook.py | 16 | Runbook generation, per CWE |
-| tests/test_security_md.py | 5 | Doc-guard: SECURITY.md structure |
-| tests/test_llm_providers.py | 16 | Provider factory, auto-detect, custom |
-| tests/test_dataflow.py | 16 | AST taint: sources, sinks, path |
-| tests/test_anomaly.py | 17 | z-score, IQR, EWMA detection |
-| tests/test_async_imports.py | 4 | Async pipeline imports config |
-| tests/test_ui_headers.py | 6 | Streamlit UI sends X-API-Key |
-| tests/test_risk_verdict.py | 7 | risk_verdict from critical nodes |
-| tests/test_anomaly_density.py | 5 | Density guard on non-numeric text |
-| tests/test_pii_copyright.py | 6 | PII ignores copyright emails |
-| tests/test_anomaly_code.py | 5 | Anomaly skips source code |
+| File | Tests |
+|---|---|
+| tests/test_anomaly.py | 17 |
+| tests/test_anomaly_code.py | 5 |
+| tests/test_anomaly_density.py | 5 |
+| tests/test_api_client.py | 16 |
+| tests/test_async_api.py | 20 |
+| tests/test_async_imports.py | 4 |
+| tests/test_baseline.py | 14 |
+| tests/test_compliance.py | 15 |
+| tests/test_conftest_data_dir.py | 4 |
+| tests/test_dataflow.py | 16 |
+| tests/test_deps.py | 17 |
+| tests/test_diff.py | 15 |
+| tests/test_e2e.py | 3 |
+| tests/test_job_store.py | 15 |
+| tests/test_jobs_shim_iso.py | 4 |
+| tests/test_llm_providers.py | 16 |
+| tests/test_patterns.py | 9 |
+| tests/test_patterns_c.py | 35 |
+| tests/test_patterns_java.py | 41 |
+| tests/test_pii_copyright.py | 6 |
+| tests/test_pipeline_mock.py | 8 |
+| tests/test_quality_gate.py | 15 |
+| tests/test_reachability.py | 11 |
+| tests/test_risk_verdict.py | 7 |
+| tests/test_risk_verdict_security.py | 8 |
+| tests/test_runbook.py | 16 |
+| tests/test_sarif.py | 9 |
+| tests/test_sbom.py | 14 |
+| tests/test_security_md.py | 5 |
+| tests/test_tools.py | 33 |
+| tests/test_ui_async.py | 19 |
+| tests/test_ui_headers.py | 13 |
+| tests/test_verdict.py | 26 |
 
 Run:
 
