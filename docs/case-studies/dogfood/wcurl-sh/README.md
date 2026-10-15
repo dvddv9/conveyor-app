@@ -119,6 +119,17 @@ L114:  --proto-default https \
 | **ShellCheck** | `SC2086` (unquoted) -- синтаксис |
 | **Vishap** | 11 рисков + STRIDE + exploit chain + PLAN_B -- семантика |
 
+## Отправлено в upstream
+
+Feedback отправлен как GitHub issue в curl/wcurl:
+
+- **URL:** https://github.com/curl/wcurl/issues/108
+- **Статус:** открыт (ожидает ответа команды)
+- **Тон:** hardening suggestion (не багрепорт)
+- **Caveat:** не claiming CVE, `--curl-options` -- by design
+
+Черновик письма: `C:/AI/wcurl-hardening-suggestion.md`
+
 ## Выводы
 
 1. **Vishap работает на shell** -- 4-й тип материала (Java + C + spec + sh).
