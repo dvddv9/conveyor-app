@@ -97,6 +97,13 @@ Async API -- job-based analysis.
 - 416 passing (was 396)
 - Dogfood: full end-to-end (POST -> poll 42s -> report)
 
+### v6.0.1 -- DONE (2026-10-15)
+UI: async analysis, LLM mode sidebar, dataflow rendering, custom theme.
+- src/ui/streamlit_app.py: header + CSS, sidebar mode, async button, dataflow expander
+- tests/test_ui_async.py (new): 19 tests
+- 435 passing (was 416)
+- Async UI works end-to-end (34k chars, 42s)
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
