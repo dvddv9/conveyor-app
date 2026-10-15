@@ -1,4 +1,4 @@
-# Vishap V5.10.7
+# Vishap V5.11.1
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,16 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.11.1
+
+- **Bugfix: risk_verdict ignored stage2.security.findings (dogfood find)** -- `run_audit()` set `REQUIRES_REVIEW` only when `stage2.risk_nodes` contained a critical node (v5.10.6 fix). Security findings in `stage2.security.findings` (e.g. `SEC-1` command injection) were ignored. A file with a critical `SEC-N` but no critical `RN-N` got a **false SAFE**.
+  - Fix: `run_audit()` now also scans `stage2.security.findings` for `priority in (kritichno, critical)`. Short-circuits on critical `risk_nodes`. Fail-open on malformed `security` data.
+  - Regression tests: `tests/test_risk_verdict_security.py` (8 tests).
+  - Dogfood case: `docs/case-studies/dogfood/wcurl-sh/` (`SEC-1` command-line injection via `--curl-options`).
+
+- **No API/behavior changes.** Fully backward compatible.
+- +8 tests. Total: 271 passing.
 
 ## What's new in v5.10.7
 

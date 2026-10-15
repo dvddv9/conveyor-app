@@ -39,6 +39,7 @@ def main():
     rc |= run("tests/test_async_imports.py")
     rc |= run("tests/test_ui_headers.py")
     rc |= run("tests/test_risk_verdict.py")
+    rc |= run("tests/test_risk_verdict_security.py")
     rc |= run("tests/test_anomaly_density.py")
     rc |= run("tests/test_pii_copyright.py")
     rc |= run("tests/test_anomaly_code.py")

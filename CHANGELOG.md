@@ -4,6 +4,20 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [5.11.1] - 2026-10-15
+
+### Fixed
+
+- **risk_verdict ignored stage2.security.findings** -- `run_audit()` only checked `stage2.risk_nodes` (v5.10.6), ignoring `stage2.security.findings`. A file with critical `SEC-N` but no critical `RN-N` got a false `SAFE`. Fix: scan both `risk_nodes` and `security.findings` for critical priority.
+
+### Added
+
+- `tests/test_risk_verdict_security.py` -- 8 regression tests.
+
+### Tests
+
+- 271 passing (was 263).
+
 ## [5.7.1] - 2026-10-12
 
 ### Fixed (review + dogfood P0)
