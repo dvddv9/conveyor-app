@@ -4,6 +4,24 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [5.11.3] - 2026-10-15
+
+### Changed
+
+- **Refactor: UI api_client.py** -- `streamlit_app.py` had 8 duplicated `requests.*` calls with manual `headers=HEADERS`. Headers defined in 3 places.
+  - New module: `src/ui/api_client.py` -- `get()`, `post()`, `_url()` with auto headers + timeouts.
+  - `src/config.py`: added `API_URL`, `CONVEYOR_API_KEY`, `API_TIMEOUT_*`.
+  - `src/ui/streamlit_app.py`: 8 calls refactored, local `API_URL`/`API_KEY`/`HEADERS` removed.
+
+### Added
+
+- `tests/test_api_client.py` -- 16 tests (mocked HTTP).
+- `tests/test_ui_headers.py` -- rewritten: 13 tests (now checks `api_client` and absence of direct `requests.*` in UI).
+
+### Tests
+
+- 320 passing (was 297).
+
 ## [5.11.2] - 2026-10-15
 
 ### Changed

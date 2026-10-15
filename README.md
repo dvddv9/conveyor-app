@@ -1,4 +1,4 @@
-# Vishap V5.11.2
+# Vishap V5.11.3
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,17 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.11.3
+
+- **Refactor: UI api_client.py -- centralized HTTP client** -- `streamlit_app.py` had 8 duplicated `requests.*` calls, each passing `headers=HEADERS` manually (v5.10.5 fix). Headers were defined in 3 places.
+  - New module: `src/ui/api_client.py` -- `get()`, `post()`, `_url()`. Auto-injects `X-API-Key` header + default timeouts.
+  - `src/config.py`: added `API_URL`, `CONVEYOR_API_KEY`, `API_TIMEOUT_SHORT/DEFAULT/LONG/BATCH`.
+  - `src/ui/streamlit_app.py`: 8 calls replaced with `api_client.get/post(...)`. Removed local `API_URL`, `API_KEY`, `HEADERS`, `import requests`, `import os`.
+  - Tests: `tests/test_api_client.py` (new, 16 tests), `tests/test_ui_headers.py` (rewritten, 13 tests -- now checks `api_client` + no direct `requests.*` in UI).
+  - No behavior change for end users.
+
+- **+23 tests** (297 -> 320).
 
 ## What's new in v5.11.2
 

@@ -50,6 +50,14 @@ CUSTOM_API_KEY = os.getenv("CUSTOM_API_KEY", "")
 CUSTOM_MODEL = os.getenv("CUSTOM_MODEL", "")
 CUSTOM_BASE_URL = os.getenv("CUSTOM_BASE_URL", "")
 
+# === FastAPI (UI -> API) ===
+API_URL = os.getenv("API_URL", "http://localhost:5001")
+CONVEYOR_API_KEY = os.getenv("CONVEYOR_API_KEY", "")
+API_TIMEOUT_SHORT = 5
+API_TIMEOUT_DEFAULT = 10
+API_TIMEOUT_LONG = 300
+API_TIMEOUT_BATCH = 900
+
 # === Tavily Web Search ===
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 ENABLE_WEB_SEARCH = os.getenv("ENABLE_WEB_SEARCH", "false").lower() == "true"

@@ -3,19 +3,15 @@
 Vishap V5.8 — Streamlit UI.
 Запуск: streamlit run src/ui/streamlit_app.py
 """
-import os
 import json
 from pathlib import Path
 from datetime import datetime
 ...
-import requests
 import streamlit as st
 from src.config import DATA_DIR
+from src.ui import api_client
 
 
-API_URL = os.getenv("API_URL", "http://localhost:5001")
-API_KEY = os.getenv("CONVEYOR_API_KEY", "")
-HEADERS = {"X-API-Key": API_KEY} if API_KEY else {}
 HISTORY_LIMIT = 20
 
 
@@ -29,7 +25,7 @@ st.title("🔬 Vishap V5.8")
 st.caption("6-стадийный LLM-конвейер для анализа кода")
 
 try:
-    health = requests.get(f"{API_URL}/health", timeout=5, headers=HEADERS).json()
+    health = api_client.get("/health", timeout=5).json()
     st.success(f"✅ API работает · {health.get('status', 'unknown')}")
 except Exception as e:
     st.error(f"❌ API не отвечает: {e}")
@@ -175,10 +171,10 @@ with tab_analyze:
                 if items:
                     with st.spinner(f"⏳ Обработка {len(items)} файлов (параллельно до {max_conc})..."):
                         try:
-                            resp = requests.post(
-                                f"{API_URL}/analyze/batch",
+                            resp = api_client.post(
+                                "/analyze/batch",
                                 json={"items": items, "max_concurrent": max_conc},
-                                timeout=900, headers=HEADERS
+                                timeout=900
                             )
 
                             if resp.status_code != 200:
@@ -257,17 +253,17 @@ with tab_history:
     with col_clear:
         if st.button("🗑️ Очистить", type="secondary"):
             try:
-                requests.post(f"{API_URL}/history/clear", timeout=5, headers=HEADERS)
+                api_client.post("/history/clear", timeout=5)
                 st.success("История очищена")
                 st.rerun()
             except Exception as e:
                 st.error(f"Ошибка: {e}")
 
     try:
-        history = requests.get(
-            f"{API_URL}/history",
+        history = api_client.get(
+            "/history",
             params={"limit": HISTORY_LIMIT},
-            timeout=10, headers=HEADERS
+            timeout=10
         ).json()
 
         if not history:
@@ -356,7 +352,7 @@ with tab_about:
 
     current_mode = "auto"
     try:
-        r = requests.get(f"{API_URL}/mode", timeout=5, headers=HEADERS)
+        r = api_client.get("/mode", timeout=5)
         if r.status_code == 200:
             current_mode = r.json().get("mode", "auto")
     except Exception:
@@ -381,7 +377,7 @@ with tab_about:
     if selected != current_mode:
         if st.button("✅ Применить", type="primary"):
             try:
-                r = requests.post(f"{API_URL}/mode", json={"mode": selected}, timeout=5, headers=HEADERS)
+                r = api_client.post("/mode", json={"mode": selected}, timeout=5)
                 if r.status_code == 200:
                     st.success(f"Режим изменён на: {selected}")
                     st.rerun()
@@ -422,7 +418,7 @@ Streamlit UI -> FastAPI (:5001) -> Pipeline (6 стадий) -> DeepSeek/Ollama
 - GET /health — проверка
 - /docs — Swagger UI
     """)
-    st.caption(f"API: {API_URL}")
+    st.caption(f"API: {api_client.API_URL}")
 
 
 if analyze_btn and material.strip() and result_placeholder is not None:
@@ -444,15 +440,15 @@ if analyze_btn and material.strip() and result_placeholder is not None:
             progress.progress((i + 1) * 20)
 
         try:
-            response = requests.post(
-                f"{API_URL}/analyze",
+            response = api_client.post(
+                "/analyze",
                 json={
                     "material": material,
                     "filename": filename,
                     "verbose": False,
                     "force": force_flag,
                 },
-                timeout=300, headers=HEADERS
+                timeout=300
             )
             progress.progress(100)
             status.success("✅ Анализ завершён!")
@@ -485,15 +481,15 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                     # === v5.8: SARIF download ===
                     if st.button("📋 Скачать SARIF 2.1.0", key="sarif_btn"):
                         try:
-                            sarif_resp = requests.post(
-                                f"{API_URL}/analyze/sarif",
+                            sarif_resp = api_client.post(
+                                "/analyze/sarif",
                                 json={
                                     "material": material,
                                     "filename": filename,
                                     "verbose": False,
                                     "force": False,
                                 },
-                                timeout=300, headers=HEADERS
+                                timeout=300
                             )
                             if sarif_resp.status_code == 200:
                                 st.download_button(
