@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.11.1 — главный pipeline.
+Vishap V5.11.2 — главный pipeline.
 v3: исправлен DeprecationWarning (datetime.utcnow → datetime.now(UTC)).
 """
 import argparse
@@ -38,6 +38,7 @@ from src.tools.anomaly import enrich_anomaly  # P2-12
 from src.tools.patterns import CRITICAL_RISK_PATTERNS
 from src.tools.baseline import apply_baseline
 from src.tools.deps import build_import_graph, collect_context_files
+from src.pipeline.verdict import compute_risk_verdict  # v5.11.2: consolidated verdict
 
 
 def format_runbook_md(audit: dict) -> str:
@@ -303,51 +304,15 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
     cwe_ids = detect_cwe(material)
-    critique = "REQUIRES_REVIEW" if (pii or compliance or cwe_ids) else "SAFE"
-    if force_emergency:
-        risk_verdict = "EMERGENCY"
-    elif cwe_ids or compliance or pii:
-        risk_verdict = "REQUIRES_REVIEW"
-    else:
-        risk_verdict = "SAFE"
-
-    # P2-12-fix-risk-verdict: если LLM нашёл критичные risk_nodes -- REQUIRES_REVIEW.
-    # Раньше risk_verdict зависел ТОЛЬКО от pii/compliance/cwe_ids и игнорировал
-    # LLM-анализ. Это давало ложный SAFE при критичных рисках в [RISK_NODES].
-    # P2-12-fix-risk-verdict + P2-12-fix-risk-verdict-security (v5.11.1):
-    # Check both risk_nodes (v5.10.6) and security.findings (v5.11.1).
-    # Short-circuit: if risk_nodes already critical -- skip security.
-    if risk_verdict == "SAFE" and stage2_result:
-        _found_critical = False
-
-        # 1. risk_nodes (v5.10.6)
-        _rn = stage2_result.get("risk_nodes", [])
-        if isinstance(_rn, list):
-            for _n in _rn:
-                if not isinstance(_n, dict):
-                    continue
-                _prio = str(_n.get("priority", "")).lower()
-                if _prio in ("критично", "critical"):
-                    _found_critical = True
-                    break
-
-        # 2. security.findings (v5.11.1)
-        if not _found_critical:
-            _sec = stage2_result.get("security", {})
-            if isinstance(_sec, dict):
-                _findings = _sec.get("findings", [])
-                if isinstance(_findings, list):
-                    for _f in _findings:
-                        if not isinstance(_f, dict):
-                            continue
-                        _prio = str(_f.get("priority", "")).lower()
-                        if _prio in ("критично", "critical"):
-                            _found_critical = True
-                            break
-
-        if _found_critical:
-            risk_verdict = "REQUIRES_REVIEW"
-            critique = "REQUIRES_REVIEW"
+    # v5.11.2: consolidated verdict computation (verdict.py).
+    # Priority: emergency > pii/compliance/cwe > critical risk_nodes > critical security.
+    risk_verdict, critique = compute_risk_verdict(
+        stage2_result=stage2_result,
+        pii=pii,
+        compliance=compliance,
+        cwe_ids=cwe_ids,
+        force_emergency=force_emergency,
+    )
     owasp_categories = map_cwe_to_owasp(cwe_ids, year="2025")
     exploitability = detect_exploitability(material)
     exploitability = enrich_exploitability(material, exploitability)  # P2-7
@@ -532,7 +497,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         )
         audit_block = (
             "\n\n[AUDIT_TRAIL]\n"
-            f"generator: Vishap V5.11.1\n"
+            f"generator: Vishap V5.11.2\n"
         f"audit_id: {audit['audit_id']}\n"
             f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -705,7 +670,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     audit_block = (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.11.1\n"
+        f"generator: Vishap V5.11.2\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"
@@ -890,7 +855,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "", stage2_result=stage2 if "stage2" in dir() else None)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
-        f"generator: Vishap V5.11.1\n"
+        f"generator: Vishap V5.11.2\n"
         f"audit_id: {audit['audit_id']}\n"
         f"material_hash: {audit['material_hash']}\n"
         f"material_hash_full: {audit.get('material_hash_full', audit['material_hash'])}\n"

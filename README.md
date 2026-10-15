@@ -1,4 +1,4 @@
-# Vishap V5.11.1
+# Vishap V5.11.2
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,19 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.11.2
+
+- **Refactor: consolidated risk verdict computation** -- `run_audit()` inlined ~45 lines of verdict logic (v5.10.6 risk_nodes + v5.11.1 security.findings) with duplicated `critique` / `risk_verdict` branches.
+  - New module: `src/pipeline/verdict.py` -- `compute_risk_verdict()` single source of truth.
+  - New function: `_has_critical_priority()`, `_has_critical_risk_nodes()`, `_has_critical_security()`.
+  - Behavior change: `critique_verdict` now correctly reflects `EMERGENCY` (was `SAFE` in emergency path -- bugfix).
+  - Behavior preserved: `pii`/`compliance`/`cwe_ids` -> `REQUIRES_REVIEW`; critical `risk_nodes` or `security.findings` -> `REQUIRES_REVIEW`; else -> `SAFE`.
+  - Regression tests: `tests/test_verdict.py` (26 tests).
+  - `run_audit()` shrunk from ~119 to ~75 lines.
+
+- **No API/behavior changes for end users.** Fully backward compatible.
+- +26 tests. Total: 297 passing.
 
 ## What's new in v5.11.1
 

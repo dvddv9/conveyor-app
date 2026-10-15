@@ -4,6 +4,27 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [5.11.2] - 2026-10-15
+
+### Changed
+
+- **Refactor: consolidated risk verdict computation** -- `run_audit()` had ~45 lines of inline verdict logic (v5.10.6 + v5.11.1) with duplicated `critique` / `risk_verdict` branches.
+  - New module: `src/pipeline/verdict.py`.
+  - Function: `compute_risk_verdict(stage2_result, pii, compliance, cwe_ids, force_emergency) -> (risk_verdict, critique_verdict)`.
+  - Priority order: emergency > pii/compliance/cwe > critical risk_nodes > critical security.findings > SAFE.
+
+### Fixed
+
+- `critique_verdict` now correctly returns `EMERGENCY` on force_emergency (was `SAFE` -- inconsistent with `risk_verdict`).
+
+### Added
+
+- `tests/test_verdict.py` -- 26 tests.
+
+### Tests
+
+- 297 passing (was 271).
+
 ## [5.11.1] - 2026-10-15
 
 ### Fixed
