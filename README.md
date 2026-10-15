@@ -1343,7 +1343,7 @@ Each Stage 2 risk node is emitted as a SARIF rule (`vishap/risk/<slug>`) with:
 
 1. checkout (fetch-depth: 0)
 2. setup Python 3.12
-3. pip install vishap-analyzer cyclonedx-bom
+3. pip install git+https://github.com/dvddv9/vishap.git cyclonedx-bom
 4. **diff-aware scan** -- only changed files are analyzed
 5. `upload-sarif@v3` with `category: vishap`
 6. SBOM uploaded as artifact
