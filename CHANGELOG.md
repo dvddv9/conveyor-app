@@ -4,6 +4,27 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [5.11.6] - 2026-10-15
+
+### Added
+
+- **P2-7: C taint patterns (regex-based data flow).**
+  - `TAINT_SOURCES["source_c"]` -- scanf/fgets/gets/read/recv, argv[], getenv.
+  - `TAINT_SINKS["sink_c_cmd|buffer|file"]` -- cmd, buffer, file.
+  - `EXPLOIT_PATTERNS["entrypoint_c_main|jni"]`, `blast_c_cmd|buffer|file`.
+  - `_LANG_ENTRYPOINTS["c"]` -- C entry points mapping.
+  - `trace_taint` auto-detects C.
+  - Blast radius logic extended for C: `c_cmd` -> high, `c_buffer` -> medium, `c_file` -> low.
+
+### Tests
+
+- `tests/test_patterns_c.py` (new) -- 35 tests.
+- 396 passing (was 361).
+
+### Dogfood
+
+- `examples/own/c_cmd_injection.c` (new) -- path `main -> argv[1] -> strcpy -> system`, blast_radius: high.
+
 ## [5.11.5] - 2026-10-15
 
 ### Added

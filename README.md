@@ -1,4 +1,4 @@
-# Vishap V5.11.5
+# Vishap V5.11.6
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,18 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v5.11.6
+
+- **P2-7: C taint patterns (regex-based data flow)** -- P2-7 was blind on C. Now detects stdin/argv/env/socket taint sources, cmd/buffer/file sinks, and entry points.
+  - `patterns.py`: `TAINT_SOURCES["source_c"]` -- scanf/fgets/gets/read/recv, argv[], getenv.
+  - `patterns.py`: `TAINT_SINKS["sink_c_cmd|buffer|file"]` -- system/popen/exec*, strcpy/strcat/sprintf/memcpy/gets, fopen/open/fread.
+  - `patterns.py`: `EXPLOIT_PATTERNS["entrypoint_c_main|jni"]`, `blast_c_cmd|buffer|file`.
+  - `reachability.py`: `_LANG_ENTRYPOINTS["c"]`, `trace_taint` auto-detects C.
+  - Dogfood: `c_cmd_injection.c` path = `main -> argv[1] -> strcpy -> system` (blast_radius: high).
+  - Tests: `tests/test_patterns_c.py` (new, 35 tests).
+
+- **+35 tests** (361 -> 396).
 
 ## What's new in v5.11.5
 

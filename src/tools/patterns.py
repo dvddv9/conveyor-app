@@ -435,6 +435,27 @@ EXPLOIT_PATTERNS = {
         r"\b(doGet|doPost|doPut|doDelete|service)\s*\(\s*HttpServletRequest",
         re.IGNORECASE,
     ),
+    # P2-7 v5.11.6: C blast radius indicators.
+    # v5.11.6-blast-c
+    "blast_c_cmd": re.compile(
+        r"\b(system|popen|execl|execlp|execle|execv|execvp|execvpe|execve)\s*\(",
+        re.IGNORECASE,
+    ),
+    "blast_c_buffer": re.compile(
+        r"\b(strcpy|strcat|sprintf|vsprintf|memcpy|memmove|gets)\s*\(",
+        re.IGNORECASE,
+    ),
+    "blast_c_file": re.compile(
+        r"\b(fopen|freopen|open|fread|fwrite)\s*\(",
+        re.IGNORECASE,
+    ),
+
+    # P2-7 v5.11.6: C entry points.
+    "entrypoint_c_main": re.compile(
+        r"\b(int|void)\s+main\s*\(\s*int\s+\w+\s*,\s*char\s*\*\*?\s*\w+",
+        re.IGNORECASE,
+    ),
+    "entrypoint_c_jni": re.compile(r"\bJNIEXPORT\b"),
 }
 
 
@@ -458,6 +479,14 @@ TAINT_SOURCES = {
         r"System\.(in|getenv|getProperty)|"
         r"Scanner\s*\(|BufferedReader\s*\(|readLine\s*\()|"
         r"@(RequestParam|PathVariable|RequestBody|RequestHeader))",
+        re.IGNORECASE,
+    ),
+    # P2-7 v5.11.6: C taint sources (stdin, argv, env, socket).
+    # v5.11.6-fix1-argc: argc is a count, not taint -- removed.
+    "source_c": re.compile(
+        r"\b(scanf|fscanf|sscanf|gets|fgets|getline|getchar|"
+        r"read|recv|recvfrom|readline)\s*\(|"
+        r"\b(argv\s*\[|getenv\s*\(|secure_getenv\s*\()",
         re.IGNORECASE,
     ),
 }
@@ -505,6 +534,19 @@ TAINT_SINKS = {
     "sink_java_jndi": re.compile(
         r"(JndiManager\.lookup|InitialContext\.lookup|Context\.lookup|"
         r"\.lookup\s*\(|JndiLookup|JndiTemplate|JndiObjectFactoryBean)",
+        re.IGNORECASE,
+    ),
+    # P2-7 v5.11.6: C taint sinks.
+    "sink_c_cmd": re.compile(
+        r"\b(system|popen|execl|execlp|execle|execv|execvp|execvpe|execve)\s*\(",
+        re.IGNORECASE,
+    ),
+    "sink_c_buffer": re.compile(
+        r"\b(strcpy|strcat|sprintf|vsprintf|memcpy|memmove|gets)\s*\(",
+        re.IGNORECASE,
+    ),
+    "sink_c_file": re.compile(
+        r"\b(fopen|freopen|open|fread|fwrite)\s*\(",
         re.IGNORECASE,
     ),
 }
@@ -558,11 +600,16 @@ def detect_exploitability(material: str) -> dict:
     )
 
     # Blast radius: high if shell/eval, medium if db/network, low if fs-only
-    if "shell" in blast_indicators or "eval" in blast_indicators or "heap" in blast_indicators:
+    # v5.11.6-blast-c-fix: also recognize C blast indicators.
+    _HIGH = ("shell", "eval", "heap", "c_cmd")
+    _MEDIUM = ("db", "network", "c_buffer")
+    _LOW = ("fs", "c_file")
+
+    if any(x in blast_indicators for x in _HIGH):
         blast = "high"
-    elif "db" in blast_indicators or "network" in blast_indicators:
+    elif any(x in blast_indicators for x in _MEDIUM):
         blast = "medium"
-    elif "fs" in blast_indicators:
+    elif any(x in blast_indicators for x in _LOW):
         blast = "low"
     else:
         blast = "none"

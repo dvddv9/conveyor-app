@@ -23,6 +23,7 @@ def main():
     rc |= run("tests/test_tools.py")
     rc |= run("tests/test_patterns.py")
     rc |= run("tests/test_patterns_java.py")
+    rc |= run("tests/test_patterns_c.py")
     rc |= run("tests/test_pipeline_mock.py")
     rc |= run("tests/test_baseline.py")
     rc |= run("tests/test_diff.py")

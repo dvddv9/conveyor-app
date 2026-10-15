@@ -27,6 +27,8 @@ _LANG_ENTRYPOINTS: dict[str, list[str]] = {
     "javascript": ["entrypoint_js_route"],
     # v5.11.5-java-entrypoints
     "java": ["entrypoint_java_main", "entrypoint_java_spring", "entrypoint_java_servlet"],
+    # v5.11.6-c-entrypoints
+    "c": ["entrypoint_c_main", "entrypoint_c_jni"],
 }
 
 
@@ -162,7 +164,8 @@ def trace_taint(material: str, finding: dict | None = None) -> dict:
         # then go, then js — first non-empty wins
         entries: list[dict] = []
         # v5.11.5-java-entrypoints: added "java"
-        for lang in ("python", "go", "js", "java"):
+        # v5.11.6: added "c"
+        for lang in ("python", "go", "js", "java", "c"):
             entries = find_entry_points(material, language=lang)
             if entries:
                 break
