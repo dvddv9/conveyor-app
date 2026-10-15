@@ -1,4 +1,4 @@
-# Vishap V5.11.6
+# Vishap V6.0.0
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,21 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v6.0.0
+
+- **Async API -- job-based analysis (v6.0)** -- `POST /analyze` blocked for 30-90 seconds. Now async: submit, poll status, fetch report. Foundation for SaaS.
+  - `src/api/jobs.py` (new) -- in-memory job store. `create_job`, `get_job`, `update_job`, `delete_job`, `list_jobs`, `clear_jobs`, `job_count`. Thread-safe (`Lock`).
+  - `src/main.py`: 3 new endpoints:
+    - `POST /analyze/async` -> `{job_id, status: "queued"}` immediately.
+    - `GET /status/{job_id}` -> `{status, created_at, started_at, finished_at, error}`.
+    - `GET /report/{job_id}` -> full result (409 if not done).
+  - `BackgroundTasks` -- pipeline runs in background via existing `run_pipeline_async`.
+  - Old `/analyze` (sync) unchanged -- backward compatible.
+  - Dogfood: POST -> job_id -> poll (42s) -> report with full audit.
+  - Tests: `tests/test_async_api.py` (new, 20 tests).
+
+- **+20 tests** (396 -> 416).
 
 ## What's new in v5.11.6
 

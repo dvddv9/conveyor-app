@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -18,6 +18,10 @@ from src.pipeline.batch import run_batch
 from src.storage.history import load_history, add_entry
 from src.api.auth import verify_api_key, is_auth_enabled
 from src.api.rate_limit import rate_limit_analyze, rate_limit_read
+from src.api.jobs import (
+    create_job, get_job, update_job, list_jobs,
+)
+from datetime import datetime, UTC
 from src.tools.sarif import to_sarif
 
 
@@ -31,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=f"{APP_NAME} API",
-    description="Vishap V5.11.6 — 6-стадийный LLM-конвейер для анализа кода",
+    description="Vishap V6.0.0 — 6-стадийный LLM-конвейер для анализа кода",
     version="5.9.6",
     lifespan=lifespan,
 )
@@ -378,6 +382,74 @@ async def set_mode_endpoint(req: ModeRequest):
             detail=f"Invalid mode: {req.mode}. Valid: {list(VALID_MODES)}",
         )
     return ModeResponse(mode=get_mode(), valid_modes=list(VALID_MODES))
+
+
+# ============================================================
+# v6.0: Async API -- job-based analysis
+# ============================================================
+
+async def _run_job_async(job_id: str, req: "AnalyzeRequest"):
+    """Run pipeline in background, update job store."""
+    from src.pipeline.orchestrator import run_pipeline_async
+    update_job(job_id, status="running", started_at=datetime.now(UTC).isoformat())
+    try:
+        result = await run_pipeline_async(
+            material=req.material,
+            filename=req.filename or "unknown",
+            verbose=False,
+        )
+        update_job(
+            job_id,
+            status="done",
+            result=result,
+            finished_at=datetime.now(UTC).isoformat(),
+        )
+    except Exception as e:
+        update_job(
+            job_id,
+            status="failed",
+            error=str(e),
+            finished_at=datetime.now(UTC).isoformat(),
+        )
+
+
+@app.post("/analyze/async", dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
+async def analyze_async(req: "AnalyzeRequest", background: BackgroundTasks):
+    """Create async job -- returns job_id immediately."""
+    job_id = create_job(filename=req.filename or "unknown")
+    background.add_task(_run_job_async, job_id, req)
+    return {"job_id": job_id, "status": "queued"}
+
+
+@app.get("/status/{job_id}")
+async def get_status(job_id: str):
+    """Get job status."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    return {
+        "job_id": job["job_id"],
+        "status": job["status"],
+        "filename": job["filename"],
+        "created_at": job["created_at"],
+        "started_at": job["started_at"],
+        "finished_at": job["finished_at"],
+        "error": job["error"],
+    }
+
+
+@app.get("/report/{job_id}")
+async def get_report(job_id: str):
+    """Get job result. 409 if not done."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job["status"] != "done":
+        raise HTTPException(
+            status_code=409,
+            detail=f"job not done: {job['status']}",
+        )
+    return job["result"]
 
 
 if __name__ == "__main__":

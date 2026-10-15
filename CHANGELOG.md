@@ -4,6 +4,27 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [6.0.0] - 2026-10-15
+
+### Added
+
+- **Async API -- job-based analysis.**
+  - `src/api/jobs.py` (new) -- in-memory job store, thread-safe.
+  - `POST /analyze/async` -- returns `{job_id, status: "queued"}` immediately.
+  - `GET /status/{job_id}` -- poll job status.
+  - `GET /report/{job_id}` -- fetch result (409 if not done).
+  - `BackgroundTasks` -- pipeline runs in background.
+  - Sync `/analyze` unchanged (backward compatible).
+
+### Tests
+
+- `tests/test_async_api.py` (new) -- 20 tests.
+- 416 passing (was 396).
+
+### Dogfood
+
+- Full end-to-end: POST -> job_id -> poll (42s) -> report with stages 0-4 + audit.
+
 ## [5.11.6] - 2026-10-15
 
 ### Added
