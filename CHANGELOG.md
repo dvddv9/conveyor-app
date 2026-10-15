@@ -4,6 +4,21 @@ All notable changes to Vishap. Format based on [Keep a Changelog](https://keepac
 
 ---
 
+## [6.0.1] - 2026-10-15
+
+### Added
+
+- **UI: async analysis, LLM mode sidebar, dataflow rendering.**
+  - Custom header (🐉 gradient) + CSS theme.
+  - Sidebar: LLM mode selector (`auto` / `cloud` / `local`).
+  - `⚡ Async` button -- non-blocking analysis via async API.
+  - Dataflow expander -- shows `dataflow_path` for Java/C.
+
+### Tests
+
+- `tests/test_ui_async.py` (new) -- 19 tests.
+- 435 passing (was 416).
+
 ## [6.0.0] - 2026-10-15
 
 ### Added

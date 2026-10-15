@@ -1,4 +1,4 @@
-# Vishap V6.0.0
+# Vishap V6.0.1
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -23,6 +23,18 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
+
+## What's new in v6.0.1
+
+- **UI: async analysis, LLM mode sidebar, dataflow rendering, custom theme** -- UI caught up with v6.0.0 async backend.
+  - `src/ui/streamlit_app.py`: custom header (🐉 gradient), CSS theme.
+  - Sidebar: LLM mode selector (`auto` / `cloud` / `local`).
+  - Async button `⚡ Async` -- uses `POST /analyze/async` + polling `/status/{job_id}` + `/report/{job_id}`.
+  - Dataflow expander -- shows `dataflow_path` (source -> intermediate -> sink) for Java/C.
+  - Version bumped to V6.0.1.
+  - Tests: `tests/test_ui_async.py` (new, 19 tests).
+
+- **+19 tests** (416 -> 435).
 
 ## What's new in v6.0.0
 

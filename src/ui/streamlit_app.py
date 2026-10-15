@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Vishap V5.8 — Streamlit UI.
+Vishap V6.0.1 — Streamlit UI.
 Запуск: streamlit run src/ui/streamlit_app.py
 """
 import json
+import time
 from pathlib import Path
 from datetime import datetime
 ...
@@ -16,13 +17,78 @@ HISTORY_LIMIT = 20
 
 
 st.set_page_config(
-    page_title="Vishap V5.8",
+    page_title="Vishap V6.0.1",
     page_icon="🔬",
     layout="wide",
 )
 
-st.title("🔬 Vishap V5.8")
-st.caption("6-стадийный LLM-конвейер для анализа кода")
+# v6.0.3: custom header + CSS
+st.markdown("""
+<style>
+    .vishap-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(90deg, #FF6B35 0%, #F7931E 100%);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+    }
+    .vishap-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: white;
+        font-weight: 700;
+    }
+    .vishap-header .subtitle {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+    .vishap-header .emoji {
+        font-size: 2.5rem;
+    }
+    .vishap-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        margin-left: auto;
+    }
+    div[data-testid="stMetric"] {
+        background: #1E2530;
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 3px solid #FF6B35;
+    }
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(90deg, #FF6B35 0%, #F7931E 100%);
+        border: none;
+        font-weight: 600;
+    }
+    .stButton > button[kind="primary"]:hover {
+        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+    }
+    section[data-testid="stSidebar"] {
+        background: #141B24;
+    }
+</style>
+
+<div class="vishap-header">
+    <div class="emoji">🐉</div>
+    <div>
+        <h1>Vishap V6.0.1</h1>
+        <div class="subtitle">LLM-конвейер для анализа кода · Async API · SAST/SCA · SARIF</div>
+    </div>
+    <span class="vishap-badge">v6.0.0</span>
+</div>
+""", unsafe_allow_html=True)
+
+st.caption("6-стадийный LLM-конвейер для анализа инженерного материала")
 
 try:
     health = api_client.get("/health", timeout=5).json()
@@ -34,6 +100,39 @@ except Exception as e:
 
 
 tab_analyze, tab_history, tab_about = st.tabs(["🔬 Анализ", "📜 История", "ℹ️ О проекте"])
+
+# v6.0.3: LLM mode in sidebar
+with st.sidebar:
+    st.markdown("### ⚙️ LLM режим")
+    _mode_opts = {
+        "auto": "🔄 Auto (DeepSeek → Ollama)",
+        "cloud": "☁️ Cloud (DeepSeek)",
+        "local": "💻 Local (Ollama)",
+    }
+    try:
+        _r = api_client.get("/mode", timeout=3)
+        _cur = _r.json().get("mode", "auto") if _r.status_code == 200 else "auto"
+    except Exception:
+        _cur = "auto"
+
+    _keys = list(_mode_opts.keys())
+    _sel = st.selectbox(
+        "Режим LLM",
+        options=_keys,
+        index=_keys.index(_cur) if _cur in _keys else 0,
+        format_func=lambda x: _mode_opts[x],
+        key="sidebar_mode",
+    )
+    if _sel != _cur:
+        if st.button("Применить", key="sidebar_mode_apply"):
+            try:
+                api_client.post("/mode", json={"mode": _sel}, timeout=5)
+                st.success(f"Режим: {_sel}")
+                st.rerun()
+            except Exception as e:
+                st.error(f"Ошибка: {e}")
+    st.caption(f"Текущий: `{_cur}`")
+
 
 
 # Defaults — на случай, если пользователь в batch-режиме
@@ -95,14 +194,23 @@ with tab_analyze:
                 if material:
                     st.caption(f"{len(material)} символов")
 
-            col_btn, col_force = st.columns([3, 1])
+            col_btn, col_async, col_force = st.columns([3, 3, 1])
             with col_btn:
                 analyze_btn = st.button(
-                "🚀 Запустить анализ",
+                "🚀 Анализ",
                 type="primary",
                 width="stretch",
                 disabled=not material.strip(),
                 key="single_analyze_btn",
+                )
+            with col_async:
+                # v6.0.1: async UI
+                async_btn = st.button(
+                "⚡ Async",
+                width="stretch",
+                disabled=not material.strip(),
+                key="single_async_btn",
+                help="Async: не блокирует, можно продолжать работу",
                 )
             with col_force:
                 force_flag = st.checkbox(
@@ -345,7 +453,7 @@ with tab_history:
 
 
 with tab_about:
-    st.subheader("ℹ️ Vishap V5.8")
+    st.subheader("ℹ️ Vishap V6.0.1")
 
     # === Режим LLM ===
     st.markdown("### 🔧 Режим LLM")
@@ -396,7 +504,7 @@ with tab_about:
     st.divider()
 
     st.markdown("""
-**Vishap V5.8** — 6-стадийный LLM-конвейер для анализа инженерного материала.
+**Vishap V6.0.1** — 6-стадийный LLM-конвейер для анализа инженерного материала.
 
 ### Архитектура
 
@@ -539,6 +647,34 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                         blast = exploit.get("blast_radius", "none")
                         auth = "yes" if exploit.get("auth_required") else "NO"
                         emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(blast, "⚪")
+                    # v6.0.1: dataflow rendering
+                    dataflow = audit.get("dataflow", {})
+                    if dataflow and dataflow.get("path"):
+                        df_path = dataflow.get("path", [])
+                        df_src = dataflow.get("source", {}).get("name", "?")
+                        df_sink = dataflow.get("sink", {}).get("name", "?")
+                        with st.expander(
+                            f"🔄 Dataflow — {len(df_path)} steps | {df_src} → {df_sink}",
+                            expanded=False,
+                        ):
+                            for i, step in enumerate(df_path, 1):
+                                step_type = step.get("type", "?")
+                                emoji_step = {
+                                    "entry_point": "🚪",
+                                    "source": "📥",
+                                    "intermediate": "➡️",
+                                    "sink": "🎯",
+                                }.get(step_type, "•")
+                                line_no = step.get("line", "?")
+                                name = step.get("name", "")
+                                content = step.get("content", "")[:100]
+                                st.caption(
+                                    f"{i}. {emoji_step} **{step_type}** (L{line_no}) "
+                                    f"`{name}` -- {content}"
+                                )
+                            st.divider()
+                            st.json(dataflow)
+
                         with st.expander(f"{emoji} Exploitability — blast: {blast}, auth: {auth}", expanded=False):
                             c1, c2 = st.columns(2)
                             c1.metric("Reachable", "Yes" if exploit.get("reachable") else "No")
@@ -591,3 +727,92 @@ if analyze_btn and material.strip() and result_placeholder is not None:
             progress.empty()
             status.error(f"❌ Ошибка: {e}")
             result_placeholder.error(f"Ошибка запроса: {e}")
+
+# ============================================================
+# v6.0.1: async UI -- analyze via /analyze/async + polling
+# ============================================================
+if (
+    "async_btn" in globals()
+    and async_btn
+    and material.strip()
+    and result_placeholder is not None
+):
+    st.info("⚡ Async-анализ запущен -- можно продолжать работу")
+    progress = st.progress(0)
+    status = st.empty()
+    final_status = "queued"
+    job_id = None
+
+    try:
+        r = api_client.post(
+            "/analyze/async",
+            json={
+                "material": material,
+                "filename": filename,
+                "verbose": False,
+                "force": force_flag,
+            },
+            timeout=15,
+        )
+
+        if r.status_code != 200:
+            st.error(f"Ошибка запуска: {r.status_code} {r.text[:200]}")
+        else:
+            job_id = r.json().get("job_id")
+            if not job_id:
+                st.error("Не получен job_id")
+            else:
+                status.info(f"🔖 Job: `{job_id}` -- ожидание...")
+
+                for i in range(90):
+                    time.sleep(2)
+                    try:
+                        s = api_client.get(f"/status/{job_id}", timeout=5).json()
+                    except Exception as poll_err:
+                        st.warning(f"Polling error: {poll_err}")
+                        continue
+
+                    final_status = s.get("status", "?")
+                    elapsed = (i + 1) * 2
+                    progress.progress(min(elapsed / 90.0, 0.99))
+                    status.info(f"⏳ Job: `{job_id}` | статус: **{final_status}** | {elapsed}s")
+
+                    if final_status in ("done", "failed"):
+                        break
+
+                progress.progress(100)
+
+                if final_status == "done":
+                    status.success("✅ Async-анализ завершён")
+                    rep = api_client.get(f"/report/{job_id}", timeout=30).json()
+
+                    result_placeholder.empty()
+                    with result_placeholder.container():
+                        st.markdown("### 📊 Метаданные (async)")
+                        c1, c2, c3 = st.columns(3)
+                        c1.metric("Session", rep.get("session_id", "?"))
+                        c2.metric("Job", job_id)
+                        c3.metric("Status", final_status)
+
+                        st.divider()
+                        st.markdown("### 📄 Отчёт")
+                        st.markdown(rep.get("final_markdown", "").replace("$", "\\$"))
+
+                        st.divider()
+                        st.download_button(
+                            "💾 Скачать Markdown (async)",
+                            data=rep.get("final_markdown", ""),
+                            file_name=f"report_async_{rep.get('session_id', 'unknown')}.md",
+                            mime="text/markdown",
+                            key="async_dl_md",
+                        )
+                else:
+                    s = api_client.get(f"/status/{job_id}", timeout=5).json()
+                    err = s.get("error", "unknown")
+                    status.error(f"❌ Ошибка: {err}")
+                    result_placeholder.error(err)
+
+    except Exception as e:
+        st.error(f"Ошибка async-запроса: {e}")
+        result_placeholder.error(f"Ошибка: {e}")
+
