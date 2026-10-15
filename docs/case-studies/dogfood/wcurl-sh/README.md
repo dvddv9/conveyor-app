@@ -121,14 +121,42 @@ L114:  --proto-default https \
 
 ## Отправлено в upstream
 
-Feedback отправлен как GitHub issue в curl/wcurl:
+**Issue #108** -- hardening suggestions (argument handling + output path):
+https://github.com/curl/wcurl/issues/108
 
-- **URL:** https://github.com/curl/wcurl/issues/108
-- **Статус:** открыт (ожидает ответа команды)
-- **Тон:** hardening suggestion (не багрепорт)
-- **Caveat:** не claiming CVE, `--curl-options` -- by design
+**Issue #109** -- process-level observations (CVE window, breaking change, exit codes):
+https://github.com/curl/wcurl/issues/109
 
-Черновик письма: `C:/AI/wcurl-hardening-suggestion.md`
+Черновики:
+- `C:/AI/wcurl-hardening-suggestion.md`
+- `C:/AI/wcurl-process-issue-draft.md`
+
+Тон: hardening suggestion + process review (не багрепорт).
+Caveat: не claiming CVE, `--curl-options` -- by design.
+
+## Docs analysis (3 extra sessions)
+
+После разбора `wcurl.sh` мы прогнали **документацию** проекта через Vishap:
+
+| Файл | Session | Level | Cost | risk_verdict | Findings |
+|---|---|---|---|---|---|
+| `CHANGELOG.md` | `sess-2026-10-15-061653-00` | D3 | $0.0066 | REQUIRES_REVIEW | CVE-2025-11563 window, breaking CLI, exit codes |
+| `README.md` | `sess-2026-10-15-061653-01` | D3 | $0.0074 | REQUIRES_REVIEW | SEC-1 (critical), SEC-2, missing exit-code contract |
+| `wcurl.md` (manpage) | `sess-2026-10-15-061653-02` | D3 | $0.0063 | REQUIRES_REVIEW | SEC-1, SEC-2, SEC-4, version gates |
+
+**Key finding (CHANGELOG):**
+> CVE-2025-11563 was declared fixed in v2025.11.04 but v2025.11.09 says it was not.
+> 5-day exposure window.
+
+**Key finding (README/wcurl.md):**
+> `--curl-options` -- critical argument injection (CWE-88).
+> `--output` -- path traversal (CWE-22).
+> Exit-code contract undefined for partial multi-URL failures.
+
+Files:
+- `result_sess-2026-10-15-061653-0X.json` -- full results.
+- `report_sess-2026-10-15-061653-0X.md` -- markdown reports.
+- `audit_sess-2026-10-15-061653-0X.json` -- audit trails.
 
 ## Выводы
 
