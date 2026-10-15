@@ -42,8 +42,23 @@ P2-7 regex не работает на Java/C. Добавить:
 risk_verdict + security section -- реализовано.
 - orchestrator.py: scan both risk_nodes AND security.findings
 
-### v5.11.2 -- TODO
-Java/C patterns для P2-7. Оценка: 2-3 дня.
+### v5.11.2 -- DONE (2026-10-15)
+Refactor: consolidate risk verdict into verdict.py.
+- src/pipeline/verdict.py (new): compute_risk_verdict()
+- tests/test_verdict.py (new): 26 tests
+- orchestrator.py: -45 lines, calls compute_risk_verdict()
+- 297 passing (was 271)
+
+### v5.11.3 -- TODO
+UI api_client.py -- объединить headers в src/ui/api_client.py (сейчас 8 дублей в streamlit_app.py).
+Оценка: 0.5-1 день.
+
+### v5.11.4 -- TODO
+anomaly: is_numeric_context() -- единый предикат вместо density+std-ratio guard'ов.
+Оценка: 0.5 дня.
+
+### v5.11.5 -- TODO
+Java/C patterns для P2-7 (regex). Оценка: 2-3 дня.
 ### v6.0 -- React UI + Multi-tenant
 Streamlit заменить на React. 1-2 недели.
 
