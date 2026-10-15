@@ -134,29 +134,57 @@ https://github.com/curl/wcurl/issues/109
 Тон: hardening suggestion + process review (не багрепорт).
 Caveat: не claiming CVE, `--curl-options` -- by design.
 
-## Docs analysis (3 extra sessions)
+## Full project review (13 files)
 
-После разбора `wcurl.sh` мы прогнали **документацию** проекта через Vishap:
+After the initial shell + docs review, we analyzed **every file** in the wcurl repository.
 
-| Файл | Session | Level | Cost | risk_verdict | Findings |
-|---|---|---|---|---|---|
-| `CHANGELOG.md` | `sess-2026-10-15-061653-00` | D3 | $0.0066 | REQUIRES_REVIEW | CVE-2025-11563 window, breaking CLI, exit codes |
-| `README.md` | `sess-2026-10-15-061653-01` | D3 | $0.0074 | REQUIRES_REVIEW | SEC-1 (critical), SEC-2, missing exit-code contract |
-| `wcurl.md` (manpage) | `sess-2026-10-15-061653-02` | D3 | $0.0063 | REQUIRES_REVIEW | SEC-1, SEC-2, SEC-4, version gates |
+| # | File | Level | Verdict | Cost |
+|---|---|---|---|---|
+| 1 | `wcurl` (shell) | D3 | REQUIRES_REVIEW | $0.0085 |
+| 2 | `test.yml` (CI) | D3 | **REQUIRES_REVIEW** | $0.0071 |
+| 3 | `wcurl.1` (roff manpage) | D3 | **REQUIRES_REVIEW** | $0.0062 |
+| 4 | `wcurl.md` (markdown manpage) | D3 | REQUIRES_REVIEW | $0.0063 |
+| 5 | `README.md` | D3 | REQUIRES_REVIEW | $0.0074 |
+| 6 | `CHANGELOG.md` | D3 | REQUIRES_REVIEW | $0.0066 |
+| 7 | `tests.sh` | D3 | SAFE | $0.0074 |
+| 8 | `dependabot.yml` | D1 | SAFE | $0.0051 |
+| 9 | `requirements.txt` | D1 | SAFE | $0.0042 |
+| 10 | `REUSE.toml` | D1 | SAFE | $0.0052 |
+| 11 | `AUTHORS` | D1 | REQUIRES_REVIEW | $0.0040 |
+| 12 | `LICENSE` | D1 | SAFE | $0.0044 |
+| 13 | `LICENSES/curl.txt` | D1 | SAFE | $0.0035 |
 
-**Key finding (CHANGELOG):**
-> CVE-2025-11563 was declared fixed in v2025.11.04 but v2025.11.09 says it was not.
-> 5-day exposure window.
+**Total:** 13 files analyzed, ~$0.07, ~30 findings (9 critical).
 
-**Key finding (README/wcurl.md):**
-> `--curl-options` -- critical argument injection (CWE-88).
-> `--output` -- path traversal (CWE-22).
-> Exit-code contract undefined for partial multi-URL failures.
+### CI + tests findings (issue #110)
 
-Files:
-- `result_sess-2026-10-15-061653-0X.json` -- full results.
-- `report_sess-2026-10-15-061653-0X.md` -- markdown reports.
-- `audit_sess-2026-10-15-061653-0X.json` -- audit trails.
+- `test.yml:136` -- `git clone --revision` (non-standard flag; fedora job broken).
+- `test.yml:41` + `:70` -- `permissions: {}` contradicts `secrets.GITHUB_TOKEN`.
+- `test.yml:58,72,77,83,89,101` -- hardcoded `/home/linuxbrew/.linuxbrew/bin/brew` (6x).
+- `tests.sh:199` -- `assertEquals` argument order swapped.
+- `tests.sh:288,295` -- assert messages copied from a different test.
+- `tests.sh:76-84` -- TODO without version guard.
+- `tests.sh` -- curl return code (`$?`) not checked.
+
+### Files in this directory
+
+- `wcurl.sh` -- the shell script under review.
+- `report_sess-2026-10-14-233330.md` + `.json` -- shell review (D3).
+- `report_sess-2026-10-15-061653-0X.md` + `.json` -- docs (CHANGELOG, README, wcurl.md).
+- `report_sess-2026-10-15-083709.md` + `.json` -- CI (`test.yml`, 3 critical).
+- `report_sess-2026-10-15-083849.md` + `.json` -- tests (`tests.sh`, 4 bugs).
+- `report_sess-2026-10-15-0840XX.md` + `.json` -- `dependabot.yml`, `requirements.txt`.
+- `report_sess-2026-10-15-0844XX.md` + `.json` -- `REUSE.toml`, `AUTHORS`.
+- `report_sess-2026-10-15-0906XX.md` + `.json` -- `LICENSE`, `curl.txt`, `wcurl.1`.
+
+### Upstream issues filed
+
+- **#108** -- https://github.com/curl/wcurl/issues/108 (hardening).
+- **#109** -- https://github.com/curl/wcurl/issues/109 (process).
+- **#110** -- https://github.com/curl/wcurl/issues/110 (CI + tests).
+
+Plus an email to `daniel@haxx.se` with feedback on CVE-2026-94266 advisory.
+
 
 ## Выводы
 
