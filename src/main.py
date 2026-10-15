@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=f"{APP_NAME} API",
-    description="Vishap V6.0.1 — 6-стадийный LLM-конвейер для анализа кода",
+    description="Vishap V6.0.2 — 6-стадийный LLM-конвейер для анализа кода",
     version="5.9.6",
     lifespan=lifespan,
 )

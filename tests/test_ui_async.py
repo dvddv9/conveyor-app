@@ -19,8 +19,13 @@ def _read_ui() -> str:
 # ============================================================
 
 def test_ui_has_v6_version():
+    """UI must contain the version from pyproject.toml (# v6.0.2-fix: read version from pyproject)."""
+    import tomllib
+    from pathlib import Path as _P
+    pyproject = _P(__file__).parent.parent / "pyproject.toml"
+    version = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]["version"]
     src = _read_ui()
-    assert "V6.0.0" in src, "expected V6.0.0 in UI"
+    assert f"V{version}" in src, f"expected V{version} in UI"
 
 
 def test_ui_no_old_version():

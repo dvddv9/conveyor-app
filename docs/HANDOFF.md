@@ -104,6 +104,29 @@ UI: async analysis, LLM mode sidebar, dataflow rendering, custom theme.
 - 435 passing (was 416)
 - Async UI works end-to-end (34k chars, 42s)
 
+### v6.0.2 -- DONE (2026-10-16)
+
+Bugfix: test isolation + version test drift.
+
+**Fixed:**
+- `tests/test_ui_async.py::test_ui_has_v6_version` -- now reads version from
+  `pyproject.toml` via `tomllib`, resilient to future bumps (was hardcoded
+  V6.0.0, drifted at v6.0.1).
+- `tests/conftest.py` -- sets `VISHAP_DATA_DIR` to a session-scoped tmp dir
+  via `pytest_configure` hook, BEFORE collection. Fixes PermissionError on
+  Windows: tests wrote audit files to `~/.vishap/data` (outside workspace,
+  blocked by Defender / sandbox / file locks).
+
+**Real test count:** 456 passed, 0 failed (handoff previously claimed 435).
+
+**New test file:** `tests/test_conftest_data_dir.py` (4 tests).
+
+**Note:** `run_tests.py` uses `subprocess.run([...])` without `env=`; it
+inherits the parent env. `conftest.py` works because `pytest_configure`
+runs before collection, not because env is propagated.
+
+---
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
