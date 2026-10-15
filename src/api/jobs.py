@@ -1,80 +1,80 @@
 # -*- coding: utf-8 -*-
-"""In-memory job store for async analysis (v6.0).
+"""Backward-compat shim for job store (v6.0.3).
 
-Statuses:
-  queued  -- job created, not started
-  running -- pipeline in progress
-  done    -- completed, result available
-  failed  -- error occurred, see error field
+Legacy module-level API now delegates to a JobStore instance.
+Backend selected via JOB_STORE env (memory | postgres; postgres -> v6.1).
 """
-import uuid
-from datetime import datetime, UTC
-from threading import Lock
-from typing import Any
+import os
+from datetime import datetime
+
+from src.api.job_store import Job, JobStatus, JobStore
+from src.api.job_store_memory import InMemoryJobStore
 
 
-_jobs: dict[str, dict] = {}
-_lock = Lock()
+_store: JobStore | None = None
 
+
+def get_store() -> JobStore:
+    global _store
+    if _store is None:
+        backend = os.getenv("JOB_STORE", "memory").lower()
+        if backend == "memory":
+            _store = InMemoryJobStore()
+        elif backend == "postgres":
+            raise NotImplementedError("PostgresJobStore lands in v6.1")
+        else:
+            raise ValueError(f"Unknown JOB_STORE={backend!r}")
+    return _store
+
+
+def _job_to_dict(job: Job) -> dict:
+    """Convert Job to legacy dict shape (status as str, ISO datetimes)."""
+    return {
+        "job_id": job.job_id,
+        "status": job.status.value,  # legacy: str, НЕ JobStatus
+        "filename": job.filename,
+        "created_at": job.created_at.isoformat(),
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "finished_at": job.finished_at.isoformat() if job.finished_at else None,
+        "result": job.result,
+        "error": job.error,
+        "tenant_id": job.tenant_id,  # новое поле, не мешает
+    }
+
+
+# --- Legacy API (сохраняем сигнатуры) ---
 
 def create_job(filename: str = "unknown") -> str:
-    """Create a new job, return job_id."""
-    job_id = f"job-{uuid.uuid4().hex[:12]}"
-    with _lock:
-        _jobs[job_id] = {
-            "job_id": job_id,
-            "status": "queued",
-            "filename": filename,
-            "created_at": datetime.now(UTC).isoformat(),
-            "started_at": None,
-            "finished_at": None,
-            "result": None,
-            "error": None,
-        }
-    return job_id
+    return get_store().create(filename=filename).job_id
 
 
 def get_job(job_id: str) -> dict | None:
-    """Get job by id, or None."""
-    with _lock:
-        job = _jobs.get(job_id)
-        return dict(job) if job else None
+    job = get_store().get(job_id)
+    return _job_to_dict(job) if job else None
 
 
 def update_job(job_id: str, **kwargs) -> bool:
-    """Update job fields. Returns True if job existed."""
-    with _lock:
-        if job_id not in _jobs:
-            return False
-        _jobs[job_id].update(kwargs)
-        return True
+    # Legacy: kwargs — dict-поля. Конвертируем status-строку в JobStatus.
+    if "status" in kwargs and isinstance(kwargs["status"], str):
+        kwargs["status"] = JobStatus(kwargs["status"])
+    # v6.0.3-shim-fix: main.py passes started_at/finished_at as ISO strings.
+    for dt_field in ("started_at", "finished_at"):
+        if dt_field in kwargs and isinstance(kwargs[dt_field], str):
+            kwargs[dt_field] = datetime.fromisoformat(kwargs[dt_field])
+    return get_store().update(job_id, **kwargs) is not None
 
 
 def delete_job(job_id: str) -> bool:
-    """Delete job. Returns True if existed."""
-    with _lock:
-        if job_id in _jobs:
-            del _jobs[job_id]
-            return True
-        return False
+    return get_store().delete(job_id)
 
 
 def list_jobs(limit: int = 50) -> list[dict]:
-    """List jobs (newest last), up to limit."""
-    with _lock:
-        items = list(_jobs.values())
-    return items[-limit:]
+    return [_job_to_dict(j) for j in get_store().list_jobs(limit=limit)]
 
 
 def clear_jobs() -> int:
-    """Clear all jobs, return count removed."""
-    with _lock:
-        n = len(_jobs)
-        _jobs.clear()
-    return n
+    return get_store().clear()
 
 
 def job_count() -> int:
-    """Current number of jobs."""
-    with _lock:
-        return len(_jobs)
+    return get_store().count()

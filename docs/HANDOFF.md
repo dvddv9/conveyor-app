@@ -127,6 +127,37 @@ runs before collection, not because env is propagated.
 
 ---
 
+### v6.0.3 -- DONE (2026-10-16)
+
+Refactor: JobStore abstraction (Protocol + InMemory).
+
+**Added:**
+- `src/api/job_store.py` -- `JobStore` Protocol, `Job` frozen dataclass, `JobStatus` enum.
+- `src/api/job_store_memory.py` -- `InMemoryJobStore` (thread-safe via RLock).
+
+**Changed:**
+- `src/api/jobs.py` -- now a backward-compat shim. Legacy module-level API
+  (create_job, get_job, update_job, delete_job, list_jobs, clear_jobs, job_count)
+  delegates to a singleton `JobStore` selected via `JOB_STORE` env
+  (memory | postgres; postgres -> v6.1).
+- `run_tests.py` -- registered `test_job_store.py` and `test_jobs_shim_iso.py`.
+
+**Fixed:**
+- `update_job` now converts ISO-string `started_at`/`finished_at` to `datetime`.
+  Production bug: `main.py` passes ISO strings; `_job_to_dict` would call
+  `.isoformat()` on a `str` -> AttributeError on `/status/{job_id}`.
+  Regression tests: `tests/test_jobs_shim_iso.py` (4 tests).
+
+**Tests:**
+- `tests/test_job_store.py` (new) -- 15 tests (Protocol-based).
+- `tests/test_jobs_shim_iso.py` (new) -- 4 tests.
+- Backward compat: `test_async_api.py` still 20/20 (main.py untouched).
+- Full run: 458 passed, 0 failed.
+
+**Foundation for v6.1:** PostgresJobStore via `JOB_STORE=postgres` env.
+
+---
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
