@@ -12,6 +12,7 @@ license = "AGPL-3.0-or-later"
 authors = [{name = "David (dvddv9)", email = "hndav9@yahoo.com"}]
 keywords = ["vishap", "vishap-analyzer", "security", "sast", "sca", "sarif", "owasp", "llm", "multi-material", "code-review", "audit-trail", "compliance", "pii", "deepseek", "ollama"]
 
+# v6.1-fix: block1+block2 deps
 dependencies = [
     "requests>=2.32.0",
     "python-dotenv>=1.0.0",
@@ -26,6 +27,10 @@ dependencies = [
     "tenacity>=9.2.0",
     "httpx>=0.27.0",
     "cyclonedx-bom>=7.0.0",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    "structlog>=24.0.0",
     "pyyaml>=6.0.0",
 ]
 
