@@ -9,6 +9,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src.api.job_store import Job, JobStatus
+from src.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 
 class Base(DeclarativeBase):
@@ -77,6 +80,7 @@ class PostgresJobStore:
         async with self._session_factory() as session:
             session.add(model)
             await session.commit()
+        log.info("job_created", job_id=job_id, filename=filename, backend="postgres")
         return self._to_job(model)
 
     async def get(self, job_id: str) -> Job | None:
@@ -99,7 +103,9 @@ class PostgresJobStore:
                 setattr(model, field, value)
             model.updated_at = datetime.now(UTC)
             await session.commit()
-        return self._to_job(model)
+        job = self._to_job(model)
+        log.info("job_updated", job_id=job_id, status=job.status.value, backend="postgres")
+        return job
 
     async def delete(self, job_id: str) -> bool:
         async with self._session_factory() as session:
@@ -108,6 +114,7 @@ class PostgresJobStore:
                 return False
             await session.delete(model)
             await session.commit()
+        log.info("job_deleted", job_id=job_id, backend="postgres")
         return True
 
     async def list_jobs(self, limit: int = 50) -> list[Job]:

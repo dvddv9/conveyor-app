@@ -77,5 +77,9 @@ MAX_TOKENS_STAGE4 = 16000
 PORT = 5001
 APP_NAME = "Vishap"
 
+# === Логирование (structlog, v6.1) ===
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_FORMAT = os.getenv("LOG_FORMAT", "pretty")  # pretty | json
+
 # === Данные ===
 DATA_DIR.mkdir(parents=True, exist_ok=True)

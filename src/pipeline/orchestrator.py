@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 import sys
+import time
 from datetime import datetime, UTC
 from pathlib import Path
 
@@ -39,6 +40,9 @@ from src.tools.patterns import CRITICAL_RISK_PATTERNS
 from src.tools.baseline import apply_baseline
 from src.tools.deps import build_import_graph, collect_context_files
 from src.pipeline.verdict import compute_risk_verdict  # v5.11.2: consolidated verdict
+from src.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 
 def format_runbook_md(audit: dict) -> str:
@@ -372,6 +376,19 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
 
 # === Pipeline ===
 
+def _timed_stage(log, stage: str, session_id: str, fn, *args, **kwargs):
+    """Run one pipeline stage with structlog timing (start/done/failed)."""
+    t0 = time.time()
+    log.info("stage_started", stage=stage, session_id=session_id)
+    try:
+        result = fn(*args, **kwargs)
+    except Exception as e:
+        log.error("stage_failed", stage=stage, error=str(e), exc_info=True)
+        raise
+    log.info("stage_done", stage=stage, duration_ms=round((time.time() - t0) * 1000, 2))
+    return result
+
+
 def run_pipeline(material: str, filename: str, verbose: bool = True,
                  session_suffix: str = "",
                  baseline_path: str = None,
@@ -385,6 +402,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     truncated = False
     original_size = len(material)
     session_id = f"sess-{datetime.now(UTC).strftime('%Y-%m-%d-%H%M%S')}{session_suffix}"
+    _pipeline_start = time.time()
     material_hash_full = compute_hash(material, context=f"{filename}:{session_id}")  # hash BEFORE truncation
     if original_size > MAX_CHARS:
         material = material[:MAX_CHARS]
@@ -415,7 +433,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         original_audit_pii = {}
         original_audit_compliance = []
 
-    stage0 = stage0_orchestrator(material, filename)
+    stage0 = _timed_stage(log, "stage0", session_id, stage0_orchestrator, material, filename)
     # Dogfood fix: always set real session_id (LLM may hallucinate or omit)
     if isinstance(stage0, dict):
         stage0["session_id"] = session_id
@@ -558,6 +576,14 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
             print(f"Результат: {result_file}")
             print()
 
+        log.info(
+            "pipeline_done",
+            session_id=session_id,
+            level=level,
+            emergency=True,
+            duration_ms=round((time.time() - _pipeline_start) * 1000, 2),
+        )
+
         return {
             "session_id": session_id,
             "stage0": stage0,
@@ -568,7 +594,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
     if verbose:
         print("[Stage 1] Scanner...")
-    stage1 = stage1_scanner(material, {"stage0": stage0})
+    stage1 = _timed_stage(log, "stage1", session_id, stage1_scanner, material, {"stage0": stage0})
 
     # === Dogfood P1: deterministic SAST/SCA before Stage 2 ===
     _lang = detect_language(filename)
@@ -612,7 +638,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     _stage2_ctx = {"stage0": stage0, "stage1": stage1}
     if _ctx_files:
         _stage2_ctx["context_files"] = _ctx_files
-    stage2 = stage2_analyst(material, _stage2_ctx)
+    stage2 = _timed_stage(log, "stage2", session_id, stage2_analyst, material, _stage2_ctx)
     risk_nodes = stage2.get("risk_nodes", [])
     if verbose:
         print(f"  → risk nodes: {len(risk_nodes)}")
@@ -622,7 +648,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     if research_first:
         if verbose:
             print("[Stage 3] Researcher...")
-        stage3 = stage3_researcher(material, {"stage0": stage0, "stage1": stage1, "stage2": stage2})
+        stage3 = _timed_stage(log, "stage3", session_id, stage3_researcher, material, {"stage0": stage0, "stage1": stage1, "stage2": stage2})
         if verbose:
             print()
 
@@ -631,7 +657,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     context_4 = {"stage0": stage0, "stage1": stage1, "stage2": stage2}
     if stage3:
         context_4["stage3"] = stage3
-    stage4 = stage4_synthesizer(material, context_4)
+    stage4 = _timed_stage(log, "stage4", session_id, stage4_synthesizer, material, context_4)
     if verbose:
         print(f"  → options: {len(stage4.get('options', []))}")
         print()
@@ -645,7 +671,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     }
     if stage3:
         context_5["stage3"] = stage3
-    final_markdown = stage5_transmitter(material, context_5)
+    final_markdown = _timed_stage(log, "stage5", session_id, stage5_transmitter, material, context_5)
     # Strip any [AUDIT_TRAIL]/[COMPLETENESS] from LLM output (pipeline adds its own)
     final_markdown = strip_llm_audit_blocks(final_markdown)
     # Dogfood fix: sanitize hallucinated session_id in markdown
@@ -790,6 +816,13 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
         print("=== Pipeline завершён ===")
         print(f"Результат: {result_file}")
         print()
+
+    log.info(
+        "pipeline_done",
+        session_id=session_id,
+        level=level,
+        duration_ms=round((time.time() - _pipeline_start) * 1000, 2),
+    )
 
     return result
 

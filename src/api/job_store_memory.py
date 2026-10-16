@@ -6,6 +6,9 @@ from datetime import datetime, UTC
 from threading import RLock
 
 from src.api.job_store import Job, JobStatus
+from src.observability.logging import get_logger
+
+log = get_logger(__name__)
 
 
 class InMemoryJobStore:
@@ -29,6 +32,7 @@ class InMemoryJobStore:
         )
         with self._lock:
             self._jobs[job_id] = job
+        log.info("job_created", job_id=job_id, filename=filename, backend="memory")
         return job
 
     def get(self, job_id: str) -> Job | None:
@@ -42,12 +46,15 @@ class InMemoryJobStore:
                 return None
             new = replace(old, updated_at=datetime.now(UTC), **kwargs)
             self._jobs[job_id] = new
+            _status = new.status.value if isinstance(new.status, JobStatus) else new.status
+            log.info("job_updated", job_id=job_id, status=_status, backend="memory")
             return new
 
     def delete(self, job_id: str) -> bool:
         with self._lock:
             if job_id in self._jobs:
                 del self._jobs[job_id]
+                log.info("job_deleted", job_id=job_id, backend="memory")
                 return True
             return False
 

@@ -4,6 +4,8 @@ Vishap — FastAPI сервер.
 """
 from contextlib import asynccontextmanager
 import json
+import time
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -13,6 +15,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from src.config import APP_NAME, PORT, DATA_DIR
+from src.observability.logging import (
+    setup_logging,
+    get_logger,
+    bind_request_id,
+    clear_context,
+)
 from src.pipeline.orchestrator import run_pipeline
 from src.pipeline.batch import run_batch
 from src.storage.history import load_history, add_entry
@@ -33,6 +41,11 @@ async def lifespan(app: FastAPI):
     print(f"=== {APP_NAME} API остановлен ===")
 
 
+# structlog: pretty in dev, JSON in prod (LOG_FORMAT=json)
+setup_logging()
+log = get_logger(__name__)
+
+
 app = FastAPI(
     title=f"{APP_NAME} API",
     description="Vishap V6.0.3 — 6-стадийный LLM-конвейер для анализа кода",
@@ -48,6 +61,37 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "X-API-Key"],
 )
+
+
+@app.middleware("http")
+async def log_requests(request, call_next):
+    request_id = str(uuid.uuid4())[:8]
+    bind_request_id(request_id)
+    start = time.time()
+    try:
+        response = await call_next(request)
+        duration_ms = round((time.time() - start) * 1000, 2)
+        log.info(
+            "http_request",
+            method=request.method,
+            path=request.url.path,
+            status=response.status_code,
+            duration_ms=duration_ms,
+        )
+        return response
+    except Exception as e:
+        duration_ms = round((time.time() - start) * 1000, 2)
+        log.error(
+            "http_request_error",
+            method=request.method,
+            path=request.url.path,
+            error=str(e),
+            duration_ms=duration_ms,
+            exc_info=True,
+        )
+        raise
+    finally:
+        clear_context()
 
 
 # === Pydantic-схемы ===
