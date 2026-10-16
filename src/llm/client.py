@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Unified LLM client with fallback (P2-11)."""
 import os
 
@@ -12,6 +12,7 @@ from src.config import (
     OPENAI_API_KEY,
     DEEPSEEK_API_KEY,
 )
+from src.llm._observe import observe_llm_result
 
 
 def _resolve_provider() -> str:
@@ -46,38 +47,38 @@ def chat(system: str, user: str,
     if provider == "custom":
         result = openai_compatible.chat(system, user, temperature, max_tokens)
         result["mode"] = "custom"
-        return result
+        return observe_llm_result(result)
 
     if provider == "openai":
         result = openai_compatible.chat(system, user, temperature, max_tokens)
         result["mode"] = "openai"
-        return result
+        return observe_llm_result(result)
 
     if provider == "deepseek":
         result = deepseek_client.chat(system, user, temperature, max_tokens)
         result["mode"] = "cloud"
-        return result
+        return observe_llm_result(result)
 
     if provider == "ollama":
         result = ollama_client.chat(system, user, temperature)
         result["mode"] = "local"
-        return result
+        return observe_llm_result(result)
 
     try:
         result = deepseek_client.chat(system, user, temperature, max_tokens)
         result["mode"] = "cloud"
-        return result
+        return observe_llm_result(result)
     except Exception as e:
         try:
             result = ollama_client.chat(system, user, temperature)
             result["mode"] = "local"
-            return result
+            return observe_llm_result(result)
         except Exception as e2:
-            return {
+            return observe_llm_result({
                 "text": f"[LLM error] deepseek: {e}; ollama: {e2}",
                 "tokens_in": 0, "tokens_out": 0,
                 "model": "none", "mode": "error",
-            }
+            }, status="error")
 
 
 def current_provider() -> str:

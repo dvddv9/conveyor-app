@@ -7,6 +7,7 @@
 """
 from src.storage.mode import get_mode
 from src.llm import async_deepseek_client, async_ollama_client
+from src.llm._observe import observe_llm_result
 
 
 async def async_chat(system: str, user: str,
@@ -18,27 +19,27 @@ async def async_chat(system: str, user: str,
     if mode == "local":
         result = await async_ollama_client.chat(system, user, temperature)
         result["mode"] = "local"
-        return result
+        return observe_llm_result(result)
 
     if mode == "cloud":
         result = await async_deepseek_client.chat(system, user, temperature, max_tokens)
         result["mode"] = "cloud"
-        return result
+        return observe_llm_result(result)
 
     # auto
     try:
         result = await async_deepseek_client.chat(system, user, temperature, max_tokens)
         result["mode"] = "cloud"
-        return result
+        return observe_llm_result(result)
     except Exception as e:
         print(f"[Vishap] DeepSeek недоступен: {e}. Fallback → локально.")
         try:
             result = await async_ollama_client.chat(system, user, temperature)
             result["mode"] = "local"
-            return result
+            return observe_llm_result(result)
         except Exception as e2:
-            return {
+            return observe_llm_result({
                 "text": f"[Ошибка LLM] cloud: {e}; local: {e2}",
                 "tokens_in": 0, "tokens_out": 0,
                 "model": "none", "mode": "error",
-            }
+            }, status="error")

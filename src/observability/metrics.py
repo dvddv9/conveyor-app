@@ -33,6 +33,18 @@ HTTP_REQUESTS = Counter(
     ["method", "endpoint", "status"],
     registry=_REGISTRY,
 )
+LLM_TOKENS = Counter(
+    "vishap_llm_tokens_total",
+    "Total LLM tokens consumed.",
+    ["model", "type"],
+    registry=_REGISTRY,
+)
+LLM_REQUESTS = Counter(
+    "vishap_llm_requests_total",
+    "Total LLM API requests.",
+    ["model", "status"],
+    registry=_REGISTRY,
+)
 
 
 def observe_job_created(status: str) -> None:
@@ -49,6 +61,16 @@ def observe_job_finished(status: str, duration_seconds: float) -> None:
 def observe_http_request(method: str, endpoint: str, status: int) -> None:
     """Increment the HTTP request counter."""
     HTTP_REQUESTS.labels(method=method, endpoint=endpoint, status=str(status)).inc()
+
+
+def observe_llm_tokens(model: str, token_type: str, count: int) -> None:
+    """Increment LLM token counter (type: prompt | completion)."""
+    LLM_TOKENS.labels(model=model, type=token_type).inc(count)
+
+
+def observe_llm_request(model: str, status: str) -> None:
+    """Increment LLM request counter (status: success | error)."""
+    LLM_REQUESTS.labels(model=model, status=status).inc()
 
 
 def get_metrics_output() -> str:

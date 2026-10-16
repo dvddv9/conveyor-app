@@ -81,5 +81,8 @@ APP_NAME = "Vishap"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FORMAT = os.getenv("LOG_FORMAT", "pretty")  # pretty | json
 
+# === Безопасность (Fernet, v6.1) ===
+FERNET_KEY = os.getenv("FERNET_KEY", "")
+
 # === Данные ===
 DATA_DIR.mkdir(parents=True, exist_ok=True)
