@@ -44,6 +44,7 @@ def main():
     rc |= run("tests/test_async_api.py")
     rc |= run("tests/test_job_store.py")
     rc |= run("tests/test_jobs_shim_iso.py")
+    rc |= run("tests/test_job_store_postgres.py")
     rc |= run("tests/test_ui_headers.py")
     rc |= run("tests/test_ui_async.py")
     rc |= run("tests/test_ui_badge_version.py")

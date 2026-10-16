@@ -21,7 +21,11 @@ def get_store() -> JobStore:
         if backend == "memory":
             _store = InMemoryJobStore()
         elif backend == "postgres":
-            raise NotImplementedError("PostgresJobStore lands in v6.1")
+            from src.api.job_store_postgres import PostgresJobStore
+            db_url = os.getenv("DATABASE_URL")
+            if not db_url:
+                raise ValueError("DATABASE_URL required for JOB_STORE=postgres")
+            _store = PostgresJobStore(db_url)
         else:
             raise ValueError(f"Unknown JOB_STORE={backend!r}")
     return _store
