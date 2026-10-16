@@ -38,6 +38,19 @@ JobStore abstraction -- foundation for v6.1 (PostgreSQL).
   (production bug: /status/{job_id} would crash on .isoformat()).
 - 461 tests passing, 0 failed.
 
+## What's new in v6.1 (in progress)
+
+Postgres + Observability + Security.
+
+- **PostgreSQL job store** (Block 1) -- `PostgresJobStore` via SQLAlchemy 2.0 async
+  (`JOB_STORE=postgres`, alembic migration).
+- **Observability (structlog)** (Block 2) -- structured logging: pretty in dev, JSON in prod
+  (`LOG_LEVEL`, `LOG_FORMAT`), request/job-scoped contextvars.
+- **Observability (Prometheus)** (Block 3) -- `GET /metrics` (text/plain; version=0.0.4):
+  job counters, job duration histogram, HTTP request counters, LLM token counters.
+- **Security (Fernet)** (Block 4) -- `src/security/fernet.py`: encrypt/decrypt secrets
+  before persisting (`FERNET_KEY` env).
+
 ## What's new in v6.0.2
 
 Bugfix: test isolation + version test drift.
@@ -983,7 +996,7 @@ git --no-pager log --oneline
 
 - **pandas is not used** — Windows Code Integrity Policy may block `pandas._libs.*.pyd`. Native `st.dataframe(list[dict])` is used instead.
 
-- **Tests** — 502 (`tests/`). Run: `python run_tests.py`.
+- **Tests** — 538 (`tests/`). Run: `python run_tests.py`.
   Coverage: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
 - **Stage 3/4 parallelism** — currently sequential.
@@ -1575,7 +1588,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**502 tests passing** across 38 files:
+**538 tests passing** across 43 files:
 
 | File | Tests |
 |---|---|
@@ -1591,13 +1604,15 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_dataflow.py | 16 |
 | tests/test_deps.py | 17 |
 | tests/test_diff.py | 15 |
-| tests/test_e2e.py | 3 |
+| tests/test_fernet.py | 8 |
 | tests/test_job_store.py | 15 |
 | tests/test_job_store_postgres.py | 16 |
 | tests/test_job_store_postgres_integration.py | 5 |
 | tests/test_jobs_shim_iso.py | 4 |
 | tests/test_llm_providers.py | 16 |
 | tests/test_logging.py | 15 |
+| tests/test_metrics.py | 12 |
+| tests/test_observe.py | 6 |
 | tests/test_patterns.py | 9 |
 | tests/test_patterns_c.py | 35 |
 | tests/test_patterns_java.py | 41 |
@@ -1612,10 +1627,13 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_sbom.py | 14 |
 | tests/test_security_md.py | 5 |
 | tests/test_tools.py | 33 |
+| tests/test_token_metrics.py | 6 |
 | tests/test_ui_async.py | 20 |
 | tests/test_ui_badge_version.py | 2 |
 | tests/test_ui_headers.py | 13 |
 | tests/test_verdict.py | 26 |
+| tests/test_verdict_sec_fallback.py | 3 |
+| tests/test_verdict_threat_model.py | 4 |
 | tests/test_version_sync.py | 2 |
 
 Run:
