@@ -110,6 +110,7 @@ with st.sidebar:
         "auto": "🔄 Auto (DeepSeek → Ollama)",
         "cloud": "☁️ Cloud (DeepSeek)",
         "local": "💻 Local (Ollama)",
+        "harness": "🎭 Harness (DSH)",
     }
     try:
         _r = api_client.get("/mode", timeout=3)

@@ -10,7 +10,7 @@ from src.config import DATA_DIR
 
 MODE_FILE = DATA_DIR / "mode.json"
 DEFAULT_MODE = "auto"
-VALID_MODES = ("auto", "cloud", "local")
+VALID_MODES = ("auto", "cloud", "local", "harness")
 
 
 def get_mode() -> str:

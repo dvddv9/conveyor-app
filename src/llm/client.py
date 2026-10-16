@@ -21,6 +21,8 @@ def _resolve_provider() -> str:
 
     if explicit == "auto":
         mode = get_mode()
+        if mode == "harness":
+            return "harness"
         if mode == "local":
             return "ollama"
         if mode == "cloud":
