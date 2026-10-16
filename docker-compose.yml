@@ -30,6 +30,9 @@ services:
     environment:
       - API_URL=http://api:5001
       - CONVEYOR_API_KEY=${CONVEYOR_API_KEY:-}
+      - VISHAP_DATA_DIR=/home/vishap/.vishap/data
+    volumes:
+      - vishap_data:/home/vishap/.vishap/data
     depends_on:
       api:
         condition: service_healthy
