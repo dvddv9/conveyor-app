@@ -253,6 +253,48 @@ Harness работает в песочнице DSH и НЕ может:
 
 ---
 
+### Блок 1 -- DONE (2026-10-16)
+
+PostgresJobStore via SQLAlchemy 2.0 async.
+
+**Создано:**
+- src/api/job_store_postgres.py -- PostgresJobStore + JobModel (jobs table)
+  - 7 async methods: create/get/update/delete/list_jobs/clear/count
+  - ISO-string started_at/finished_at -> datetime in update() (v6.0.3-fix repeated)
+- alembic.ini, alembic/env.py, alembic/script.py.mako, alembic/versions/001_initial_jobs.py
+- tests/test_job_store_postgres.py -- 16 unit tests (mocks)
+- tests/test_job_store_postgres_integration.py -- 5 integration (skipif TEST_POSTGRES_URL)
+
+**Изменено:**
+- src/api/jobs.py -- get_store() postgres branch imports PostgresJobStore
+- docker-compose.yml -- add postgres:16-alpine + postgres_data volume + healthcheck
+- .env.example -- add DATABASE_URL, POSTGRES_PASSWORD
+- requirements.txt -- sqlalchemy[asyncio]>=2.0.30, asyncpg>=0.29.0, alembic>=1.13.0
+- run_tests.py -- register test_job_store_postgres.py
+
+**Схема БД (table jobs):**
+- job_id PK (varchar(32))
+- status indexed (varchar(16))
+- filename (varchar(255))
+- created_at, updated_at (timestamptz)
+- started_at, finished_at (timestamptz, nullable)
+- tenant_id indexed (varchar(64), nullable)
+- result (jsonb)
+- error (text)
+
+**Тесты:**
+- 16 unit passed
+- 5 integration passed (с живым Postgres через docker compose + alembic upgrade head)
+- Полный прогон: 478 passed + 5 skipped (integration, если нет env) + 3 e2e
+
+**Commit:** 250155f
+
+**Что в работе (v6.1.x):**
+- RLS / multi-tenant isolation
+- structlog + JSON logs (Блок 2)
+- Prometheus /metrics (Блок 3)
+- token counters + Fernet (Блок 4)
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
