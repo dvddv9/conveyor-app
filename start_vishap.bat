@@ -2,7 +2,7 @@
 cd /d C:\AI\conveyor_app
 
 echo ========================================
-echo   Vishap V5.8 - Starting
+echo   Vishap V6.0.3 - Starting
 echo ========================================
 echo.
 
