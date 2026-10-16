@@ -291,9 +291,48 @@ PostgresJobStore via SQLAlchemy 2.0 async.
 
 **Что в работе (v6.1.x):**
 - RLS / multi-tenant isolation
-- structlog + JSON logs (Блок 2)
 - Prometheus /metrics (Блок 3)
 - token counters + Fernet (Блок 4)
+
+### Блок 2 -- DONE (2026-10-16)
+
+structlog + JSON logs + Docker fixes.
+
+**Создано:**
+- src/observability/__init__.py, logging.py (setup_logging, get_logger, bind_job_id, bind_request_id, clear_context)
+- tests/test_logging.py (15 тестов)
+
+**Изменено:**
+- src/config.py: LOG_LEVEL, LOG_FORMAT
+- src/main.py: setup_logging + HTTP middleware log_requests
+- src/api/job_store_memory.py, job_store_postgres.py: log job events
+- src/pipeline/orchestrator.py: _timed_stage + stage events
+- requirements.txt: +structlog>=24.0.0
+- pyproject.toml: +sqlalchemy[asyncio], asyncpg, alembic, structlog (Docker fix)
+- .env.example: +LOG_LEVEL, LOG_FORMAT
+- run_tests.py: register test_logging.py
+
+**Docker fixes (попутно, все запушены):**
+- docker-compose.yml: vishap-ui healthcheck on 8501
+- docker-compose.yml: vishap-ui volume vishap_data + VISHAP_DATA_DIR
+- pyproject.toml: 4 deps для Docker pip install .
+- streamlit_app.py: file_name без .md
+
+**Тесты:**
+- test_logging.py: 15 passed
+- test_ui_async.py: 20 passed (+1 download test)
+- На host: 494 passed (без e2e). Всего collected: 502.
+
+**Commits:**
+- 84534c5 feat(observability): structlog + JSON logs (v6.1-block2)
+- 9a0ee1d fix(build): add deps to pyproject.toml
+- 13f02d7 fix(docker): mount vishap_data in vishap-ui
+- 8847edc fix(ui): remove .md from download_button file_name
+- 0c47243 docs(readme): bump tests count 486 -> 502
+
+**Что в работе (следующие сессии):**
+- Блок 3: Prometheus /metrics (prometheus-client)
+- Блок 4: token counters + Fernet
 
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
