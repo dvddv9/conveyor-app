@@ -73,3 +73,6 @@ AGENTS.md
 # v6.1-fix: pipeline temp files
 /tmp*
 vishap-tests-*/
+
+# temp: docker cp data for case-study
+data_curl/
