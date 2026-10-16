@@ -69,3 +69,6 @@ _*.txt
 .tmp_data/
 pytest-of-*/
 AGENTS.md
+
+# v6.1-fix: pipeline temp files
+/tmp*
