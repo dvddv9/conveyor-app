@@ -3,7 +3,7 @@
 import os
 
 from src.storage.mode import get_mode
-from src.llm import deepseek_client, ollama_client
+from src.llm import deepseek_client, ollama_client, harness_client
 from src.llm import openai_compatible
 
 from src.config import (
@@ -26,7 +26,7 @@ def _resolve_provider() -> str:
         if mode == "cloud":
             return "deepseek"
 
-    if explicit in ("deepseek", "openai", "custom", "ollama"):
+    if explicit in ("deepseek", "openai", "custom", "ollama", "harness"):
         return explicit
 
     if CUSTOM_BASE_URL and CUSTOM_API_KEY:
@@ -43,6 +43,11 @@ def chat(system: str, user: str,
          max_tokens: int = 2000) -> dict:
     """Returns {text, tokens_in, tokens_out, model, mode}."""
     provider = _resolve_provider()
+
+    if provider == "harness":
+        h = harness_client.HarnessClient()
+        result = h.chat(user, system)
+        return observe_llm_result(result)
 
     if provider == "custom":
         result = openai_compatible.chat(system, user, temperature, max_tokens)
