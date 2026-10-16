@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -21,6 +21,7 @@ from src.observability.logging import (
     bind_request_id,
     clear_context,
 )
+from src.observability.metrics import get_metrics_output, observe_http_request
 from src.pipeline.orchestrator import run_pipeline
 from src.pipeline.batch import run_batch
 from src.storage.history import load_history, add_entry
@@ -78,6 +79,7 @@ async def log_requests(request, call_next):
             status=response.status_code,
             duration_ms=duration_ms,
         )
+        observe_http_request(request.method, request.url.path, response.status_code)
         return response
     except Exception as e:
         duration_ms = round((time.time() - start) * 1000, 2)
@@ -189,6 +191,14 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
+
+@app.get("/metrics")
+async def metrics():
+    return Response(
+        content=get_metrics_output(),
+        media_type="text/plain; version=0.0.4",
+    )
 
 
 @app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])

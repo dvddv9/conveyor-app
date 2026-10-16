@@ -27,3 +27,4 @@ sqlalchemy[asyncio]>=2.0.30
 asyncpg>=0.29.0
 alembic>=1.13.0
 structlog>=24.0.0
+prometheus-client>=0.20.0

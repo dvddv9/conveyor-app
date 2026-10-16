@@ -10,6 +10,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from src.api.job_store import Job, JobStatus
 from src.observability.logging import get_logger
+from src.observability.metrics import observe_job_created, observe_job_finished
 
 log = get_logger(__name__)
 
@@ -81,6 +82,7 @@ class PostgresJobStore:
             session.add(model)
             await session.commit()
         log.info("job_created", job_id=job_id, filename=filename, backend="postgres")
+        observe_job_created(JobStatus.QUEUED.value)
         return self._to_job(model)
 
     async def get(self, job_id: str) -> Job | None:
@@ -99,12 +101,18 @@ class PostgresJobStore:
             model = await session.get(JobModel, job_id)
             if model is None:
                 return None
+            old_status = model.status
             for field, value in kwargs.items():
                 setattr(model, field, value)
             model.updated_at = datetime.now(UTC)
             await session.commit()
         job = self._to_job(model)
         log.info("job_updated", job_id=job_id, status=job.status.value, backend="postgres")
+        if job.status.value in ("done", "failed") and old_status != job.status.value:
+            duration = 0.0
+            if job.started_at and job.finished_at:
+                duration = (job.finished_at - job.started_at).total_seconds()
+            observe_job_finished(job.status.value, duration)
         return job
 
     async def delete(self, job_id: str) -> bool:

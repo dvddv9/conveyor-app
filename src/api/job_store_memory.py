@@ -7,6 +7,7 @@ from threading import RLock
 
 from src.api.job_store import Job, JobStatus
 from src.observability.logging import get_logger
+from src.observability.metrics import observe_job_created, observe_job_finished
 
 log = get_logger(__name__)
 
@@ -33,6 +34,7 @@ class InMemoryJobStore:
         with self._lock:
             self._jobs[job_id] = job
         log.info("job_created", job_id=job_id, filename=filename, backend="memory")
+        observe_job_created(job.status.value)
         return job
 
     def get(self, job_id: str) -> Job | None:
@@ -48,6 +50,12 @@ class InMemoryJobStore:
             self._jobs[job_id] = new
             _status = new.status.value if isinstance(new.status, JobStatus) else new.status
             log.info("job_updated", job_id=job_id, status=_status, backend="memory")
+            _old_status = old.status.value if isinstance(old.status, JobStatus) else old.status
+            if _status in ("done", "failed") and _old_status != _status:
+                duration = 0.0
+                if new.started_at and new.finished_at:
+                    duration = (new.finished_at - new.started_at).total_seconds()
+                observe_job_finished(_status, duration)
             return new
 
     def delete(self, job_id: str) -> bool:
