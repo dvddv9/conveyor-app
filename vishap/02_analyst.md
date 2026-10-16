@@ -112,6 +112,33 @@ cove: questions (q, independent_answer, match), verdict (confirmed | requires_ex
 contracts: idempotency, retry, timeout, circuit_breaker.
 priority_rule: loss > risk > money.
 
+## security — обязательная схема (v6.1-fix)
+
+```json
+"security": {
+  "summary": "Краткое описание (1-2 предложения)",
+  "findings": [
+    {
+      "id": "SEC-N",
+      "title": "Краткое название",
+      "issue": "Описание проблемы",
+      "priority": "критично|важно|опционально",
+      "cwe": "CWE-NNN или null",
+      "location": "строка/функция"
+    }
+  ]
+}
+```
+
+Обязательные правила:
+- ВСЕ SEC-находки ДОЛЖНЫ быть в `security.findings[]`.
+- `priority` ∈ {критично, важно, опционально}. Не использовать "critical"/"high"/"medium".
+- CWE указывать в поле `cwe` (только `CWE-NNN`, не текст).
+- НЕ дублировать SEC-находки в `threat_model` (`threats` — это STRIDE, не CWE).
+
+Проверка (в конце):
+- Если в тексте `[CONCLUSION]` упоминается критичная проблема — она ДОЛЖНА быть в `security.findings[]` с `priority="критично"`.
+
 ## Что запрещено
 
 - Синтезировать (Stage 4).

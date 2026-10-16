@@ -263,6 +263,29 @@ def detect_cwe(text: str) -> list:
     return seen
 
 
+def collect_findings_cwe(stage2_result: dict | None) -> list:
+    """Collect CWE IDs from LLM security.findings[].cwe (v6.1-fix).
+
+    detect_cwe() only scans the source material for literal "CWE-XXX"; the LLM
+    may assign CWE IDs to findings that never appear in the source. Merge them
+    so audit.cwe_ids (and thus OWASP mapping + verdict) see the LLM's CWEs.
+    """
+    import re as _re
+    if not stage2_result:
+        return []
+    sec = stage2_result.get("security", {})
+    findings = sec.get("findings", []) if isinstance(sec, dict) else []
+    cwes = []
+    for f in findings or []:
+        if not isinstance(f, dict):
+            continue
+        cwe = str(f.get("cwe", "") or "")
+        m = _re.match(r"CWE-\d+", cwe)
+        if m and m.group() not in cwes:
+            cwes.append(m.group())
+    return cwes
+
+
 def map_cwe_to_owasp(cwe_ids: list, year: str = "2025") -> list:
     """Map list of CWE IDs to unique OWASP Top 10 categories."""
     owasp = []
@@ -299,7 +322,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
               sca_result: dict = None,
               web_search_queries: list = None,
               escalation_level: str = "",
-              stage2_result: dict = None) -> dict:
+              stage2_result: dict = None,
+              final_markdown: str = "") -> dict:
     """Собирает audit-запись.
 
     # P2-12-fix-risk-verdict: stage2_result используется для проверки
@@ -308,6 +332,8 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
     pii = detect_pii(material)
     compliance = detect_compliance(material, pii)
     cwe_ids = detect_cwe(material)
+    # v6.1-fix: also collect CWE from LLM security.findings[].cwe.
+    cwe_ids = cwe_ids + [c for c in collect_findings_cwe(stage2_result) if c not in cwe_ids]
     # v5.11.2: consolidated verdict computation (verdict.py).
     # Priority: emergency > pii/compliance/cwe > critical risk_nodes > critical security.
     risk_verdict, critique = compute_risk_verdict(
@@ -316,6 +342,7 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
         compliance=compliance,
         cwe_ids=cwe_ids,
         force_emergency=force_emergency,
+        final_markdown=final_markdown,
     )
     owasp_categories = map_cwe_to_owasp(cwe_ids, year="2025")
     exploitability = detect_exploitability(material)
@@ -685,7 +712,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
     force_emergency = bool(stage0.get('force_emergency', False))
     _escalation = _safe_escalation_note(stage4)
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "", stage2_result=stage2 if "stage2" in dir() else None)
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "", stage2_result=stage2 if "stage2" in dir() else None, final_markdown=final_markdown)
     if verbose:
         print(f"  → audit_id: {audit['audit_id']}")
         print(f"  → material_hash: {audit['material_hash']}")
@@ -885,7 +912,7 @@ async def run_pipeline_async(material: str, filename: str, verbose: bool = False
     force_emergency = bool(stage0.get('force_emergency', False))
     _escalation = _safe_escalation_note(stage4)
 
-    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "", stage2_result=stage2 if "stage2" in dir() else None)
+    audit = run_audit(material_original, session_id, truncated=truncated, original_size=original_size, material_hash_full=material_hash_full, force_emergency=force_emergency, context=f"{filename}:{session_id}", redaction_map=redaction_map, sast_result=_sast_result if "_sast_result" in dir() else None, sca_result=_sca_result if "_sca_result" in dir() else None, web_search_queries=(stage2.get("_web_search", {}) or {}).get("queries", []) if "stage2" in dir() else [], escalation_level=_safe_escalation_note(stage4) if "stage4" in dir() else "", stage2_result=stage2 if "stage2" in dir() else None, final_markdown=final_markdown)
     final_markdown += (
         "\n\n[AUDIT_TRAIL]\n"
         f"generator: Vishap V6.0.1\n"
