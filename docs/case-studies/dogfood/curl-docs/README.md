@@ -1,3 +1,19 @@
+# Note
+
+This audit was initially submitted to curl/curl as issues
+#23438-#23440 in October 2026. The maintainers considered the format
+too long and AI-generated, and asked to stop. The issues were closed
+by the maintainers.
+
+This case-study is kept as a *local example* of Vishap output, not as
+a successful upstream contribution. Any future upstream use of Vishap
+output should:
+- Read CONTRIBUTING.md first.
+- Prefer PRs over issues.
+- Keep reports <=100 words, in your own voice.
+
+---
+
 # curl/curl docs — Vishap case study
 
 - **Source:** https://github.com/curl/curl
