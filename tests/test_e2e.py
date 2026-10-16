@@ -20,6 +20,11 @@ import requests
 API_URL = "http://localhost:5001"
 TIMEOUT = 300
 
+# v6.1-e2e-fix: X-API-Key for /analyze (required since v5.10.5)
+import os
+API_KEY = os.environ.get("CONVEYOR_API_KEY", "test-key-12345")
+HEADERS = {"X-API-Key": API_KEY}
+
 def _unique_material(prefix: str = "e2e") -> str:
     return f"def {prefix}_{uuid.uuid4().hex[:8]}(): pass"
 
@@ -58,7 +63,7 @@ def test_e2e_full_pipeline():
     payload = {"material": material, "filename": E2E_FILENAME, "verbose": False}
 
     t0 = time.time()
-    r = requests.post(f"{API_URL}/analyze", json=payload, timeout=TIMEOUT)
+    r = requests.post(f"{API_URL}/analyze", json=payload, headers=HEADERS, timeout=TIMEOUT)
     elapsed = time.time() - t0
 
     assert r.status_code == 200, f"API error: {r.text[:500]}"
@@ -96,14 +101,14 @@ def test_e2e_idempotency_cache_hit():
     payload = {"material": material, "filename": E2E_FILENAME, "verbose": False}
 
     # Первый запрос (может быть из предыдущего теста, но не зависим)
-    r1 = requests.post(f"{API_URL}/analyze", json=payload, timeout=TIMEOUT)
+    r1 = requests.post(f"{API_URL}/analyze", json=payload, headers=HEADERS, timeout=TIMEOUT)
     assert r1.status_code == 200
     data1 = r1.json()
     session1 = data1["session_id"]
 
     # Второй запрос — должен вернуть кэш
     t0 = time.time()
-    r2 = requests.post(f"{API_URL}/analyze", json=payload, timeout=TIMEOUT)
+    r2 = requests.post(f"{API_URL}/analyze", json=payload, headers=HEADERS, timeout=TIMEOUT)
     elapsed2 = time.time() - t0
     assert r2.status_code == 200
     data2 = r2.json()
