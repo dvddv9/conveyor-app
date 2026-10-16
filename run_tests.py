@@ -45,6 +45,7 @@ def main():
     rc |= run("tests/test_jobs_shim_iso.py")
     rc |= run("tests/test_ui_headers.py")
     rc |= run("tests/test_ui_async.py")
+    rc |= run("tests/test_ui_badge_version.py")
     rc |= run("tests/test_api_client.py")
     rc |= run("tests/test_risk_verdict.py")
     rc |= run("tests/test_risk_verdict_security.py")

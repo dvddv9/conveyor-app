@@ -14,6 +14,13 @@ from src.config import DATA_DIR
 from src.ui import api_client
 
 
+def _get_version() -> str:
+    """Read version from pyproject.toml (single source of truth)."""
+    import tomllib
+    pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
+    return tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]["version"]
+
+
 HISTORY_LIMIT = 20
 
 
@@ -85,9 +92,9 @@ st.markdown("""
         <h1>Vishap V6.0.3</h1>
         <div class="subtitle">LLM-конвейер для анализа кода · Async API · SAST/SCA · SARIF</div>
     </div>
-    <span class="vishap-badge">v6.0.0</span>
+    <span class="vishap-badge">v__VERSION__</span>
 </div>
-""", unsafe_allow_html=True)
+""".replace("__VERSION__", _get_version()), unsafe_allow_html=True)
 
 st.caption("6-стадийный LLM-конвейер для анализа инженерного материала")
 
