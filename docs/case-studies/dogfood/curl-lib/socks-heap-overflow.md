@@ -84,3 +84,43 @@ security.findings. compute_risk_verdict смотрит только структ
 - CVE-2023-38545 -- curl.se: https://curl.se/docs/CVE-2023-38545.html
 - CVE-2023-38545 -- NVD: https://nvd.nist.gov/vuln/detail/CVE-2023-38545
 - CVE-2023-38545 -- Ubuntu: https://ubuntu.com/security/CVE-2023-38545
+
+## Fix (P0, 2026-10-16)
+
+**Проблема:** `risk_verdict = SAFE` при критичных SEC-находках (недетерминированный bug).
+
+**Причина:** структурный разрыв между LLM и verdict:
+1. Промпт `02_analyst.md` не задаёт схему `security.findings[]`.
+2. `compute_risk_verdict` не читает `threat_model.threats[].priority`.
+3. `cwe_ids` собирались только regex-сканом исходника.
+
+**Fix (defense-in-depth, commit 94d224c):**
+
+| # | Компонент | Что |
+|---|-----------|-----|
+| A | `vishap/02_analyst.md` | Явная схема `security.findings[]` (id/priority/cwe/location) |
+| D | `src/pipeline/verdict.py` | `_has_critical_threat_model` -- читает `threat_model.threats[].priority` |
+| C | `src/pipeline/verdict.py` | Fallback `_has_critical_sec_in_text(final_markdown)` -- regex `SEC-\d+...(критично\|critical\|CVE-\d\|crash\|overflow\|injection)` |
+| -- | `src/pipeline/orchestrator.py` | `collect_findings_cwe(stage2_result)` -- CWE из `security.findings[].cwe` |
+
+**Порядок в `compute_risk_verdict`:**
+`force_emergency` -> pii/compliance/cwe -> risk_nodes -> security.findings -> threat_model -> fallback -> SAFE.
+
+**Тесты:** 7 новых (`tests/test_verdict_threat_model.py` + `tests/test_verdict_sec_fallback.py`).
+
+## Результат fix'а (dogfood 2026-10-16)
+
+**Было (сессия 174827):**
+- `risk_verdict: SAFE`
+- `critique_verdict: SAFE`
+- `cwe_ids: []`
+
+**Стало (сессия 4721ab):**
+- `risk_verdict: REQUIRES_REVIEW`
+- `critique_verdict: REQUIRES_REVIEW`
+- `cwe_ids: ['CWE-476', 'CWE-200', 'CWE-754', 'CWE-770']`
+- `provenance_commit: 94d224c`
+
+**Найдено LLM:** SEC-1 (NULL-deref `sx->dest`, CWE-476, критично), RN-1 (critical).
+
+**Вывод:** fallback + threat_model + CWE collect **поймали** критичные находки, которые LLM положила в текст `[CONCLUSION]`, а не в структуру.
