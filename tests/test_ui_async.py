@@ -144,3 +144,23 @@ def test_ui_uses_api_client():
     # all HTTP via api_client, no direct requests
     assert "api_client." in src
     assert "requests." not in src
+
+
+# ============================================================
+# Download buttons
+# ============================================================
+
+def test_ui_download_button_no_md_extension():
+    """Markdown downloads must not include .md in file_name (fix .md.md).
+
+    Browser/Streamlit appends the extension from mime="text/markdown";
+    keeping ".md" in file_name produced report_X.md.md.
+    JSON downloads (.json) keep their explicit extension.
+    """
+    import re
+
+    src = _read_ui()
+    names = re.findall(r'file_name=f"([^"]+)"', src)
+    assert names, "expected download_button file_name args"
+    md_names = [n for n in names if ".md" in n]
+    assert not md_names, f"markdown file_name must not contain .md: {md_names}"

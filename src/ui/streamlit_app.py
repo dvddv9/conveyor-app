@@ -340,7 +340,7 @@ with tab_analyze:
                                             st.download_button(
                                                 "💾 Скачать Markdown",
                                                 data=r.get("final_markdown", "") or "",
-                                                file_name=f"report_{fn}.md",
+                                                file_name=f"report_{fn}",
                                                 mime="text/markdown",
                                                 key=f"dl_{fn}_{r.get('session_id', '')}",
                                             )
@@ -441,7 +441,7 @@ with tab_history:
                         st.download_button(
                             "💾 Download Markdown",
                             data=_md,
-                            file_name=f"report_{dl_session}.md",
+                            file_name=f"report_{dl_session}",
                             mime="text/markdown",
                             key=f"dl_hist_{dl_session}",
                         )
@@ -584,7 +584,7 @@ if analyze_btn and material.strip() and result_placeholder is not None:
                     st.download_button(
                         "💾 Скачать Markdown",
                         data=data.get("final_markdown", ""),
-                        file_name=f"report_{data.get('session_id', 'unknown')}.md",
+                        file_name=f"report_{data.get('session_id', 'unknown')}",
                         mime="text/markdown",
                     )
 
@@ -804,7 +804,7 @@ if (
                         st.download_button(
                             "💾 Скачать Markdown (async)",
                             data=rep.get("final_markdown", ""),
-                            file_name=f"report_async_{rep.get('session_id', 'unknown')}.md",
+                            file_name=f"report_async_{rep.get('session_id', 'unknown')}",
                             mime="text/markdown",
                             key="async_dl_md",
                         )
