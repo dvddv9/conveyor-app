@@ -983,7 +983,7 @@ git --no-pager log --oneline
 
 - **pandas is not used** — Windows Code Integrity Policy may block `pandas._libs.*.pyd`. Native `st.dataframe(list[dict])` is used instead.
 
-- **Tests** — 461 (`tests/`). Run: `python run_tests.py`.
+- **Tests** — 465 (`tests/`). Run: `python run_tests.py`.
   Coverage: PII, compliance, hash, JSON parsing, fallback_check, pipeline (mock LLM).
 
 - **Stage 3/4 parallelism** — currently sequential.
@@ -1575,7 +1575,7 @@ See [LICENSE](LICENSE) for full text.
 
 ## Test Suite
 
-**461 tests passing** across 33 files:
+**465 tests passing** across 35 files:
 
 | File | Tests |
 |---|---|
@@ -1610,8 +1610,10 @@ See [LICENSE](LICENSE) for full text.
 | tests/test_security_md.py | 5 |
 | tests/test_tools.py | 33 |
 | tests/test_ui_async.py | 19 |
+| tests/test_ui_badge_version.py | 2 |
 | tests/test_ui_headers.py | 13 |
 | tests/test_verdict.py | 26 |
+| tests/test_version_sync.py | 2 |
 
 Run:
 
