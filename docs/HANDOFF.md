@@ -372,6 +372,39 @@ Prometheus /metrics endpoint.
 - Блок 4: token counters + Fernet (secret encryption).
 - RLS / multi-tenant isolation.
 
+### Блок 4 -- DONE (2026-10-16)
+
+LLM token metrics + Fernet encryption.
+
+**Создано:**
+- src/security/__init__.py, fernet.py -- encrypt/decrypt/generate_key/is_configured.
+- src/llm/_observe.py -- DRY helper observe_llm_result.
+- tests/test_fernet.py (8), test_token_metrics.py (6), test_observe.py (6).
+
+**Изменено:**
+- src/observability/metrics.py -- +2 метрики: vishap_llm_tokens_total{model, type},
+  vishap_llm_requests_total{model, status}.
+- src/llm/client.py + async_client.py -- обёртка observe_llm_result
+  (6 + 4 вызова + error-path).
+- src/config.py + .env.example -- FERNET_KEY.
+- requirements.txt + pyproject.toml -- cryptography>=42.0.0 (symmetry).
+- run_tests.py -- register 3 файла.
+
+**Тесты:**
+- 20 new tests (8 + 6 + 6).
+- Full run (host): 531 passed (494 + 12 Block3 + 20 Block4 + 5 integration).
+
+**Commit:** 072a288
+
+**Dogfood (2026-10-16):**
+- Fernet: roundtrip OK, type=bytes, len=100, non-deterministic.
+- Integration: 5 passed (Postgres).
+- Docker: 3 healthy.
+
+**Что в работе (v6.1.x):**
+- RLS / multi-tenant isolation.
+- CI (GitHub Actions) -- не настроен.
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
@@ -398,7 +431,7 @@ Java/C patterns для P2-7 (regex). Оценка: 2-3 дня.
 ### v6.0 -- React UI + Multi-tenant
 Streamlit заменить на React. 1-2 недели.
 
-## Грабли (10-20)
+## Грабли (10-21)
 
 10. Anchor без отступа -> IndentationError. ВСЕГДА ast.parse сразу.
 11. Не копировать git diff в консоль (PowerShell выполнит).
@@ -416,6 +449,8 @@ Streamlit заменить на React. 1-2 недели.
     (New-Object System.Text.UTF8Encoding $false)).
 20. GitHub UI переводит контент при русском языке профиля.
     Settings -> Appearance -> Language -> English (обязательно).
+21. Copilot review может найти реальные фактические проблемы.
+    Проверять факт (curl.se/download) -- не игнорировать, не спорить.
 
 ## Ключи
 
@@ -454,6 +489,14 @@ Docs: encourage verifying tarball before unpacking.
 - Label: `documentation` (auto).
 - Files: docs/INSTALL.md, +17.
 - Commit: a8aefa1 (no BOM).
+
+**Обновление (2026-10-16, позже):**
+- CI: 13/13 success на head 68e6d27.
+- Copilot review: finding про sha256sum (curl не публикует .sha256) -- ИСПРАВЛЕНО.
+- HEAD SHA: 68e6d27 (был a8aefa1).
+- Status: waiting for human review.
+- Наш ответ Copilot: "The download page currently publishes only .asc (GPG),
+  not .sha256. I removed the sha256sum example."
 
 **Что делать:**
 - НЕ комментировать в issue #23438.
