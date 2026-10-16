@@ -12,13 +12,7 @@ from datetime import datetime
 import streamlit as st
 from src.config import DATA_DIR
 from src.ui import api_client
-
-
-def _get_version() -> str:
-    """Read version from pyproject.toml (single source of truth)."""
-    import tomllib
-    pyproject = Path(__file__).parent.parent.parent / "pyproject.toml"
-    return tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]["version"]
+from src.version import __version__
 
 
 HISTORY_LIMIT = 20
@@ -94,7 +88,7 @@ st.markdown("""
     </div>
     <span class="vishap-badge">v__VERSION__</span>
 </div>
-""".replace("__VERSION__", _get_version()), unsafe_allow_html=True)
+""".replace("__VERSION__", __version__), unsafe_allow_html=True)
 
 st.caption("6-стадийный LLM-конвейер для анализа инженерного материала")
 

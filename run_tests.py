@@ -21,6 +21,7 @@ def run(path):
 def main():
     rc = 0
     rc |= run("tests/test_conftest_data_dir.py")
+    rc |= run("tests/test_version_sync.py")
     rc |= run("tests/test_tools.py")
     rc |= run("tests/test_patterns.py")
     rc |= run("tests/test_patterns_java.py")

@@ -18,4 +18,4 @@ def test_ui_badge_no_hardcoded_v600():
 def test_ui_badge_uses_dynamic_version():
     src = _read_ui()
     assert "__VERSION__" in src, "placeholder __VERSION__ not found"
-    assert "_get_version()" in src, "_get_version() not called"
+    assert "from src.version import __version__" in src, "from src.version import __version__ not found"
