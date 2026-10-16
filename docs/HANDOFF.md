@@ -334,6 +334,44 @@ structlog + JSON logs + Docker fixes.
 - Блок 3: Prometheus /metrics (prometheus-client)
 - Блок 4: token counters + Fernet
 
+### Блок 3 -- DONE (2026-10-16)
+
+Prometheus /metrics endpoint.
+
+**Создано:**
+- src/observability/metrics.py -- единый CollectorRegistry, 4 метрики
+  (vishap_jobs_created_total, vishap_jobs_completed_total,
+  vishap_job_duration_seconds, vishap_http_requests_total) + helpers.
+- tests/test_metrics.py -- 12 тестов (test-first).
+
+**Изменено:**
+- src/main.py -- GET /metrics route (text/plain; version=0.0.4)
+  + observe_http_request в middleware log_requests.
+- src/api/job_store_memory.py -- observe_job_created + observe_job_finished
+  (old != new guard).
+- src/api/job_store_postgres.py -- то же (symmetry).
+- requirements.txt + pyproject.toml -- prometheus-client>=0.20.0 (symmetry).
+- run_tests.py -- register test_metrics.py.
+
+**Тесты:**
+- 12 new tests (metrics): endpoint, content-type, job counters,
+  duration histogram, http counters, format, robustness.
+- Полный прогон: 494 -> 506 passed, 5 skipped (integration).
+- collected: 502 -> 514.
+
+**Commit:** d2b7561
+
+**Dogfood (2026-10-16):**
+- Integration: 5 passed (с живым Postgres).
+- /metrics: 200, text/plain; version=0.0.4.
+- # HELP / # TYPE для всех 4 метрик.
+- Histogram buckets: 1, 5, 10, 30, 60, 300.
+- /health: ok.
+
+**Что в работе (v6.1.x):**
+- Блок 4: token counters + Fernet (secret encryption).
+- RLS / multi-tenant isolation.
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
@@ -360,7 +398,7 @@ Java/C patterns для P2-7 (regex). Оценка: 2-3 дня.
 ### v6.0 -- React UI + Multi-tenant
 Streamlit заменить на React. 1-2 недели.
 
-## Грабли (10-16)
+## Грабли (10-20)
 
 10. Anchor без отступа -> IndentationError. ВСЕГДА ast.parse сразу.
 11. Не копировать git diff в консоль (PowerShell выполнит).
@@ -369,6 +407,15 @@ Streamlit заменить на React. 1-2 недели.
 14. "test_X.py" in src != в таблице. Проверять точный формат.
 15. \\n в heredoc строке -> SyntaxError. Использовать конкатенацию.
 16. Inline python -c в PowerShell съедает кавычки. Всегда через .py файл.
+17. Get-Content .env в чат -> ключи утекли. Только имена:
+    (Get-Content .env | Select-String "^KEY=").Line -replace "^KEY=".
+18. PowerShell here-string @"..."@ НЕ обрабатывает \" escape.
+    В here-string кавычки пишутся как есть.
+19. Out-File -Encoding utf8 (PS 5.1) добавляет BOM.
+    Через [System.IO.File]::WriteAllText($path, $msg,
+    (New-Object System.Text.UTF8Encoding $false)).
+20. GitHub UI переводит контент при русском языке профиля.
+    Settings -> Appearance -> Language -> English (обязательно).
 
 ## Ключи
 
@@ -392,6 +439,28 @@ docs/case-studies/dogfood/RequestFilter-java/
 - Реальный Sakai Java код.
 - D3, $0.008, 11 risk_nodes (3 critical).
 - Триггер для v5.10.5 + v5.10.6.
+
+## Curl PR #23441 (2026-10-16)
+
+Docs: encourage verifying tarball before unpacking.
+
+**История:**
+- Issue #23438 -- closed by Daniel Stenberg after AI-slop complaint.
+- Second chance via human reply -> PR accepted.
+- PR: https://github.com/curl/curl/pull/23441
+
+**Status:**
+- Open, awaiting CI approval (first-time contributor, 5 workflows pending).
+- Label: `documentation` (auto).
+- Files: docs/INSTALL.md, +17.
+- Commit: a8aefa1 (no BOM).
+
+**Что делать:**
+- НЕ комментировать в issue #23438.
+- НЕ пинговать Daniel/Stefan.
+- Ждать 7 дней. Если тишина -> один вежливый ping в PR.
+
+**LESSONS.md:** записан.
 
 ## Философия
 
