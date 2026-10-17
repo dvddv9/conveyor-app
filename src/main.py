@@ -31,6 +31,7 @@ from src.api.jobs import (
 from src.api.tasks import run_analysis_task
 from src.api.celery_app import broker_available
 from src.github_app.webhook import handle_webhook
+from src.auth.middleware import current_user
 from datetime import UTC
 from src.tools.sarif import to_sarif
 
@@ -308,6 +309,12 @@ async def analyze(req: AnalyzeRequest):
         audit=result.get("audit", {}),
         completeness=result.get("completeness", {}),
     )
+
+
+@app.post("/analyze/secure", dependencies=[Depends(current_user)])
+async def analyze_secure(req: AnalyzeRequest):
+    """Analyze with Clerk JWT auth (multi-tenant); /analyze keeps API-key auth."""
+    return await analyze(req)
 
 
 @app.post("/analyze/batch", response_model=BatchResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])

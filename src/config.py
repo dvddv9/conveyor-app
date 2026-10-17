@@ -89,5 +89,9 @@ GITHUB_APP_ID = os.getenv("GITHUB_APP_ID", "")
 GITHUB_PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY", "")
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "")
 
+# === Clerk auth (v6.1) ===
+CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY", "")
+CLERK_JWKS_URL = os.getenv("CLERK_JWKS_URL", "")
+
 # === Данные ===
 DATA_DIR.mkdir(parents=True, exist_ok=True)
