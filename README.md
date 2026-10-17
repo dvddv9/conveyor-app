@@ -8,7 +8,7 @@
 ---
 
 
-[![tests](https://github.com/dvddv9/vishap/actions/workflows/tests.yml/badge.svg)](https://github.com/dvddv9/vishap/actions/workflows/tests.yml)
+[![CI](https://github.com/dvddv9/vishap/actions/workflows/ci.yml/badge.svg)](https://github.com/dvddv9/vishap/actions/workflows/ci.yml)
 
 
 🔬 6-stage LLM pipeline for analyzing engineering materials (code, spec, logs).

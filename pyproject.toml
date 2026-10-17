@@ -56,5 +56,16 @@ addopts = "-v"
 line-length = 100
 target-version = ["py311", "py312"]
 
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["F", "E9"]
+ignore = [
+    "F821",  # undefined name: false positive (dir() guard in orchestrator)
+    "F841",  # local variable assigned but never used (debug: original_audit_compliance)
+]
+
 [tool.setuptools.package-data]
 vishap = ["*.md"]
