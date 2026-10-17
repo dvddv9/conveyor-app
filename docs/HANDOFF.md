@@ -7,7 +7,7 @@
 ## Состояние
 
 - **Версия:** v6.1.0
-- **HEAD:** 8ac77a0
+- **HEAD:** 0b8230c
 - **Тесты:** 548 passing (было 197)
 - **Все платформы:** GitHub + PyPI + Docker Hub = 5.10.6
 
@@ -476,6 +476,38 @@ Stripe billing (subscriptions + webhook + usage).
 **Тесты:** 6 new; полный 548 passed.
 **Commit:** 8ac77a0
 
+### Block 9 -- DONE (2026-10-17)
+
+Docs Docusaurus (site + GitHub Pages deploy).
+
+**Создано:**
+- docs-site/ (Docusaurus classic, TS): 5 pages (getting-started, api-reference, cli, architecture, case-studies)
+- .github/workflows/docs.yml (build -> deploy GitHub Pages)
+
+**Изменено:**
+- README.md: Documentation section.
+- .gitignore: node_modules/build/.docusaurus ignored.
+
+**Тесты:** (не требует, статичный сайт). Build + Deploy OK.
+**Commit:** 8564f46
+
+### Block 10 -- DONE (2026-10-17)
+
+Landing page (static HTML + Tailwind CDN).
+
+**Создано:**
+- docs-site/static/landing/index.html (6 sections: hero, features, pricing, cta, etc.)
+- docs-site/static/landing/assets/style.css + script.js
+- docs-site/static/landing/favicon.ico
+
+**Изменено:**
+- README.md: landing URL.
+- **GitHub Pages enabled** (repo -> public, Source -> GitHub Actions).
+
+**Тесты:** (статичный сайт). Build + Deploy OK.
+**Commit:** 0b8230c
+
+
 
 **Dogfood (2026-10-16):**
 - Fernet: roundtrip OK, type=bytes, len=100, non-deterministic.
@@ -495,7 +527,7 @@ PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Secret encryption
 
 ### v6.2 -- TODO
-UI (Next.js) + Docs (Docusaurus)  [Clerk -- DONE in Block 7]. Оценка: 1.5 недели.
+UI (Next.js) [Docs -- DONE in Block 9]. Оценка: 1.5 недели.
 
 ### v6.3 -- TODO
 GitHub App [DONE Block 6] + Billing (Stripe) [DONE Block 8]. Оценка: 1 неделя.
@@ -536,6 +568,10 @@ Streamlit заменить на React. 1-2 недели.
 22. Review по фрагменту файла из чата -- ложный баг. Фрагмент может обрезать
     верхние import. ВСЕГДА запрашивать Get-Content целиком (или первые 10 строк)
     перед claim'ом «нет import».
+
+23. GitHub Pages 404: если репозиторий Private, Pages недоступен (бесплатный план).
+    Deploy action падает с HttpError 404. Фикс: Settings -> General -> Change to Public,
+    затем Settings -> Pages -> Source: GitHub Actions.
 
 ## Ключи
 
