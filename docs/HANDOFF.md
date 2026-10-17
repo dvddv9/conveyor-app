@@ -1,14 +1,14 @@
-# HANDOFF: Vishap v5.10.6
+# HANDOFF: Vishap v6.1.0
 
-**Дата:** 2026-10-14
+**Дата:** 2026-10-17
 **От:** senior-разработчик (сессия 3)
 **Кому:** следующий senior-разработчик
 
 ## Состояние
 
-- **Версия:** v5.10.6
-- **HEAD:** 7c9c48a
-- **Тесты:** 252 passing (было 197)
+- **Версия:** v6.1.0
+- **HEAD:** 8ac77a0
+- **Тесты:** 548 passing (было 197)
 - **Все платформы:** GitHub + PyPI + Docker Hub = 5.10.6
 
 ## 5 релизов за сессию
@@ -396,6 +396,87 @@ LLM token metrics + Fernet encryption.
 
 **Commit:** 072a288
 
+### Block 5 -- DONE (2026-10-17)
+
+Celery + Redis queue (production job queue).
+
+**Создано:**
+- src/api/celery_app.py -- Celery instance (broker/backend из env, acks_late, task_reject_on_worker_lost, prefetch=1) + broker_available() (TCP precheck).
+- src/api/tasks.py -- run_analysis_task (@celery_app.task, bind=True, max_retries=3, default_retry_delay=30).
+- tests/test_celery_app.py (4), tests/test_tasks.py (3).
+
+**Изменено:**
+- src/main.py -- /analyze/async -> run_analysis_task.delay(...) + fallback to BackgroundTasks (Redis down).
+- docker-compose.yml -- redis service (redis:7-alpine, healthcheck) + worker service.
+- requirements.txt + pyproject.toml -- celery[redis]>=5.3.0, redis>=5.0.0 (symmetry).
+- .env.example -- CELERY_BROKER_URL, CELERY_RESULT_BACKEND.
+
+**Тесты:** 7 new; полный 524 passed.
+**Commit:** 9cef721
+
+### Block 6 -- DONE (2026-10-17)
+
+GitHub App (webhooks + PR auto-analyze).
+
+**Создано:**
+- src/github_app/auth.py -- generate_jwt (RS256, iat/exp=iat+600/iss=APP_ID; optional private_key param for tests).
+- src/github_app/client.py -- get_installation_token, post_pr_comment, analyze_pr_diff.
+- src/github_app/webhook.py -- verify_signature (HMAC SHA256) + handle_webhook (ping / pull_request opened).
+- src/github_app/__init__.py -- re-exports.
+- tests/test_github_auth.py (3), test_github_client.py (3), test_github_webhook.py (4).
+
+**Изменено:**
+- src/main.py -- POST /webhook/github route.
+- src/config.py -- GITHUB_APP_ID, GITHUB_PRIVATE_KEY, GITHUB_WEBHOOK_SECRET.
+- .env.example -- GITHUB_* placeholders.
+- requirements.txt + pyproject.toml -- PyJWT>=2.9.0 (symmetry).
+- run_tests.py -- register 3 files.
+
+**Тесты:** 10 new; полный 535 passed.
+**Commit:** 7a4e453
+
+**Known limitation:** webhook синхронно вызывает analyze_pr_diff (production -> Celery.delay, TODO).
+
+### Block 7 -- DONE (2026-10-17)
+
+Clerk JWT auth (multi-tenant, SSO-ready).
+
+**Создано:**
+- src/auth/clerk.py -- AuthError + verify_jwt (RS256, JWKS cache, kid/sub checks, separate errors for expired/invalid signature).
+- src/auth/middleware.py -- current_user dependency (Authorization: Bearer <jwt> -> {user_id, claims}; 401 on missing/invalid).
+- src/auth/__init__.py -- re-exports.
+- tests/test_auth_clerk.py (4), test_auth_middleware.py (3).
+
+**Изменено:**
+- src/main.py -- POST /analyze/secure (dependency current_user); /analyze (API key) untouched.
+- src/config.py -- CLERK_SECRET_KEY, CLERK_JWKS_URL.
+- .env.example -- CLERK_* placeholders.
+- run_tests.py -- register 2 files.
+
+**Тесты:** 7 new; полный 542 passed.
+**Commit:** a2f3e1d
+
+### Block 8 -- DONE (2026-10-17)
+
+Stripe billing (subscriptions + webhook + usage).
+
+**Создано:**
+- src/billing/stripe_client.py -- BillingError, _stripe() lazy init, create_checkout_session, get_customer, record_usage(customer_id, quantity) via Billing Meters API (stripe>=16 removed SubscriptionItem.create_usage_record).
+- src/billing/webhook.py -- handle_stripe_webhook (construct_event + stripe.SignatureVerificationError; dispatch customer.subscription.updated -> subscription_id).
+- src/billing/__init__.py -- re-exports.
+- tests/test_stripe_client.py (3), test_billing_webhook.py (3).
+
+**Изменено:**
+- src/main.py -- POST /billing/checkout + POST /webhook/stripe.
+- src/config.py -- STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_ID.
+- .env.example -- STRIPE_* placeholders + STRIPE_METER_EVENT (optional).
+- requirements.txt + pyproject.toml -- stripe>=10.0.0 (symmetry).
+- run_tests.py -- register 2 files.
+
+**Тесты:** 6 new; полный 548 passed.
+**Commit:** 8ac77a0
+
+
 **Dogfood (2026-10-16):**
 - Fernet: roundtrip OK, type=bytes, len=100, non-deterministic.
 - Integration: 5 passed (Postgres).
@@ -414,10 +495,10 @@ PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Secret encryption
 
 ### v6.2 -- TODO
-UI (Next.js) + Auth (Clerk) + Docs (Docusaurus). Оценка: 1.5 недели.
+UI (Next.js) + Docs (Docusaurus)  [Clerk -- DONE in Block 7]. Оценка: 1.5 недели.
 
 ### v6.3 -- TODO
-GitHub App + Billing (Stripe). Оценка: 1 неделя.
+GitHub App [DONE Block 6] + Billing (Stripe) [DONE Block 8]. Оценка: 1 неделя.
 
 ### v5.11.7 -- TODO (deferred)
 Java AST (P2-7b) via javalang. Оценка: 2-3 дня.
@@ -451,6 +532,10 @@ Streamlit заменить на React. 1-2 недели.
     Settings -> Appearance -> Language -> English (обязательно).
 21. Copilot review может найти реальные фактические проблемы.
     Проверять факт (curl.se/download) -- не игнорировать, не спорить.
+
+22. Review по фрагменту файла из чата -- ложный баг. Фрагмент может обрезать
+    верхние import. ВСЕГДА запрашивать Get-Content целиком (или первые 10 строк)
+    перед claim'ом «нет import».
 
 ## Ключи
 
