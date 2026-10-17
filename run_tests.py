@@ -73,6 +73,7 @@ def main():
     rc |= run("tests/test_auth_middleware.py")
     rc |= run("tests/test_stripe_client.py")
     rc |= run("tests/test_billing_webhook.py")
+    rc |= run("tests/test_tracing.py")
 
     if "--all" in sys.argv:
         print("\n[--all] E2E tests (real LLM, slow, uses API):")

@@ -21,6 +21,7 @@ from src.observability.logging import (
     clear_context,
 )
 from src.observability.metrics import get_metrics_output, observe_http_request
+from src.observability.tracing import setup_tracing, get_tracer, span, traced
 from src.pipeline.batch import run_batch
 from src.storage.history import load_history
 from src.api.auth import verify_api_key, is_auth_enabled
@@ -49,6 +50,9 @@ async def lifespan(app: FastAPI):
 # structlog: pretty in dev, JSON in prod (LOG_FORMAT=json)
 setup_logging()
 log = get_logger(__name__)
+
+# OpenTelemetry tracing: fail-open if OTel is missing/disabled.
+setup_tracing()
 
 
 app = FastAPI(
@@ -232,6 +236,7 @@ async def stripe_webhook(request: Request):
 
 
 @app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
+@traced("analyze")
 async def analyze(req: AnalyzeRequest):
     """
     Запускает полный pipeline Vishap V5.9.
@@ -504,6 +509,7 @@ async def _run_job_async(job_id: str, req: "AnalyzeRequest"):
 
 
 @app.post("/analyze/async", dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
+@traced("analyze_async")
 async def analyze_async(req: "AnalyzeRequest", background: BackgroundTasks):
     """Create async job -- returns job_id immediately."""
     job_id = create_job(filename=req.filename or "unknown")

@@ -41,6 +41,7 @@ from src.tools.baseline import apply_baseline
 from src.tools.deps import build_import_graph, collect_context_files
 from src.pipeline.verdict import compute_risk_verdict  # v5.11.2: consolidated verdict
 from src.observability.logging import get_logger
+from src.observability.tracing import span
 
 log = get_logger(__name__)
 
@@ -404,11 +405,12 @@ def run_audit(material: str, session_id: str, model: str = "deepseek-chat",
 # === Pipeline ===
 
 def _timed_stage(log, stage: str, session_id: str, fn, *args, **kwargs):
-    """Run one pipeline stage with structlog timing (start/done/failed)."""
+    """Run one pipeline stage with structlog timing + OTel span."""
     t0 = time.time()
     log.info("stage_started", stage=stage, session_id=session_id)
     try:
-        result = fn(*args, **kwargs)
+        with span(f"stage.{stage}"):
+            result = fn(*args, **kwargs)
     except Exception as e:
         log.error("stage_failed", stage=stage, error=str(e), exc_info=True)
         raise
