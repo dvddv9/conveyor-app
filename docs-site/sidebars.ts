@@ -10,7 +10,14 @@ const sidebars: SidebarsConfig = {
         'architecture',
         'api-reference',
         'cli',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Case Studies',
+      items: [
         'case-studies',
+        'case-studies/curl-cookie-c',
       ],
     },
     {
