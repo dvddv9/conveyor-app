@@ -640,6 +640,13 @@ Streamlit заменить на React. 1-2 недели.
     Deploy action падает с HttpError 404. Фикс: Settings -> General -> Change to Public,
     затем Settings -> Pages -> Source: GitHub Actions.
 
+24. RLS не применяется к суперпользователям (vishap в Docker -- superuser).
+    Даже FORCE ROW LEVEL SECURITY не действует: суперюзер и роли с BYPASSRLS
+    обходят политики. Для production -- отдельная роль vishap_app
+    (не суперюзер и не owner) в DATABASE_URL. Integration-тесты в
+    tests/test_rls.py скипаются, если current_setting('is_superuser') = 'on'
+    или у роли rolbypassrls = true.
+
 ## Ключи
 
 Ротированы 2026-10-14:

@@ -28,6 +28,37 @@ PG_URL = os.getenv("TEST_POSTGRES_URL", "")
 needs_pg = pytest.mark.skipif(not PG_URL, reason="TEST_POSTGRES_URL not set")
 
 
+async def _rls_bypassed() -> bool:
+    """True when the test connection bypasses RLS (superuser / BYPASSRLS role).
+
+    PostgreSQL does not apply row-level security to superusers or to roles with
+    BYPASSRLS, not even with ``FORCE ROW LEVEL SECURITY``. The Docker dev
+    database connects as ``vishap``, which is a superuser, so integration tests
+    that assert isolation have to skip rather than fail.
+    """
+    if not PG_URL:
+        return False
+
+    from sqlalchemy import text
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    engine = create_async_engine(PG_URL)
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(
+                text(
+                    "SELECT current_setting('is_superuser') = 'on' "
+                    "OR COALESCE((SELECT rolbypassrls FROM pg_roles "
+                    "WHERE rolname = current_user), false)"
+                )
+            )
+            return bool(result.scalar())
+    except Exception:
+        return False
+    finally:
+        await engine.dispose()
+
+
 @pytest.fixture(autouse=True)
 def _reset_tenant():
     """Never leak tenant context between tests."""
@@ -282,6 +313,9 @@ async def test_rls_policy_exists_in_pg():
 @pytest.mark.asyncio
 async def test_tenant_isolation_in_pg():
     """Two tenants cannot read each other's jobs through the app role."""
+    if await _rls_bypassed():
+        pytest.skip("RLS does not apply to superusers. Use the vishap_app role in production.")
+
     from sqlalchemy import text
     from sqlalchemy.exc import DBAPIError
     from sqlalchemy.ext.asyncio import create_async_engine
@@ -374,6 +408,9 @@ def test_status_and_report_hide_other_tenants():
 @pytest.mark.asyncio
 async def test_postgres_fail_closed_without_tenant():
     """No tenant set -> RLS denies everything (no rows, no exception)."""
+    if await _rls_bypassed():
+        pytest.skip("RLS does not apply to superusers. Use the vishap_app role in production.")
+
     from sqlalchemy import text
     from sqlalchemy.exc import DBAPIError
     from sqlalchemy.ext.asyncio import create_async_engine
