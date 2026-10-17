@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Режим работы LLM: cloud / local / auto.
 Сохраняется в data/mode.json.

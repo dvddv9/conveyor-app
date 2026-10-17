@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """P2-7b: AST-based data-flow analysis (taint tracking).
 
 Extends reachability (P2-7, regex + line-based) with real Python AST parsing.

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Universal OpenAI-compatible LLM client (P2-11).
 
 Works with any provider exposing the OpenAI /v1/chat/completions API:

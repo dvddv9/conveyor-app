@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Async universal OpenAI-compatible LLM client (P2-11).
 
 Mirror of src/llm/openai_compatible.py, but async.

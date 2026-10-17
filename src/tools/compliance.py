@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """P2-8 Compliance Mapping: CWE -> concrete standard controls.
 
 Extends compliance_flags (list[str]) with compliance_controls (dict).

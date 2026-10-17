@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """P2-7 Reachability: source -> sink path tracing.
 
 Extends detect_exploitability() (boolean) with line-level path.

@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """P2-9 Runbook Generation: incident response steps per CWE.
 
 Extends audit trail with structured runbook
