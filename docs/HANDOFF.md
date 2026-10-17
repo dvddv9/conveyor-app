@@ -688,6 +688,71 @@ Streamlit заменить на React. 1-2 недели.
     tests/test_rls.py скипаются, если current_setting('is_superuser') = 'on'
     или у роли rolbypassrls = true.
 
+
+
+## Что осталось (TODO) — на 2026-10-18
+
+### P1 (Продукт) — блокеры для enterprise-продаж
+
+| # | Задача | Размер | Приоритет |
+|---|---|---|---|
+| 1 | **Enterprise invoices (Stripe)** — Invoicing API (ручной биллинг для enterprise). | 1-2 дня | P1 |
+| 2 | **`/api/me/data` (GDPR)** — экспорт/удаление данных пользователя. | 1 день | P1 |
+| 3 | **SSO (SAML)** — Clerk Enterprise plan ($25/мес) или WorkOS. | 2-3 дня | P1 |
+
+### P2 (Рост) — маркетинг и distribution
+
+| # | Задача | Размер | Приоритет |
+|---|---|---|---|
+| 4 | **GitHub Marketplace** — публикация GitHub App (review ~1 неделя). | 1 неделя | P2 |
+| 5 | **Blog + changelog** — Docusaurus blog (auto from GitHub Releases). | 1 день | P2 |
+| 6 | **AWS Marketplace** — только после 10+ enterprise-клиентов (3-6 мес). | 3-6 мес | P3 |
+
+### P3 (Enterprise) — сертификации
+
+| # | Задача | Размер | Приоритет |
+|---|---|---|---|
+| 7 | **SOC 2** — аудит (Vanta/Drata, $10-20k/год). | 6-12 мес | P3 |
+| 8 | **ISO 27001** — аудит (€15-30k). | 6-12 мес | P3 |
+| 9 | **HIPAA** — BAA + аудит (только если медицина). | 3-6 мес | P3 |
+| 10 | **Pen-test** — ежегодный (€5-15k). | 2-4 недели | P3 |
+
+### P0 (Баги / Tech Debt) — если найдутся
+
+| # | Задача | Приоритет |
+|---|---|---|
+| 11 | **`vishap.yml` (dogfood)** — non-blocking (Ollama unavailable in CI). **Сделано** (f564563). | — |
+| 12 | **`/history` (cross-tenant)** — **Сделано** (Block 16.1). | — |
+| 13 | **FORCE RLS** — **Сделано** (Block 16.1, миграция 003). | — |
+| 14 | **Аудит export (CSV/JSON)** — **Сделано** (Block 17). | — |
+
+### P4 (Nice-to-have) — для полноты
+
+| # | Задача | Размер |
+|---|---|---|
+| 15 | **Java AST (v5.11.7)** — javalang (deferred, 2-3 дня). | 2-3 дня |
+| 16 | **OTel для Celery** — span для `celery.run_analysis` (уже есть, но можно расширить). | 0.5 дня |
+| 17 | **RLS для `audit` таблицы** (если появится). | 1 день |
+| 18 | **CI: Docker push** — автоматическая сборка образа в GitHub Actions. | 1 день |
+
+### Что сделано (для контекста)
+
+- ✅ **Block 16:** RLS (multi-tenant) + FORCE RLS.
+- ✅ **Block 16.1:** History + FORCE RLS.
+- ✅ **Block 17:** Audit export (CSV/JSON).
+- ✅ **Block 18:** Case Study #1 (cookie.c).
+- ✅ **Block 18.1:** Case Study #2 (http2.c).
+- ✅ **Block 18.2:** Full Reports.
+- ✅ **Block 18.3:** Cleanup + version alignment.
+
+### Рекомендуемый порядок (следующая сессия)
+
+1. **Enterprise invoices (P1)** — 1-2 дня (быстро, разблокирует enterprise).
+2. **`/api/me/data` (GDPR, P1)** — 1 день (compliance).
+3. **SSO (SAML, P1)** — 2-3 дня (enterprise).
+4. **GitHub Marketplace (P2)** — 1 неделя (distribution).
+5. **SOC 2 / ISO 27001 (P3)** — когда будет 10+ enterprise-запросов.
+
 ## Ключи
 
 Ротированы 2026-10-14:
