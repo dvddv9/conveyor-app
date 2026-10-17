@@ -72,7 +72,7 @@ processing agreement.
 | **Stripe** | Payments and subscription billing | Customer ID, subscription and usage data, billing email |
 | **GitHub** | GitHub App webhooks and repository access | Installation ID, repository name, commit references |
 | **LLM inference providers** (DeepSeek or an OpenAI-compatible endpoint, or self-hosted Ollama) | Generate the analysis report | The analysed material **after PII redaction**, plus the filename |
-| **Grafana Cloud / self-hosted Tempo, Grafana, Prometheus** | Observability: metrics, traces, dashboards | Technical telemetry, job identifiers, filenames, endpoint timings |
+| **Grafana Cloud / self-hosted Tempo, Grafana, Prometheus** | Observability: metrics, traces, dashboards | Technical telemetry, job identifiers, endpoint timings |
 
 3.1. **Self-hosted Ollama.** When the Service is configured to use a local Ollama
 model, the analysed material is not sent to a third party.

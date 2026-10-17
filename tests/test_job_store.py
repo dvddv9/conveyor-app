@@ -95,55 +95,63 @@ def test_jobstore_create_signature():
 # D. InMemoryJobStore
 # ============================================================
 
-def test_create_returns_job():
+@pytest.mark.asyncio
+async def test_create_returns_job():
     store = InMemoryJobStore()
-    job = store.create("x.py")
+    job = await store.create("x.py")
     assert isinstance(job, Job)
     assert job.job_id
     assert job.status is JobStatus.QUEUED
 
 
-def test_create_filename_and_tenant():
+@pytest.mark.asyncio
+async def test_create_filename_and_tenant():
     store = InMemoryJobStore()
-    job = store.create(filename="x.py", tenant_id="t1")
+    job = await store.create(filename="x.py", tenant_id="t1")
     assert job.filename == "x.py"
     assert job.tenant_id == "t1"
-    fetched = store.get(job.job_id)
+    fetched = await store.get(job.job_id)
     assert fetched is not None
     assert fetched.tenant_id == "t1"
-    assert store.create("y.py").tenant_id is None
+    assert (await store.create("y.py")).tenant_id is None
 
 
-def test_get_returns_job_or_none():
+@pytest.mark.asyncio
+async def test_get_returns_job_or_none():
     store = InMemoryJobStore()
-    job = store.create("x.py")
-    assert store.get(job.job_id).job_id == job.job_id
-    assert store.get("nonexistent") is None
+    job = await store.create("x.py")
+    assert (await store.get(job.job_id)).job_id == job.job_id
+    assert await store.get("nonexistent") is None
 
 
-def test_update_returns_job_and_bumps_updated_at():
+@pytest.mark.asyncio
+async def test_update_returns_job_and_bumps_updated_at():
     store = InMemoryJobStore()
-    job = store.create("x.py")
-    updated = store.update(job.job_id, status=JobStatus.RUNNING, started_at=datetime.now())
+    job = await store.create("x.py")
+    updated = await store.update(
+        job.job_id, status=JobStatus.RUNNING, started_at=datetime.now()
+    )
     assert updated is not None
     assert updated.status is JobStatus.RUNNING
     assert updated.started_at is not None
     assert updated.updated_at >= job.updated_at  # bumped (monotonic)
 
 
-def test_update_missing_returns_none():
+@pytest.mark.asyncio
+async def test_update_missing_returns_none():
     store = InMemoryJobStore()
-    assert store.update("nonexistent", status=JobStatus.DONE) is None
+    assert await store.update("nonexistent", status=JobStatus.DONE) is None
 
 
-def test_delete_list_clear_count():
+@pytest.mark.asyncio
+async def test_delete_list_clear_count():
     store = InMemoryJobStore()
-    ids = [store.create(f"f{i}.py").job_id for i in range(3)]
+    ids = [(await store.create(f"f{i}.py")).job_id for i in range(3)]
     # newest-last == creation order (deterministic via job_id, not micros)
-    assert [j.job_id for j in store.list_jobs()] == ids
-    assert [j.job_id for j in store.list_jobs(limit=2)] == ids[-2:]
-    assert store.delete(ids[0]) is True
-    assert store.delete("nonexistent") is False
-    assert store.count() == 2
-    assert store.clear() == 2
-    assert store.count() == 0
+    assert [j.job_id for j in await store.list_jobs()] == ids
+    assert [j.job_id for j in await store.list_jobs(limit=2)] == ids[-2:]
+    assert await store.delete(ids[0]) is True
+    assert await store.delete("nonexistent") is False
+    assert await store.count() == 2
+    assert await store.clear() == 2
+    assert await store.count() == 0

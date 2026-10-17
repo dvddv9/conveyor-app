@@ -190,7 +190,8 @@ INSERT, UPDATE and DELETE to rows belonging to that tenant.
 tamper-evident without requiring retention of raw content.
 
 6.6. **Observability.** OpenTelemetry traces and Prometheus metrics record job
-identifiers, filenames and timings; they do **not** contain the analysed material.
+identifiers and timings; they do **not** contain the analysed material or file
+names.
 
 6.7. **Transport encryption.** All client traffic is served over TLS.
 

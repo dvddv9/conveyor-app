@@ -71,6 +71,8 @@ def upgrade() -> None:
     # 4. Tenant isolation policy: SELECT/INSERT/UPDATE/DELETE are all filtered.
     #    current_setting(..., true) returns NULL when no tenant was set, and
     #    `tenant_id = NULL` is never true — so the policy fails closed.
+    #    DROP IF EXISTS keeps the migration re-runnable after a partial failure.
+    op.execute(f"DROP POLICY IF EXISTS {POLICY_NAME} ON jobs;")
     op.execute(
         f"""
         CREATE POLICY {POLICY_NAME} ON jobs
@@ -82,10 +84,13 @@ def upgrade() -> None:
 
     # 5. Composite index for the common tenant + recency listing query.
     #    A plain tenant_id index already exists (001_initial_jobs).
-    op.create_index("ix_jobs_tenant_created", "jobs", ["tenant_id", "created_at"])
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS ix_jobs_tenant_created "
+        "ON jobs (tenant_id, created_at);"
+    )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_jobs_tenant_created", table_name="jobs")
+    op.execute("DROP INDEX IF EXISTS ix_jobs_tenant_created;")
     op.execute(f"DROP POLICY IF EXISTS {POLICY_NAME} ON jobs;")
     op.execute("ALTER TABLE jobs DISABLE ROW LEVEL SECURITY;")

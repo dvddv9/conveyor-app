@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""In-memory JobStore implementation (v6.0.3, tenant-aware in v6.3)."""
+"""In-memory JobStore implementation (v6.0.3, async since v6.3, tenant-aware)."""
 import uuid
 from dataclasses import replace
 from datetime import datetime, UTC
@@ -15,9 +15,12 @@ log = get_logger(__name__)
 class InMemoryJobStore:
     """Thread-safe in-memory job store with optional tenant scoping.
 
+    Methods are ``async`` to satisfy the :class:`~src.api.job_store.JobStore`
+    contract shared with the PostgreSQL backend, even though no I/O is involved.
+
     Tenant scoping mirrors the PostgreSQL RLS policy: when a tenant is bound
     (``set_tenant``), reads and writes only see rows belonging to it. With no
-    tenant bound the store behaves exactly as before (single-tenant dev mode).
+    tenant bound the store behaves as before (single-tenant dev mode).
     """
 
     def __init__(self) -> None:
@@ -41,8 +44,8 @@ class InMemoryJobStore:
 
     # --- CRUD ---------------------------------------------------------------
 
-    def create(self, filename: str = "unknown", *,
-               tenant_id: str | None = None) -> Job:
+    async def create(self, filename: str = "unknown", *,
+                     tenant_id: str | None = None) -> Job:
         job_id = f"job-{uuid.uuid4().hex[:12]}"
         now = datetime.now(UTC)
         job = Job(
@@ -59,14 +62,14 @@ class InMemoryJobStore:
         observe_job_created(job.status.value)
         return job
 
-    def get(self, job_id: str) -> Job | None:
+    async def get(self, job_id: str) -> Job | None:
         with self._lock:
             job = self._jobs.get(job_id)
         if job is not None and not self._visible(job, get_tenant()):
             return None
         return job
 
-    def update(self, job_id: str, **kwargs) -> Job | None:
+    async def update(self, job_id: str, **kwargs) -> Job | None:
         with self._lock:
             old = self._jobs.get(job_id)
             if old is None or not self._visible(old, get_tenant()):
@@ -83,7 +86,7 @@ class InMemoryJobStore:
                 observe_job_finished(_status, duration)
             return new
 
-    def delete(self, job_id: str) -> bool:
+    async def delete(self, job_id: str) -> bool:
         with self._lock:
             job = self._jobs.get(job_id)
             if job is None or not self._visible(job, get_tenant()):
@@ -92,13 +95,13 @@ class InMemoryJobStore:
             log.info("job_deleted", job_id=job_id, backend="memory")
             return True
 
-    def list_jobs(self, limit: int = 50) -> list[Job]:
+    async def list_jobs(self, limit: int = 50) -> list[Job]:
         tenant = get_tenant()
         with self._lock:
             items = [j for j in self._jobs.values() if self._visible(j, tenant)]
         return items[-limit:]
 
-    def clear(self) -> int:
+    async def clear(self) -> int:
         tenant = get_tenant()
         with self._lock:
             if tenant is None:
@@ -110,7 +113,7 @@ class InMemoryJobStore:
                 del self._jobs[jid]
             return len(doomed)
 
-    def count(self) -> int:
+    async def count(self) -> int:
         tenant = get_tenant()
         with self._lock:
             return sum(1 for j in self._jobs.values() if self._visible(j, tenant))

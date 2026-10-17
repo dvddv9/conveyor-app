@@ -34,36 +34,40 @@ def test_metrics_content_type(client):
 
 # --- job counters ---
 
-def test_jobs_created_counter_increments():
+@pytest.mark.asyncio
+async def test_jobs_created_counter_increments():
     store = InMemoryJobStore()
     before = _val("vishap_jobs_created_total", {"status": "queued"})
-    store.create("x.py")
+    await store.create("x.py")
     assert _val("vishap_jobs_created_total", {"status": "queued"}) == before + 1
 
 
-def test_jobs_completed_counter_increments():
+@pytest.mark.asyncio
+async def test_jobs_completed_counter_increments():
     store = InMemoryJobStore()
-    job = store.create("x.py")
+    job = await store.create("x.py")
     before = _val("vishap_jobs_completed_total", {"status": "done"})
-    store.update(job.job_id, status=JobStatus.DONE)
+    await store.update(job.job_id, status=JobStatus.DONE)
     assert _val("vishap_jobs_completed_total", {"status": "done"}) == before + 1
 
 
-def test_jobs_failed_counter_increments():
+@pytest.mark.asyncio
+async def test_jobs_failed_counter_increments():
     store = InMemoryJobStore()
-    job = store.create("x.py")
+    job = await store.create("x.py")
     before = _val("vishap_jobs_completed_total", {"status": "failed"})
-    store.update(job.job_id, status=JobStatus.FAILED)
+    await store.update(job.job_id, status=JobStatus.FAILED)
     assert _val("vishap_jobs_completed_total", {"status": "failed"}) == before + 1
 
 
-def test_job_duration_histogram_observed():
+@pytest.mark.asyncio
+async def test_job_duration_histogram_observed():
     store = InMemoryJobStore()
-    job = store.create("x.py")
+    job = await store.create("x.py")
     t0 = datetime.now(UTC)
-    store.update(job.job_id, status=JobStatus.RUNNING, started_at=t0)
+    await store.update(job.job_id, status=JobStatus.RUNNING, started_at=t0)
     before = _val("vishap_job_duration_seconds_count", {})
-    store.update(job.job_id, status=JobStatus.DONE, finished_at=t0 + timedelta(seconds=2))
+    await store.update(job.job_id, status=JobStatus.DONE, finished_at=t0 + timedelta(seconds=2))
     assert _val("vishap_job_duration_seconds_count", {}) == before + 1
 
 

@@ -27,7 +27,7 @@ from src.storage.history import load_history
 from src.api.auth import verify_api_key, is_auth_enabled
 from src.api.rate_limit import rate_limit_analyze, rate_limit_read
 from src.api.jobs import (
-    create_job, get_job, update_job,
+    create_job_async, get_job_async, update_job_async,
 )
 from src.api.tasks import run_analysis_task
 from src.api.celery_app import broker_available
@@ -485,29 +485,32 @@ async def set_mode_endpoint(req: ModeRequest):
 # v6.0: Async API -- job-based analysis
 # ============================================================
 
-async def _run_job_async(job_id: str, req: "AnalyzeRequest"):
+async def _run_job_async(job_id: str, req: "AnalyzeRequest", tenant: str):
     """Run pipeline in background, update job store."""
     from src.pipeline.orchestrator import run_pipeline_async
-    update_job(job_id, status="running", started_at=datetime.now(UTC).isoformat())
-    try:
-        result = await run_pipeline_async(
-            material=req.material,
-            filename=req.filename or "unknown",
-            verbose=False,
+    with tenant_scope(tenant):
+        await update_job_async(
+            job_id, status="running", started_at=datetime.now(UTC).isoformat()
         )
-        update_job(
-            job_id,
-            status="done",
-            result=result,
-            finished_at=datetime.now(UTC).isoformat(),
-        )
-    except Exception as e:
-        update_job(
-            job_id,
-            status="failed",
-            error=str(e),
-            finished_at=datetime.now(UTC).isoformat(),
-        )
+        try:
+            result = await run_pipeline_async(
+                material=req.material,
+                filename=req.filename or "unknown",
+                verbose=False,
+            )
+            await update_job_async(
+                job_id,
+                status="done",
+                result=result,
+                finished_at=datetime.now(UTC).isoformat(),
+            )
+        except Exception as e:
+            await update_job_async(
+                job_id,
+                status="failed",
+                error=str(e),
+                finished_at=datetime.now(UTC).isoformat(),
+            )
 
 
 @app.post("/analyze/async", dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
@@ -516,45 +519,49 @@ async def analyze_async(req: "AnalyzeRequest", background: BackgroundTasks,
                         tenant: str = Depends(current_tenant)):
     """Create async job -- returns job_id immediately."""
     with tenant_scope(tenant):
-        job_id = create_job(filename=req.filename or "unknown", tenant_id=tenant)
+        job_id = await create_job_async(
+            filename=req.filename or "unknown", tenant_id=tenant
+        )
         if broker_available():
-            run_analysis_task.delay(job_id, req.material, req.filename or "unknown")
+            run_analysis_task.delay(job_id, req.material, req.filename or "unknown", tenant)
         else:
             # v6.1: broker unavailable -> in-process fallback (graceful degradation)
             log.warning("celery_broker_unavailable", job_id=job_id)
-            background.add_task(_run_job_async, job_id, req)
+            background.add_task(_run_job_async, job_id, req, tenant)
         return {"job_id": job_id, "status": "queued"}
 
 
 @app.get("/status/{job_id}")
-async def get_status(job_id: str):
+async def get_status(job_id: str, tenant: str = Depends(current_tenant)):
     """Get job status."""
-    job = get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
-    return {
-        "job_id": job["job_id"],
-        "status": job["status"],
-        "filename": job["filename"],
-        "created_at": job["created_at"],
-        "started_at": job["started_at"],
-        "finished_at": job["finished_at"],
-        "error": job["error"],
-    }
+    with tenant_scope(tenant):
+        job = await get_job_async(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="job not found")
+        return {
+            "job_id": job["job_id"],
+            "status": job["status"],
+            "filename": job["filename"],
+            "created_at": job["created_at"],
+            "started_at": job["started_at"],
+            "finished_at": job["finished_at"],
+            "error": job["error"],
+        }
 
 
 @app.get("/report/{job_id}")
-async def get_report(job_id: str):
+async def get_report(job_id: str, tenant: str = Depends(current_tenant)):
     """Get job result. 409 if not done."""
-    job = get_job(job_id)
-    if not job:
-        raise HTTPException(status_code=404, detail="job not found")
-    if job["status"] != "done":
-        raise HTTPException(
-            status_code=409,
-            detail=f"job not done: {job['status']}",
-        )
-    return job["result"]
+    with tenant_scope(tenant):
+        job = await get_job_async(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="job not found")
+        if job["status"] != "done":
+            raise HTTPException(
+                status_code=409,
+                detail=f"job not done: {job['status']}",
+            )
+        return job["result"]
 
 
 if __name__ == "__main__":

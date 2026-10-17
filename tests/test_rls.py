@@ -6,6 +6,7 @@ Integration tests need a live database with revision 002 applied:
     $env:TEST_POSTGRES_URL="postgresql+asyncpg://vishap:vishap_dev@localhost:5432/vishap"
     python -m pytest tests/test_rls.py -v
 """
+import asyncio
 import importlib.util
 import os
 from pathlib import Path
@@ -105,45 +106,49 @@ def test_current_user_dependency_returns_tenant_id():
 # C. In-memory store isolation
 # ============================================================
 
-def test_memory_store_isolates_tenants():
+@pytest.mark.asyncio
+async def test_memory_store_isolates_tenants():
     store = InMemoryJobStore()
 
     set_tenant("t1")
-    job_t1 = store.create("a.py")
+    job_t1 = await store.create("a.py")
     set_tenant("t2")
-    job_t2 = store.create("b.py")
+    job_t2 = await store.create("b.py")
 
     set_tenant("t1")
-    assert store.get(job_t1.job_id) is not None
-    assert store.get(job_t2.job_id) is None
-    assert [j.job_id for j in store.list_jobs()] == [job_t1.job_id]
-    assert store.count() == 1
-    assert store.delete(job_t2.job_id) is False
+    assert await store.get(job_t1.job_id) is not None
+    assert await store.get(job_t2.job_id) is None
+    assert [j.job_id for j in await store.list_jobs()] == [job_t1.job_id]
+    assert await store.count() == 1
+    assert await store.delete(job_t2.job_id) is False
 
 
-def test_memory_store_unscoped_sees_everything():
+@pytest.mark.asyncio
+async def test_memory_store_unscoped_sees_everything():
     store = InMemoryJobStore()
     set_tenant("t1")
-    store.create("a.py")
+    await store.create("a.py")
     set_tenant("t2")
-    store.create("b.py")
+    await store.create("b.py")
 
     set_tenant(None)
-    assert store.count() == 2
-    assert len(store.list_jobs()) == 2
+    assert await store.count() == 2
+    assert len(await store.list_jobs()) == 2
 
 
-def test_memory_create_inherits_bound_tenant():
+@pytest.mark.asyncio
+async def test_memory_create_inherits_bound_tenant():
     store = InMemoryJobStore()
     set_tenant("t1")
-    job = store.create("a.py")
+    job = await store.create("a.py")
     assert job.tenant_id == "t1"
 
 
-def test_memory_create_explicit_tenant_wins():
+@pytest.mark.asyncio
+async def test_memory_create_explicit_tenant_wins():
     store = InMemoryJobStore()
     set_tenant("t1")
-    job = store.create("a.py", tenant_id="t2")
+    job = await store.create("a.py", tenant_id="t2")
     assert job.tenant_id == "t2"
 
 
@@ -324,3 +329,72 @@ def test_inmemory_store_satisfies_protocol_shape():
     for name in ("create", "get", "update", "delete", "list_jobs", "clear", "count",
                  "set_tenant", "get_tenant"):
         assert hasattr(store, name), name
+
+
+# ============================================================
+# G. Context isolation and HTTP-level tenant enforcement
+# ============================================================
+
+@pytest.mark.asyncio
+async def test_tenant_scope_does_not_leak_between_tasks():
+    """Concurrent requests must not see each other's tenant."""
+
+    async def worker(tenant_id: str, delay: float) -> str | None:
+        with tenant_scope(tenant_id):
+            await asyncio.sleep(delay)
+            return get_tenant()
+
+    results = await asyncio.gather(worker("t1", 0.02), worker("t2", 0.0))
+    assert results == ["t1", "t2"]
+    assert get_tenant() is None
+
+
+def test_status_and_report_hide_other_tenants():
+    """A job owned by tenant-a is invisible to tenant-b (404, not 403)."""
+    from fastapi.testclient import TestClient
+
+    from src.auth.middleware import current_tenant
+    from src.main import app
+
+    job_id = jobs_module.create_job("a.py", tenant_id="tenant-a")
+    client = TestClient(app)
+    try:
+        app.dependency_overrides[current_tenant] = lambda: "tenant-b"
+        assert client.get(f"/status/{job_id}").status_code == 404
+        assert client.get(f"/report/{job_id}").status_code == 404
+
+        app.dependency_overrides[current_tenant] = lambda: "tenant-a"
+        assert client.get(f"/status/{job_id}").status_code == 200
+        assert client.get(f"/report/{job_id}").status_code == 409  # queued, not done
+    finally:
+        app.dependency_overrides.pop(current_tenant, None)
+
+
+@needs_pg
+@pytest.mark.asyncio
+async def test_postgres_fail_closed_without_tenant():
+    """No tenant set -> RLS denies everything (no rows, no exception)."""
+    from sqlalchemy import text
+    from sqlalchemy.exc import DBAPIError
+    from sqlalchemy.ext.asyncio import create_async_engine
+
+    from src.api.job_store_postgres import PostgresJobStore
+
+    engine = create_async_engine(PG_URL)
+    async with engine.connect() as conn:
+        try:
+            await conn.execute(text("SET ROLE vishap_app"))
+        except DBAPIError:
+            await engine.dispose()
+            pytest.skip("role vishap_app unavailable; RLS bypassed for table owner")
+        await conn.rollback()
+    await engine.dispose()
+
+    store = PostgresJobStore(PG_URL)
+    try:
+        set_tenant(None)
+        assert await store.list_jobs() == []
+        assert await store.count() == 0
+    finally:
+        set_tenant(None)
+        await store._engine.dispose()

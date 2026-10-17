@@ -1,15 +1,36 @@
 # -*- coding: utf-8 -*-
-"""Backward-compat shim for job store (v6.0.3).
+"""Job store access layer (v6.3: async store, synchronous legacy facade).
 
-Legacy module-level API now delegates to a JobStore instance.
-Backend selected via JOB_STORE env (memory | postgres; postgres -> v6.1).
+The concrete stores are async (see ``src/api/job_store.py``). This module exposes
+two surfaces:
+
+* **async functions** (``*_async``) used by the FastAPI endpoints and Celery —
+  these always ``await`` the store. Before v6.3 the PostgreSQL backend's
+  coroutines were never awaited, so ``JOB_STORE=postgres`` crashed on the first
+  ``create_job`` and Celery updates silently did nothing.
+* a **synchronous facade** with the historical names (``create_job``,
+  ``get_job``, ...) that drives the async functions through ``asyncio.run``.
+  It is used by legacy module-level callers and the existing unit tests.
+
+The synchronous facade must not be called from inside a running event loop —
+use the ``*_async`` variant there.
 """
+import asyncio
 import os
 from datetime import datetime
+from typing import Any, Coroutine, TypeVar
 
-from src.api.job_store import Job, JobStatus, JobStore, get_tenant, set_tenant
+from src.api.job_store import (
+    DEFAULT_TENANT,
+    Job,
+    JobStatus,
+    JobStore,
+    get_tenant,
+    set_tenant,
+)
 from src.api.job_store_memory import InMemoryJobStore
 
+T = TypeVar("T")
 
 _store: JobStore | None = None
 
@@ -31,6 +52,36 @@ def get_store() -> JobStore:
     return _store
 
 
+def reset_store() -> None:
+    """Drop the cached store.
+
+    Needed by the Celery worker: each task runs ``asyncio.run`` on a fresh event
+    loop, and a SQLAlchemy async engine is bound to the loop that created it.
+    """
+    global _store
+    _store = None
+
+
+def _run_sync(coro: Coroutine[Any, Any, T]) -> T:
+    """Drive a coroutine from synchronous code."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    coro.close()
+    raise RuntimeError(
+        "The synchronous job-store facade cannot run inside an event loop. "
+        "Use the *_async variant (create_job_async, get_job_async, ...) instead."
+    )
+
+
+def _effective_tenant(tenant_id: str | None) -> str:
+    """Explicit tenant wins; otherwise the bound tenant; otherwise the default."""
+    if tenant_id is not None:
+        return tenant_id
+    return get_tenant() or DEFAULT_TENANT
+
+
 def _job_to_dict(job: Job) -> dict:
     """Convert Job to legacy dict shape (status as str, ISO datetimes)."""
     return {
@@ -46,42 +97,77 @@ def _job_to_dict(job: Job) -> dict:
     }
 
 
-# --- Legacy API (сохраняем сигнатуры) ---
-
-def create_job(filename: str = "unknown", tenant_id: str | None = None) -> str:
-    return get_store().create(filename=filename, tenant_id=tenant_id).job_id
-
-
-def get_job(job_id: str) -> dict | None:
-    job = get_store().get(job_id)
-    return _job_to_dict(job) if job else None
-
-
-def update_job(job_id: str, **kwargs) -> bool:
-    # Legacy: kwargs — dict-поля. Конвертируем status-строку в JobStatus.
+def _normalise_update(kwargs: dict) -> dict:
+    """Legacy coercion: status str -> JobStatus, ISO datetime str -> datetime."""
     if "status" in kwargs and isinstance(kwargs["status"], str):
         kwargs["status"] = JobStatus(kwargs["status"])
-    # v6.0.3-shim-fix: main.py passes started_at/finished_at as ISO strings.
     for dt_field in ("started_at", "finished_at"):
         if dt_field in kwargs and isinstance(kwargs[dt_field], str):
             kwargs[dt_field] = datetime.fromisoformat(kwargs[dt_field])
-    return get_store().update(job_id, **kwargs) is not None
+    return kwargs
+
+
+# --- async API (endpoints, Celery) -----------------------------------------
+
+async def create_job_async(filename: str = "unknown", tenant_id: str | None = None) -> str:
+    job = await get_store().create(filename=filename, tenant_id=_effective_tenant(tenant_id))
+    return job.job_id
+
+
+async def get_job_async(job_id: str) -> dict | None:
+    job = await get_store().get(job_id)
+    return _job_to_dict(job) if job else None
+
+
+async def update_job_async(job_id: str, **kwargs) -> bool:
+    updated = await get_store().update(job_id, **_normalise_update(kwargs))
+    return updated is not None
+
+
+async def delete_job_async(job_id: str) -> bool:
+    return await get_store().delete(job_id)
+
+
+async def list_jobs_async(limit: int = 50) -> list[dict]:
+    return [_job_to_dict(j) for j in await get_store().list_jobs(limit=limit)]
+
+
+async def clear_jobs_async() -> int:
+    return await get_store().clear()
+
+
+async def job_count_async() -> int:
+    return await get_store().count()
+
+
+# --- synchronous legacy facade ---------------------------------------------
+
+def create_job(filename: str = "unknown", tenant_id: str | None = None) -> str:
+    return _run_sync(create_job_async(filename, tenant_id))
+
+
+def get_job(job_id: str) -> dict | None:
+    return _run_sync(get_job_async(job_id))
+
+
+def update_job(job_id: str, **kwargs) -> bool:
+    return _run_sync(update_job_async(job_id, **kwargs))
 
 
 def delete_job(job_id: str) -> bool:
-    return get_store().delete(job_id)
+    return _run_sync(delete_job_async(job_id))
 
 
 def list_jobs(limit: int = 50) -> list[dict]:
-    return [_job_to_dict(j) for j in get_store().list_jobs(limit=limit)]
+    return _run_sync(list_jobs_async(limit=limit))
 
 
 def clear_jobs() -> int:
-    return get_store().clear()
+    return _run_sync(clear_jobs_async())
 
 
 def job_count() -> int:
-    return get_store().count()
+    return _run_sync(job_count_async())
 
 
 # --- Tenant context (v6.3 RLS) ---

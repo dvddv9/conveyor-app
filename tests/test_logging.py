@@ -152,26 +152,29 @@ def test_exception_logged_with_traceback():
 
 # --- job store (memory) ----------------------------------------------------
 
-def test_job_store_memory_logs_create():
+@pytest.mark.asyncio
+async def test_job_store_memory_logs_create():
     store = InMemoryJobStore()
     with capture_logs() as cap:
-        store.create("x.py")
+        await store.create("x.py")
     assert any(e["event"] == "job_created" for e in cap)
 
 
-def test_job_store_memory_logs_update():
+@pytest.mark.asyncio
+async def test_job_store_memory_logs_update():
     store = InMemoryJobStore()
-    job = store.create("x.py")
+    job = await store.create("x.py")
     with capture_logs() as cap:
-        store.update(job.job_id, status=JobStatus.RUNNING)
+        await store.update(job.job_id, status=JobStatus.RUNNING)
     assert any(e["event"] == "job_updated" for e in cap)
 
 
-def test_job_store_memory_logs_delete():
+@pytest.mark.asyncio
+async def test_job_store_memory_logs_delete():
     store = InMemoryJobStore()
-    job = store.create("x.py")
+    job = await store.create("x.py")
     with capture_logs() as cap:
-        store.delete(job.job_id)
+        await store.delete(job.job_id)
     assert any(e["event"] == "job_deleted" for e in cap)
 
 
