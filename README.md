@@ -1642,6 +1642,12 @@ Run:
 python run_tests.py
 ```
 
+## Documentation
+
+Full documentation (built with Docusaurus) lives in [`docs-site/`](docs-site/) and is deployed to GitHub Pages:
+
+- https://dvddv9.github.io/vishap/
+
 ## Contributors
 
 - **dvddv9** — creator, maintainer ([@dvddv9](https://github.com/dvddv9))

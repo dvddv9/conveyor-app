@@ -76,3 +76,11 @@ vishap-tests-*/
 
 # temp: docker cp data for case-study
 data_curl/
+
+# === Docusaurus (docs-site) ===
+docs-site/node_modules/
+docs-site/build/
+docs-site/.docusaurus/
+docs-site/.cache-loader/
+docs-site/.env.local
+docs-site/npm-debug.log*
