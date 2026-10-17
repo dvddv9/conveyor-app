@@ -29,3 +29,4 @@ alembic>=1.13.0
 structlog>=24.0.0
 prometheus-client>=0.20.0
 cryptography>=42.0.0
+zstandard>=0.22.0
