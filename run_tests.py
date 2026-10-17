@@ -64,6 +64,8 @@ def main():
     rc |= run("tests/test_anomaly_code.py")
     rc |= run("tests/test_analyze_concurrency.py")
     rc |= run("tests/test_analyze_contracts.py")
+    rc |= run("tests/test_celery_app.py")
+    rc |= run("tests/test_tasks.py")
 
     if "--all" in sys.argv:
         print("\n[--all] E2E tests (real LLM, slow, uses API):")

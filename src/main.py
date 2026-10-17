@@ -28,6 +28,8 @@ from src.api.rate_limit import rate_limit_analyze, rate_limit_read
 from src.api.jobs import (
     create_job, get_job, update_job,
 )
+from src.api.tasks import run_analysis_task
+from src.api.celery_app import broker_available
 from datetime import UTC
 from src.tools.sarif import to_sarif
 
@@ -469,7 +471,12 @@ async def _run_job_async(job_id: str, req: "AnalyzeRequest"):
 async def analyze_async(req: "AnalyzeRequest", background: BackgroundTasks):
     """Create async job -- returns job_id immediately."""
     job_id = create_job(filename=req.filename or "unknown")
-    background.add_task(_run_job_async, job_id, req)
+    if broker_available():
+        run_analysis_task.delay(job_id, req.material, req.filename or "unknown")
+    else:
+        # v6.1: broker unavailable -> in-process fallback (graceful degradation)
+        log.warning("celery_broker_unavailable", job_id=job_id)
+        background.add_task(_run_job_async, job_id, req)
     return {"job_id": job_id, "status": "queued"}
 
 
