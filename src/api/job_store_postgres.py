@@ -1,18 +1,30 @@
 # -*- coding: utf-8 -*-
-"""PostgreSQL JobStore implementation (v6.1) via SQLAlchemy 2.0 async."""
-import uuid
-from datetime import datetime, UTC
+"""PostgreSQL JobStore implementation (v6.1) via SQLAlchemy 2.0 async.
 
-from sqlalchemy import DateTime, String, Text, delete, func, select
+Multi-tenant isolation (v6.3) is delegated to PostgreSQL row-level security:
+every session opened by the store first applies
+``set_config('app.current_tenant', <tenant>, true)``, so the policy installed by
+alembic revision ``002_add_rls_jobs`` filters every SELECT/UPDATE/DELETE.
+"""
+import uuid
+from contextlib import asynccontextmanager
+from datetime import datetime, UTC
+from typing import AsyncIterator
+
+from sqlalchemy import DateTime, String, Text, delete, func, select, text
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from src.api.job_store import Job, JobStatus
+from src.api.job_store import Job, JobStatus, get_tenant, set_tenant
 from src.observability.logging import get_logger
 from src.observability.metrics import observe_job_created, observe_job_finished
 
 log = get_logger(__name__)
+
+#: Parameterised; ``SET LOCAL app.current_tenant = :x`` is not valid PostgreSQL,
+#: and ``is_local = true`` scopes the value to the current transaction.
+_SET_TENANT_SQL = text("SELECT set_config('app.current_tenant', :tenant, true)")
 
 
 class Base(DeclarativeBase):
@@ -47,6 +59,27 @@ class PostgresJobStore:
         self._engine = create_async_engine(database_url)
         self._session_factory = async_sessionmaker(self._engine, expire_on_commit=False)
 
+    # --- tenant context -----------------------------------------------------
+
+    def set_tenant(self, tenant_id: str | None) -> None:
+        """Bind the tenant for subsequent sessions opened by this store."""
+        set_tenant(tenant_id)
+
+    def get_tenant(self) -> str | None:
+        """Return the currently bound tenant."""
+        return get_tenant()
+
+    @asynccontextmanager
+    async def _session(self) -> AsyncIterator[AsyncSession]:
+        """Open a session and apply the tenant context inside its transaction."""
+        async with self._session_factory() as session:
+            tenant = get_tenant()
+            if tenant:
+                # Runs inside the autobegun transaction, so `is_local=true`
+                # keeps the value for exactly this session's work.
+                await session.execute(_SET_TENANT_SQL, {"tenant": tenant})
+            yield session
+
     @staticmethod
     def _to_job(model: "JobModel") -> Job:
         return Job(
@@ -72,13 +105,13 @@ class PostgresJobStore:
             filename=filename,
             created_at=now,
             updated_at=now,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id if tenant_id is not None else get_tenant(),
             result=None,
             error=None,
             started_at=None,
             finished_at=None,
         )
-        async with self._session_factory() as session:
+        async with self._session() as session:
             session.add(model)
             await session.commit()
         log.info("job_created", job_id=job_id, filename=filename, backend="postgres")
@@ -86,7 +119,7 @@ class PostgresJobStore:
         return self._to_job(model)
 
     async def get(self, job_id: str) -> Job | None:
-        async with self._session_factory() as session:
+        async with self._session() as session:
             model = await session.get(JobModel, job_id)
         return self._to_job(model) if model else None
 
@@ -97,7 +130,7 @@ class PostgresJobStore:
         for dt_field in ("started_at", "finished_at"):
             if dt_field in kwargs and isinstance(kwargs[dt_field], str):
                 kwargs[dt_field] = datetime.fromisoformat(kwargs[dt_field])
-        async with self._session_factory() as session:
+        async with self._session() as session:
             model = await session.get(JobModel, job_id)
             if model is None:
                 return None
@@ -116,7 +149,7 @@ class PostgresJobStore:
         return job
 
     async def delete(self, job_id: str) -> bool:
-        async with self._session_factory() as session:
+        async with self._session() as session:
             model = await session.get(JobModel, job_id)
             if model is None:
                 return False
@@ -126,7 +159,7 @@ class PostgresJobStore:
         return True
 
     async def list_jobs(self, limit: int = 50) -> list[Job]:
-        async with self._session_factory() as session:
+        async with self._session() as session:
             result = await session.execute(
                 select(JobModel).order_by(JobModel.created_at.desc()).limit(limit)
             )
@@ -134,13 +167,13 @@ class PostgresJobStore:
         return [self._to_job(m) for m in models]
 
     async def clear(self) -> int:
-        async with self._session_factory() as session:
+        async with self._session() as session:
             result = await session.execute(delete(JobModel))
             await session.commit()
         return result.rowcount or 0
 
     async def count(self) -> int:
-        async with self._session_factory() as session:
+        async with self._session() as session:
             result = await session.execute(select(func.count()).select_from(JobModel))
             value = result.scalar()
         return value or 0

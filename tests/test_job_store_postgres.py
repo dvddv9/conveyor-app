@@ -192,3 +192,31 @@ async def test_count_returns_int(store, session):
     result.scalar.return_value = 5
     session.execute.return_value = result
     assert await store.count() == 5
+
+
+# --- tenant context (v6.3 RLS) ---
+
+def test_store_exposes_tenant_methods(store):
+    assert hasattr(store, "set_tenant")
+    assert hasattr(store, "get_tenant")
+
+
+@pytest.mark.asyncio
+async def test_set_tenant_applies_guc(store, session):
+    from src.api.job_store import set_tenant
+
+    set_tenant(None)
+    store.set_tenant("t1")
+    assert store.get_tenant() == "t1"
+
+    result = MagicMock()
+    result.scalars.return_value.all.return_value = []
+    session.execute.return_value = result
+    await store.list_jobs()
+
+    first = session.execute.await_args_list[0]
+    assert "set_config" in str(first.args[0])
+    assert first.args[1] == {"tenant": "t1"}
+
+    store.set_tenant(None)
+    assert store.get_tenant() is None

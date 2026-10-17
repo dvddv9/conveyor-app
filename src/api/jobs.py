@@ -7,7 +7,7 @@ Backend selected via JOB_STORE env (memory | postgres; postgres -> v6.1).
 import os
 from datetime import datetime
 
-from src.api.job_store import Job, JobStatus, JobStore
+from src.api.job_store import Job, JobStatus, JobStore, get_tenant, set_tenant
 from src.api.job_store_memory import InMemoryJobStore
 
 
@@ -48,8 +48,8 @@ def _job_to_dict(job: Job) -> dict:
 
 # --- Legacy API (сохраняем сигнатуры) ---
 
-def create_job(filename: str = "unknown") -> str:
-    return get_store().create(filename=filename).job_id
+def create_job(filename: str = "unknown", tenant_id: str | None = None) -> str:
+    return get_store().create(filename=filename, tenant_id=tenant_id).job_id
 
 
 def get_job(job_id: str) -> dict | None:
@@ -82,3 +82,15 @@ def clear_jobs() -> int:
 
 def job_count() -> int:
     return get_store().count()
+
+
+# --- Tenant context (v6.3 RLS) ---
+
+def set_current_tenant(tenant_id: str | None) -> None:
+    """Bind the tenant for the current request/task (see job_store.tenant_scope)."""
+    set_tenant(tenant_id)
+
+
+def get_current_tenant() -> str | None:
+    """Return the tenant bound to the current request/task."""
+    return get_tenant()

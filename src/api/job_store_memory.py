@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""In-memory JobStore implementation (v6.0.3)."""
+"""In-memory JobStore implementation (v6.0.3, tenant-aware in v6.3)."""
 import uuid
 from dataclasses import replace
 from datetime import datetime, UTC
 from threading import RLock
 
-from src.api.job_store import Job, JobStatus
+from src.api.job_store import Job, JobStatus, get_tenant, set_tenant
 from src.observability.logging import get_logger
 from src.observability.metrics import observe_job_created, observe_job_finished
 
@@ -13,11 +13,33 @@ log = get_logger(__name__)
 
 
 class InMemoryJobStore:
-    """Thread-safe in-memory job store."""
+    """Thread-safe in-memory job store with optional tenant scoping.
+
+    Tenant scoping mirrors the PostgreSQL RLS policy: when a tenant is bound
+    (``set_tenant``), reads and writes only see rows belonging to it. With no
+    tenant bound the store behaves exactly as before (single-tenant dev mode).
+    """
 
     def __init__(self) -> None:
         self._jobs: dict[str, Job] = {}
         self._lock = RLock()
+
+    # --- tenant context -----------------------------------------------------
+
+    def set_tenant(self, tenant_id: str | None) -> None:
+        set_tenant(tenant_id)
+
+    def get_tenant(self) -> str | None:
+        return get_tenant()
+
+    @staticmethod
+    def _visible(job: Job, tenant: str | None) -> bool:
+        """RLS equivalent: NULL tenant rows are only visible without a tenant."""
+        if tenant is None:
+            return True
+        return job.tenant_id == tenant
+
+    # --- CRUD ---------------------------------------------------------------
 
     def create(self, filename: str = "unknown", *,
                tenant_id: str | None = None) -> Job:
@@ -29,7 +51,7 @@ class InMemoryJobStore:
             created_at=now,
             updated_at=now,
             filename=filename,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id if tenant_id is not None else get_tenant(),
         )
         with self._lock:
             self._jobs[job_id] = job
@@ -39,12 +61,15 @@ class InMemoryJobStore:
 
     def get(self, job_id: str) -> Job | None:
         with self._lock:
-            return self._jobs.get(job_id)
+            job = self._jobs.get(job_id)
+        if job is not None and not self._visible(job, get_tenant()):
+            return None
+        return job
 
     def update(self, job_id: str, **kwargs) -> Job | None:
         with self._lock:
             old = self._jobs.get(job_id)
-            if old is None:
+            if old is None or not self._visible(old, get_tenant()):
                 return None
             new = replace(old, updated_at=datetime.now(UTC), **kwargs)
             self._jobs[job_id] = new
@@ -60,23 +85,32 @@ class InMemoryJobStore:
 
     def delete(self, job_id: str) -> bool:
         with self._lock:
-            if job_id in self._jobs:
-                del self._jobs[job_id]
-                log.info("job_deleted", job_id=job_id, backend="memory")
-                return True
-            return False
+            job = self._jobs.get(job_id)
+            if job is None or not self._visible(job, get_tenant()):
+                return False
+            del self._jobs[job_id]
+            log.info("job_deleted", job_id=job_id, backend="memory")
+            return True
 
     def list_jobs(self, limit: int = 50) -> list[Job]:
+        tenant = get_tenant()
         with self._lock:
-            items = list(self._jobs.values())
+            items = [j for j in self._jobs.values() if self._visible(j, tenant)]
         return items[-limit:]
 
     def clear(self) -> int:
+        tenant = get_tenant()
         with self._lock:
-            n = len(self._jobs)
-            self._jobs.clear()
-        return n
+            if tenant is None:
+                n = len(self._jobs)
+                self._jobs.clear()
+                return n
+            doomed = [jid for jid, j in self._jobs.items() if self._visible(j, tenant)]
+            for jid in doomed:
+                del self._jobs[jid]
+            return len(doomed)
 
     def count(self) -> int:
+        tenant = get_tenant()
         with self._lock:
-            return len(self._jobs)
+            return sum(1 for j in self._jobs.values() if self._visible(j, tenant))

@@ -32,7 +32,8 @@ from src.api.jobs import (
 from src.api.tasks import run_analysis_task
 from src.api.celery_app import broker_available
 from src.github_app.webhook import handle_webhook
-from src.auth.middleware import current_user
+from src.api.job_store import tenant_scope
+from src.auth.middleware import current_tenant, current_user
 from src.billing.stripe_client import create_checkout_session
 from src.billing.webhook import handle_stripe_webhook
 from datetime import UTC
@@ -339,9 +340,10 @@ async def analyze(req: AnalyzeRequest):
 
 
 @app.post("/analyze/secure", dependencies=[Depends(current_user)])
-async def analyze_secure(req: AnalyzeRequest):
+async def analyze_secure(req: AnalyzeRequest, user: dict = Depends(current_user)):
     """Analyze with Clerk JWT auth (multi-tenant); /analyze keeps API-key auth."""
-    return await analyze(req)
+    with tenant_scope(user["tenant_id"]):
+        return await analyze(req)
 
 
 @app.post("/analyze/batch", response_model=BatchResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
@@ -510,16 +512,18 @@ async def _run_job_async(job_id: str, req: "AnalyzeRequest"):
 
 @app.post("/analyze/async", dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
 @traced("analyze_async")
-async def analyze_async(req: "AnalyzeRequest", background: BackgroundTasks):
+async def analyze_async(req: "AnalyzeRequest", background: BackgroundTasks,
+                        tenant: str = Depends(current_tenant)):
     """Create async job -- returns job_id immediately."""
-    job_id = create_job(filename=req.filename or "unknown")
-    if broker_available():
-        run_analysis_task.delay(job_id, req.material, req.filename or "unknown")
-    else:
-        # v6.1: broker unavailable -> in-process fallback (graceful degradation)
-        log.warning("celery_broker_unavailable", job_id=job_id)
-        background.add_task(_run_job_async, job_id, req)
-    return {"job_id": job_id, "status": "queued"}
+    with tenant_scope(tenant):
+        job_id = create_job(filename=req.filename or "unknown", tenant_id=tenant)
+        if broker_available():
+            run_analysis_task.delay(job_id, req.material, req.filename or "unknown")
+        else:
+            # v6.1: broker unavailable -> in-process fallback (graceful degradation)
+            log.warning("celery_broker_unavailable", job_id=job_id)
+            background.add_task(_run_job_async, job_id, req)
+        return {"job_id": job_id, "status": "queued"}
 
 
 @app.get("/status/{job_id}")
