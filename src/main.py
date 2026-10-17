@@ -32,6 +32,8 @@ from src.api.tasks import run_analysis_task
 from src.api.celery_app import broker_available
 from src.github_app.webhook import handle_webhook
 from src.auth.middleware import current_user
+from src.billing.stripe_client import create_checkout_session
+from src.billing.webhook import handle_stripe_webhook
 from datetime import UTC
 from src.tools.sarif import to_sarif
 
@@ -207,6 +209,26 @@ async def metrics():
 async def github_webhook(request: Request):
     """GitHub App webhook: PR opened -> analyze diff -> comment."""
     return await handle_webhook(request)
+
+
+class CheckoutRequest(BaseModel):
+    email: str
+    success_url: str
+    cancel_url: str
+
+
+@app.post("/billing/checkout")
+async def checkout(req: CheckoutRequest):
+    """Create a Stripe Checkout Session (subscription)."""
+    return create_checkout_session(req.email, req.success_url, req.cancel_url)
+
+
+@app.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """Stripe webhook: verify signature, handle subscription events."""
+    payload = await request.body()
+    sig = request.headers.get("Stripe-Signature", "")
+    return handle_stripe_webhook(payload, sig)
 
 
 @app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
