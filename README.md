@@ -1646,7 +1646,8 @@ python run_tests.py
 
 Full documentation (built with Docusaurus) lives in [`docs-site/`](docs-site/) and is deployed to GitHub Pages:
 
-- https://dvddv9.github.io/vishap/
+- Docs: https://dvddv9.github.io/vishap/
+- Landing: https://dvddv9.github.io/vishap/landing/
 
 ## Contributors
 
