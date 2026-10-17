@@ -281,11 +281,112 @@ def mode_migrate(spec: dict) -> dict:
     return out
 
 
+# === v6.1: concurrency + contracts (AST, Python only) ===
+
+_LOCK_NAMES = {"Lock", "RLock", "Semaphore", "BoundedSemaphore", "Condition", "Event"}
+
+
+def analyze_concurrency(code: str) -> dict:
+    """Detect concurrency constructs (locks, shared state, async) via AST.
+
+    Python only. Fail-open: parse errors return empty lists + "error", never raise.
+    """
+    result = {
+        "mode": "concurrency",
+        "locks": [],
+        "shared_state": [],
+        "async_constructs": [],
+    }
+    if not code.strip():
+        result["empty"] = True
+        return result
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as e:
+        result["error"] = f"SyntaxError: {e}"
+        return result
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            fn = node.func
+            if isinstance(fn, ast.Attribute) and fn.attr in _LOCK_NAMES:
+                obj = fn.value
+                name = f"{obj.id}.{fn.attr}" if isinstance(obj, ast.Name) else fn.attr
+                if name not in result["locks"]:
+                    result["locks"].append(name)
+            elif isinstance(fn, ast.Name) and fn.id in _LOCK_NAMES:
+                if fn.id not in result["locks"]:
+                    result["locks"].append(fn.id)
+        elif isinstance(node, ast.Global):
+            for name in node.names:
+                if name not in result["shared_state"]:
+                    result["shared_state"].append(name)
+        elif isinstance(node, ast.Await):
+            if "await" not in result["async_constructs"]:
+                result["async_constructs"].append("await")
+        elif isinstance(node, ast.AsyncFunctionDef):
+            if "async def" not in result["async_constructs"]:
+                result["async_constructs"].append("async def")
+
+    return result
+
+
+def analyze_contracts(code: str) -> dict:
+    """Detect reliability contracts (error handling, retry, timeout, idempotency).
+
+    Heuristic AST check, Python only. Fail-open like other deterministic tools.
+    """
+    result = {
+        "mode": "contracts",
+        "error_handling": False,
+        "retry": False,
+        "timeout": False,
+        "idempotency": False,
+    }
+    if not code.strip():
+        result["empty"] = True
+        return result
+    try:
+        tree = ast.parse(code)
+    except SyntaxError as e:
+        result["error"] = f"SyntaxError: {e}"
+        return result
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Try):
+            result["error_handling"] = True
+        elif isinstance(node, ast.Name):
+            low = node.id.lower()
+            if low == "retry":
+                result["retry"] = True
+            elif low in ("idempotency", "idempotency_key"):
+                result["idempotency"] = True
+        elif isinstance(node, ast.Attribute):
+            if node.attr == "retry":
+                result["retry"] = True
+            elif node.attr in ("idempotency", "idempotency_key"):
+                result["idempotency"] = True
+        elif isinstance(node, ast.arg):
+            if node.arg.lower() in ("idempotency", "idempotency_key"):
+                result["idempotency"] = True
+        elif isinstance(node, ast.Call):
+            for kw in node.keywords:
+                if kw.arg == "timeout":
+                    result["timeout"] = True
+                elif kw.arg in ("idempotency_key", "idempotency"):
+                    result["idempotency"] = True
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            if "idempotency" in node.value.lower():
+                result["idempotency"] = True
+
+    return result
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", required=True,
                     choices=["static", "security", "metrics", "deps", "tests",
-                             "calc", "cost", "migrate"])
+                             "calc", "cost", "migrate", "concurrency", "contracts"])
     ap.add_argument("--input")
     ap.add_argument("--spec")
     args = ap.parse_args()
@@ -298,6 +399,10 @@ def main():
         print(json.dumps(mode_deps(args.input), indent=2, ensure_ascii=False))
     elif args.mode == "tests":
         print(json.dumps(mode_tests(args.input), indent=2, ensure_ascii=False))
+    elif args.mode in ("concurrency", "contracts"):
+        code = _read_input(args.input)
+        fn = {"concurrency": analyze_concurrency, "contracts": analyze_contracts}[args.mode]
+        print(json.dumps(fn(code), indent=2, ensure_ascii=False))
     elif args.mode in ("calc", "cost", "migrate"):
         if not args.spec:
             print(json.dumps({"error": "--spec required"}))
