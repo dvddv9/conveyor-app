@@ -146,7 +146,7 @@ Vishap **не** утверждает, что нашёл эксплуатируе
 ## Full Report
 
 <details>
-<summary>Полный отчёт Vishap (дословно, артефакт прогона)</summary>
+<summary>Full Report (Vishap v6.0.1, D3)</summary>
 
 ```text
 VISHAP V5.8 — STAGE 5: TRANSMITTER

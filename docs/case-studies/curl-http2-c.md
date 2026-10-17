@@ -172,7 +172,7 @@ REQUIRES_REVIEW
 ## Full Report
 
 <details>
-<summary>Полный отчёт Vishap (дословно, артефакт прогона)</summary>
+<summary>Full Report (Vishap v6.0.1, D4)</summary>
 
 ```text
 VISHAP V5.8 — STAGE 5: TRANSMITTER
