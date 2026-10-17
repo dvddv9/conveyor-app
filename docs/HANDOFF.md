@@ -468,6 +468,42 @@ Streamlit заменить на React. 1-2 недели.
     python -m src.main
     docker compose up -d
 
+## Harness (DSH) integration (2026-10-17)
+
+Vishap may use DeepSeek Harness (DSH) as an LLM provider - agent with
+workspace access (files, shell, multi-turn), not just a chat response.
+
+**Commits:**
+- `9523f14` - feat(llm): add Harness (DSH) provider
+- `caf45e9` - feat(llm): expose Harness mode via UI + mode API
+- `48004bd` - feat(llm): full Harness integration - sync + async
+- `d244c1c` - docs: add HARNESS.md
+
+**Architecture:**
+- `src/llm/harness_client.py` - sync client (Typert RPC over HTTP + JSONL log read via zstandard).
+- `src/llm/client.py` - `harness` branch in `chat()` (sync).
+- `src/llm/async_client.py` - `harness` branch in `async_chat()`, wraps sync client in `loop.run_in_executor`.
+- `src/storage/mode.py` - `harness` in `VALID_MODES`.
+- `src/ui/streamlit_app.py` - sidebar option Harness (DSH).
+
+**Config (.env):**
+```
+HARNESS_URL=http://127.0.0.1:3080
+HARNESS_TOKEN=<from dsh web>
+VISHAP_LLM_PROVIDER=auto
+VISHAP_DATA_DIR=C:\AI\conveyor_app\data
+```
+
+**Docs:** `docs/HARNESS.md` (setup, switching, troubleshooting).
+
+**Known limitation:**
+- No fallback (DSH down -> 500). Recommended next session.
+- DSH developer preview; RPC + log format may change.
+- `session.v4.jsonl.zstd` filename versioned.
+
+**Tests:** none yet. Recommended: `tests/test_harness_client.py`
+(mock httpx + zstandard).
+
 ## Case study
 
 docs/case-studies/dogfood/RequestFilter-java/
