@@ -1,4 +1,4 @@
-# Vishap V6.0.3
+# Vishap V6.1.0
 
 <img src="docs/logo.png" alt="Vishap dragon" width="128" height="128" align="right">
 
@@ -24,7 +24,7 @@ Takes a file as input → returns a structured Markdown report with risks, STRID
 
 
 
-## What's new in v6.0.3
+## What's new in v6.1.0
 
 JobStore abstraction -- foundation for v6.1 (PostgreSQL).
 
