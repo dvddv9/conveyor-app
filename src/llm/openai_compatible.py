@@ -10,7 +10,6 @@ Works with any provider exposing the OpenAI /v1/chat/completions API:
 - Ollama (OpenAI-compat mode)
 - DeepSeek (already works, but this is generic)
 """
-import os
 from openai import OpenAI
 
 from src.config import (

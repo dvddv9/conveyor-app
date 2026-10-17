@@ -31,7 +31,7 @@ from src.tools.sca import run_sca  # dogfood P1: dependency audit
 from src.tools.patterns import PII_PATTERNS, COMPLIANCE_TRIGGERS
 from src.tools.compliance import enrich_compliance  # P2-8
 from src.tools.runbook import enrich_runbook  # P2-9
-from src.tools.patterns import CWE_TO_OWASP, cwe_to_owasp
+from src.tools.patterns import cwe_to_owasp
 from src.tools.patterns import detect_exploitability
 from src.tools.reachability import enrich_exploitability  # P2-7
 from src.tools.dataflow import enrich_dataflow  # P2-7b
@@ -439,7 +439,7 @@ def run_pipeline(material: str, filename: str, verbose: bool = True,
 
 
     if verbose:
-        print(f"=== Vishap Pipeline ===")
+        print("=== Vishap Pipeline ===")
         print(f"Session: {session_id}")
         print(f"File: {filename}")
         print(f"Material: {len(material)} символов")

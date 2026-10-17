@@ -8,7 +8,6 @@ stages. This module redacts PII/secrets BEFORE any LLM call.
 Uses the same regex patterns as orchestrator.PII_PATTERNS to keep
 detection and redaction in sync.
 """
-import re
 from src.tools.patterns import PII_PATTERNS
 
 

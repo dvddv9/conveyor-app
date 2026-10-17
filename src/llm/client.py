@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Unified LLM client with fallback (P2-11)."""
-import os
 
 from src.storage.mode import get_mode
 from src.llm import deepseek_client, ollama_client, harness_client

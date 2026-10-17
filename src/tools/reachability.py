@@ -12,7 +12,6 @@ Fail-open: returns safe defaults on error, does not raise.
 Backward compatible: enrich_exploitability() adds new fields,
     keeps all old fields intact, does not mutate input.
 """
-import re
 from typing import Any
 
 from src.tools.patterns import EXPLOIT_PATTERNS, TAINT_SOURCES, TAINT_SINKS

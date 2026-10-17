@@ -7,7 +7,6 @@ import json
 import time
 import uuid
 from datetime import datetime
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, Response
@@ -22,15 +21,14 @@ from src.observability.logging import (
     clear_context,
 )
 from src.observability.metrics import get_metrics_output, observe_http_request
-from src.pipeline.orchestrator import run_pipeline
 from src.pipeline.batch import run_batch
-from src.storage.history import load_history, add_entry
+from src.storage.history import load_history
 from src.api.auth import verify_api_key, is_auth_enabled
 from src.api.rate_limit import rate_limit_analyze, rate_limit_read
 from src.api.jobs import (
-    create_job, get_job, update_job, list_jobs,
+    create_job, get_job, update_job,
 )
-from datetime import datetime, UTC
+from datetime import UTC
 from src.tools.sarif import to_sarif
 
 
@@ -214,7 +212,7 @@ async def analyze(req: AnalyzeRequest):
 
     # === Idempotency: check if same material already analyzed ===
     from src.pipeline.orchestrator import compute_hash
-    from src.storage.history import find_done_by_hash, load_history
+    from src.storage.history import find_done_by_hash
 
     material_hash = compute_hash(req.material)
     existing = None if getattr(req, 'force', False) else find_done_by_hash(material_hash)

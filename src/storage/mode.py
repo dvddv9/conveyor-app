@@ -4,7 +4,6 @@
 Сохраняется в data/mode.json.
 """
 import json
-from pathlib import Path
 
 from src.config import DATA_DIR
 

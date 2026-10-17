@@ -85,9 +85,9 @@ def cmd_analyze(args):
             if sbom:
                 print(f"sbom:          {args.sbom} ({sbom_info['count']} components)")
             else:
-                print(f"sbom:          generation failed")
+                print("sbom:          generation failed")
         else:
-            print(f"sbom:          cyclonedx-py not available")
+            print("sbom:          cyclonedx-py not available")
 
     if args.output:
         Path(args.output).write_text(md, encoding="utf-8")

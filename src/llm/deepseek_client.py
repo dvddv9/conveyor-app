@@ -13,7 +13,7 @@ from tenacity import (
     before_sleep_log,
 )
 
-from src.config import DEEPSEEK_API_KEY, DEEPSEEK_URL, DEEPSEEK_MODEL
+from src.config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
 
 logger = logging.getLogger(__name__)
 
