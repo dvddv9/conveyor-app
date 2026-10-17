@@ -18,6 +18,7 @@ const sidebars: SidebarsConfig = {
       items: [
         'case-studies',
         'case-studies/curl-cookie-c',
+        'case-studies/curl-http2-c',
       ],
     },
     {
