@@ -46,6 +46,7 @@ jobs:
         continue-on-error: true
 
       - name: Vishap Quality Gate (P1-5)
+        continue-on-error: true  # LLM (Ollama) unavailable in CI runner
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BASE_REF="origin/${{ github.base_ref }}"
