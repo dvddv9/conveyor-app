@@ -19,10 +19,31 @@ async def async_chat(system: str, user: str,
     mode = get_mode()
 
     if mode == "harness":
-        h = harness_client.HarnessClient()
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, lambda: h.chat(user, system))
-        return observe_llm_result(result)
+        try:
+            h = harness_client.HarnessClient()
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, lambda: h.chat(user, system))
+            return observe_llm_result(result)
+        except Exception as e:
+            # Harness async fallback -> DeepSeek (if key available)
+            from src.config import DEEPSEEK_API_KEY
+            if DEEPSEEK_API_KEY and not DEEPSEEK_API_KEY.startswith("sk-xxxx"):
+                try:
+                    result = await async_deepseek_client.chat(system, user, temperature, max_tokens)
+                    result["mode"] = "cloud"
+                    result["fallback_from"] = "harness"
+                    return observe_llm_result(result)
+                except Exception as e2:
+                    return observe_llm_result({
+                        "text": f"[Harness error] {e}; [DeepSeek error] {e2}",
+                        "tokens_in": 0, "tokens_out": 0,
+                        "model": "none", "mode": "error",
+                    }, status="error")
+            return observe_llm_result({
+                "text": f"[Harness error] {e} (no valid DEEPSEEK_API_KEY for fallback)",
+                "tokens_in": 0, "tokens_out": 0,
+                "model": "none", "mode": "error",
+            }, status="error")
 
     if mode == "local":
         result = await async_ollama_client.chat(system, user, temperature)

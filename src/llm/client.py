@@ -47,9 +47,29 @@ def chat(system: str, user: str,
     provider = _resolve_provider()
 
     if provider == "harness":
-        h = harness_client.HarnessClient()
-        result = h.chat(user, system)
-        return observe_llm_result(result)
+        try:
+            h = harness_client.HarnessClient()
+            result = h.chat(user, system)
+            return observe_llm_result(result)
+        except Exception as e:
+            # Harness fallback -> DeepSeek (if key available)
+            if DEEPSEEK_API_KEY and not DEEPSEEK_API_KEY.startswith("sk-xxxx"):
+                try:
+                    result = deepseek_client.chat(system, user, temperature, max_tokens)
+                    result["mode"] = "cloud"
+                    result["fallback_from"] = "harness"
+                    return observe_llm_result(result)
+                except Exception as e2:
+                    return observe_llm_result({
+                        "text": f"[Harness error] {e}; [DeepSeek error] {e2}",
+                        "tokens_in": 0, "tokens_out": 0,
+                        "model": "none", "mode": "error",
+                    }, status="error")
+            return observe_llm_result({
+                "text": f"[Harness error] {e} (no valid DEEPSEEK_API_KEY for fallback)",
+                "tokens_in": 0, "tokens_out": 0,
+                "model": "none", "mode": "error",
+            }, status="error")
 
     if provider == "custom":
         result = openai_compatible.chat(system, user, temperature, max_tokens)
