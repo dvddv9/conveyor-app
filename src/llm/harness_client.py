@@ -16,7 +16,7 @@ import zstandard
 DEFAULT_URL = os.getenv("HARNESS_URL", "http://127.0.0.1:3080")
 DEFAULT_TOKEN = os.getenv("HARNESS_TOKEN", "")
 POLL_INTERVAL = 1.0
-POLL_TIMEOUT = 90.0
+POLL_TIMEOUT = 600.0
 
 
 class HarnessError(RuntimeError):

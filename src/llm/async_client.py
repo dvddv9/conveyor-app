@@ -8,6 +8,8 @@
 from src.storage.mode import get_mode
 from src.llm import async_deepseek_client, async_ollama_client
 from src.llm._observe import observe_llm_result
+from src.llm import harness_client
+import asyncio
 
 
 async def async_chat(system: str, user: str,
@@ -15,6 +17,12 @@ async def async_chat(system: str, user: str,
                      max_tokens: int = 2000) -> dict:
     """Асинхронный вызов LLM. Аналог chat() с fallback."""
     mode = get_mode()
+
+    if mode == "harness":
+        h = harness_client.HarnessClient()
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, lambda: h.chat(user, system))
+        return observe_llm_result(result)
 
     if mode == "local":
         result = await async_ollama_client.chat(system, user, temperature)
