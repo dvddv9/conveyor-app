@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 # v6.0.2-displayed-version: bumped user-visible version strings
-Vishap V6.2.0 — Streamlit UI.
+Vishap V6.2.1 — Streamlit UI.
 Запуск: streamlit run src/ui/streamlit_app.py
 """
 import json
@@ -17,7 +17,7 @@ HISTORY_LIMIT = 20
 
 
 st.set_page_config(
-    page_title="Vishap V6.2.0",
+    page_title="Vishap V6.2.1",
     page_icon="🔬",
     layout="wide",
 )
@@ -81,7 +81,7 @@ st.markdown("""
 <div class="vishap-header">
     <div class="emoji">🐉</div>
     <div>
-        <h1>Vishap V6.2.0</h1>
+        <h1>Vishap V6.2.1</h1>
         <div class="subtitle">LLM-конвейер для анализа кода · Async API · SAST/SCA · SARIF</div>
     </div>
     <span class="vishap-badge">v__VERSION__</span>
@@ -454,7 +454,7 @@ with tab_history:
 
 
 with tab_about:
-    st.subheader("ℹ️ Vishap V6.2.0")
+    st.subheader("ℹ️ Vishap V6.2.1")
 
     # === Режим LLM ===
     st.markdown("### 🔧 Режим LLM")
@@ -505,7 +505,7 @@ with tab_about:
     st.divider()
 
     st.markdown("""
-**Vishap V6.2.0** — 6-стадийный LLM-конвейер для анализа инженерного материала.
+**Vishap V6.2.1** — 6-стадийный LLM-конвейер для анализа инженерного материала.
 
 ### Архитектура
 
