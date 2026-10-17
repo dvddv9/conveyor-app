@@ -436,30 +436,33 @@ async def analyze_sarif(req: AnalyzeRequest):
 
 
 @app.get("/history", response_model=list[HistoryItem])
-async def history(limit: int = 20):
-    """Возвращает последние N записей."""
-    items = load_history()
-    return [
-        HistoryItem(
-            session_id=item.get("session_id", ""),
-            filename=item.get("filename", ""),
-            level=item.get("level"),
-            route=item.get("route"),
-            material_size=item.get("material_size", 0),
-            timestamp=item.get("timestamp", ""),
-            verdict=item.get("verdict"),
-            pii_detected=item.get("pii_detected"),
-        )
-        for item in items[-limit:]
-    ]
+async def history(limit: int = 20, tenant: str = Depends(current_tenant)):
+    """Возвращает последние N записей текущего tenant."""
+    with tenant_scope(tenant):
+        items = load_history(tenant_id=tenant)
+        return [
+            HistoryItem(
+                session_id=item.get("session_id", ""),
+                filename=item.get("filename", ""),
+                level=item.get("level"),
+                route=item.get("route"),
+                material_size=item.get("material_size", 0),
+                timestamp=item.get("timestamp", ""),
+                verdict=item.get("verdict"),
+                pii_detected=item.get("pii_detected"),
+            )
+            for item in items[-limit:]
+        ]
 
 
 @app.post("/history/clear", dependencies=[Depends(verify_api_key), Depends(rate_limit_read)])
-async def history_clear():
-    """Очищает историю."""
-    from src.storage.history import save_history
-    save_history([])
-    return {"status": "ok"}
+async def history_clear(tenant: str = Depends(current_tenant)):
+    """Очищает историю только текущего tenant."""
+    from src.storage.history import clear_history
+
+    with tenant_scope(tenant):
+        removed = clear_history(tenant_id=tenant)
+    return {"status": "ok", "removed": removed}
 
 
 @app.get("/mode", response_model=ModeResponse)
