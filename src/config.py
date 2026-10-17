@@ -84,5 +84,10 @@ LOG_FORMAT = os.getenv("LOG_FORMAT", "pretty")  # pretty | json
 # === Безопасность (Fernet, v6.1) ===
 FERNET_KEY = os.getenv("FERNET_KEY", "")
 
+# === GitHub App (v6.1) ===
+GITHUB_APP_ID = os.getenv("GITHUB_APP_ID", "")
+GITHUB_PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY", "")
+GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "")
+
 # === Данные ===
 DATA_DIR.mkdir(parents=True, exist_ok=True)

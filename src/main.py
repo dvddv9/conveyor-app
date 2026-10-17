@@ -8,7 +8,7 @@ import time
 import uuid
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -30,6 +30,7 @@ from src.api.jobs import (
 )
 from src.api.tasks import run_analysis_task
 from src.api.celery_app import broker_available
+from src.github_app.webhook import handle_webhook
 from datetime import UTC
 from src.tools.sarif import to_sarif
 
@@ -199,6 +200,12 @@ async def metrics():
         content=get_metrics_output(),
         media_type="text/plain; version=0.0.4",
     )
+
+
+@app.post("/webhook/github")
+async def github_webhook(request: Request):
+    """GitHub App webhook: PR opened -> analyze diff -> comment."""
+    return await handle_webhook(request)
 
 
 @app.post("/analyze", response_model=AnalyzeResponse, dependencies=[Depends(verify_api_key), Depends(rate_limit_analyze)])
