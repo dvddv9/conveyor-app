@@ -76,6 +76,7 @@ def main():
     rc |= run("tests/test_tracing.py")
     rc |= run("tests/test_rls.py")
     rc |= run("tests/test_history.py")
+    rc |= run("tests/test_audit_export.py")
 
     if "--all" in sys.argv:
         print("\n[--all] E2E tests (real LLM, slow, uses API):")

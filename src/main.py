@@ -8,7 +8,8 @@ import time
 import uuid
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Request, Query
+from typing import Literal
 from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -29,6 +30,7 @@ from src.api.rate_limit import rate_limit_analyze, rate_limit_read
 from src.api.jobs import (
     create_job_async, get_job_async, update_job_async,
 )
+from src.api.audit import DEFAULT_LIMIT, MAX_LIMIT, export_audit
 from src.api.tasks import run_analysis_task
 from src.api.celery_app import broker_available
 from src.github_app.webhook import handle_webhook
@@ -463,6 +465,26 @@ async def history_clear(tenant: str = Depends(current_tenant)):
     with tenant_scope(tenant):
         removed = clear_history(tenant_id=tenant)
     return {"status": "ok", "removed": removed}
+
+
+@app.get("/audit/export", dependencies=[Depends(verify_api_key), Depends(rate_limit_read)])
+async def audit_export(
+    format: Literal["csv", "json"] = "csv",
+    from_date: str | None = Query(None, alias="from", description="ISO 8601 lower bound"),
+    to_date: str | None = Query(None, alias="to", description="ISO 8601 upper bound"),
+    status: Literal["queued", "running", "done", "failed"] | None = None,
+    limit: int = Query(DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+    tenant: str = Depends(current_tenant),
+):
+    """Экспорт audit trail текущего tenant в CSV или JSON."""
+    with tenant_scope(tenant):
+        return await export_audit(
+            format=format,
+            from_date=from_date,
+            to_date=to_date,
+            status=status,
+            limit=limit,
+        )
 
 
 @app.get("/mode", response_model=ModeResponse)
