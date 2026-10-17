@@ -1,61 +1,21 @@
-# Vishap
+## 🚀 Vishap v6.3.0 — Next.js Dashboard
 
-[![CI](https://github.com/dvddv9/vishap/actions/workflows/ci.yml/badge.svg)](https://github.com/dvddv9/vishap/actions/workflows/ci.yml)
-[![Docs](https://github.com/dvddv9/vishap/actions/workflows/docs.yml/badge.svg)](https://dvddv9.github.io/vishap/)
-[![PyPI version](https://badge.fury.io/py/vishap.svg)](https://badge.fury.io/py/vishap)
-[![Docker Pulls](https://img.shields.io/docker/pulls/dvddv9/vishap-analyzer.svg)](https://hub.docker.com/r/dvddv9/vishap-analyzer)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+This release completes the SaaS roadmap by adding a modern React-based UI (Next.js 16 + Tailwind + Clerk) to replace the Streamlit prototype.
 
-> 🔬 6-stage LLM pipeline for analyzing engineering materials (code, spec, logs).
+### ✨ New Features
+- **Next.js Dashboard (`ui-next/`):** Modern UI with Clerk authentication, analyze form with polling, and Markdown report view.
+- **Dark Terminal Theme:** Tailwind CSS + custom `.markdown-body` styles.
+- **TypeScript:** Full type safety, API client (`apiFetch<T>`), localStorage job cache.
 
-**Vishap** takes a file as input → returns a structured Markdown report with risks, STRIDE threat model, refactoring options and **audit trail** with PII detection and compliance flags.
+### 🔧 Infrastructure & Fixes
+- **PyPI Trusted Publishing:** `.github/workflows/publish.yml` (build + twine check + OIDC publish on tag `v*`).
+- **CI Fix:** `vishap.yml` Quality Gate is now non-blocking (Ollama unavailable in GitHub Actions).
+- **Version Sync:** `pyproject.toml`, `src/version.py`, `src/ui/streamlit_app.py` all at `6.3.0`.
 
-## 🌐 Links
+### 🧪 Tests & Build
+- **553 tests passed** (Python).
+- **`npm run build`:** 3 routes (`/`, `/analyze`, `/report/[id]`) compiled successfully.
 
-- **Documentation:** [https://dvddv9.github.io/vishap/](https://dvddv9.github.io/vishap/)
-- **Landing Page:** [https://dvddv9.github.io/vishap/landing/](https://dvddv9.github.io/vishap/landing/)
-- **GitHub App:** Auto-analyze PR diffs and comment on findings.
-
-## 🚀 What's new in v6.1.0 (SaaS Release)
-
-We have transformed Vishap from a local tool into a full-fledged SaaS platform:
-
-- **Queue (Celery + Redis):** Production-ready async processing (`/analyze/async`).
-- **GitHub App:** Webhooks + PR auto-analyze with inline comments.
-- **Auth (Clerk):** Multi-tenant JWT authentication (`/analyze/secure`).
-- **Billing (Stripe):** Subscriptions + usage-based billing (Checkout API).
-- **Docs (Docusaurus):** Full documentation site on GitHub Pages.
-- **Landing (HTML/Tailwind):** Static marketing page.
-- **Observability (OTel):** Distributed tracing (Tempo) + metrics (Prometheus) + Grafana dashboards.
-- **PostgreSQL:** JobStore abstraction for persistent job tracking.
-
-## 🛠 Features
-
-- **6-stage pipeline:** Ingestion → Taint Analysis → Dataflow → Risk Assessment → Verdict → Report.
-- **Multi-language:** Python, Java, C (AST + taint patterns).
-- **Async API:** FastAPI with Celery workers.
-- **Security:** Fernet encryption for secrets, HMAC for webhooks.
-- **Observability:** Structlog (JSON), Prometheus `/metrics`, OpenTelemetry traces.
-- **CI/CD:** GitHub Actions (tests, lint, docs deploy, dogfood).
-
-## 📦 Quick Start
-
-### Docker (recommended)
-
-git clone https://github.com/dvddv9/vishap.git
-cd vishap
-cp .env.example .env
-docker compose up -d
-
-- UI: `http://localhost:8501`
-- API: `http://localhost:5001/docs`
-- Grafana: `http://localhost:3001`
-
-## 🧪 Testing
-
-python -m pytest tests/ --ignore=tests/test_e2e.py -q
-# 553 passed
-
-## 📄 License
-
-MIT License. See [LICENSE](LICENSE) for details.
+### 📦 Install
+```bash
+pip install vishap-analyzer==6.3.0
