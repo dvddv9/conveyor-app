@@ -15,7 +15,7 @@ from src.pipeline.orchestrator import run_pipeline
 def run_analysis_task(self, job_id: str, material: str, filename: str):
     """Run the analysis pipeline for a queued job (Celery worker task)."""
     store = get_store()
-    with span("celery.run_analysis", job_id=job_id, filename=filename):
+    with span("celery.run_analysis", job_id=job_id):  # filename removed: PII risk in Tempo
         try:
             store.update(job_id, status="running")
             result = run_pipeline(material, filename)

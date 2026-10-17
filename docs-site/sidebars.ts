@@ -13,6 +13,11 @@ const sidebars: SidebarsConfig = {
         'case-studies',
       ],
     },
+    {
+      type: 'category',
+      label: 'Legal',
+      items: ['legal/terms', 'legal/privacy'],
+    },
   ],
 };
 
