@@ -585,6 +585,47 @@ Landing page (static HTML + Tailwind CDN).
 - RLS / multi-tenant isolation.
 - CI (GitHub Actions) -- не настроен.
 
+
+
+### Block 16 -- DONE (2026-10-17)
+
+Multi-tenant RLS (Row-Level Security) — production-ready.
+
+**Создано:**
+- alembic/versions/002_add_rls_jobs.py (RLS policy + role vishap_app + index).
+- alembic/versions/003_force_rls.py (FORCE ROW LEVEL SECURITY).
+- tests/test_rls.py (25 tests).
+
+**Изменено:**
+- src/api/job_store.py (async Protocol + ContextVar).
+- src/api/job_store_memory.py (async + tenant scoping).
+- src/api/jobs.py (async-ядро + sync-фасад).
+- src/api/tasks.py (Celery tenant + asyncio.run).
+- src/main.py (/status, /report — tenant_scope).
+- src/auth/middleware.py (current_tenant).
+- tests/test_job_store.py, test_jobs_shim_iso.py, test_logging.py, test_metrics.py (async).
+
+**Тесты:** 583 passed (0 failed, 2 skipped для суперюзера).
+**RLS verified:** под vishap_app — 25 passed (0 skipped).
+
+**Грабли:** #24 (RLS не применяется к суперюзерам — для production использовать vishap_app).
+
+**Commit:** 61e4fd0 + 5fc205a (merge) + d056bd6 + 8105de8.
+
+### Block 16.1 -- DONE (2026-10-17)
+
+History + FORCE RLS.
+
+**Создано:**
+- tests/test_history.py (6 tests).
+
+**Изменено:**
+- src/storage/history.py (add_entry + load_history с tenant_id).
+- src/main.py (/history, /history/clear — tenant_scope).
+
+**Тесты:** 583 passed (+6 history).
+**Commit:** d056bd6 + 8105de8.
+
 ### v6.1 -- TODO
 PostgreSQL + Observability + Security. Оценка: 1 неделя.
 - Replace in-memory job store with PostgreSQL
